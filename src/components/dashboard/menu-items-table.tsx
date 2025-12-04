@@ -1,0 +1,139 @@
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from '@/components/ui/card';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { MoreHorizontal, PlusCircle } from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '../ui/dropdown-menu';
+
+const menuItems = [
+  {
+    name: 'Classic Cheeseburger',
+    category: 'Burgers',
+    price: 12.99,
+    stock: 45,
+    status: 'Active',
+  },
+  {
+    name: 'Truffle Fries',
+    category: 'Sides',
+    price: 7.5,
+    stock: 120,
+    status: 'Active',
+  },
+  {
+    name: 'Seasonal Berry Crumble',
+    category: 'Desserts',
+    price: 9.0,
+    stock: 0,
+    status: 'Out of Stock',
+  },
+  {
+    name: 'Artisanal Pizza',
+    category: 'Mains',
+    price: 18.5,
+    stock: 23,
+    status: 'Active',
+  },
+  {
+    name: 'Fresh Garden Salad',
+    category: 'Salads',
+    price: 10.25,
+    stock: 30,
+    status: 'Low Stock',
+  },
+];
+
+export function MenuItemsTable() {
+  return (
+    <Card>
+      <CardHeader className="flex flex-row items-center justify-between">
+        <div>
+          <CardTitle>Menu Management</CardTitle>
+          <CardDescription>Add, edit, and categorize products.</CardDescription>
+        </div>
+        <Button size="sm">
+          <PlusCircle className="h-4 w-4 mr-2" />
+          Add Product
+        </Button>
+      </CardHeader>
+      <CardContent>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Product</TableHead>
+              <TableHead>Category</TableHead>
+              <TableHead className="text-right">Price</TableHead>
+              <TableHead className="text-right">Stock</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead>
+                <span className="sr-only">Actions</span>
+              </TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {menuItems.map((item) => (
+              <TableRow key={item.name}>
+                <TableCell className="font-medium">{item.name}</TableCell>
+                <TableCell>{item.category}</TableCell>
+                <TableCell className="text-right">
+                  ${item.price.toFixed(2)}
+                </TableCell>
+                <TableCell className="text-right">{item.stock}</TableCell>
+                <TableCell>
+                  <Badge
+                    variant={
+                      item.status === 'Active'
+                        ? 'default'
+                        : item.status === 'Out of Stock'
+                        ? 'destructive'
+                        : 'secondary'
+                    }
+                    className={
+                      item.status === 'Active'
+                        ? 'bg-green-100 text-green-800'
+                        : ''
+                    }
+                  >
+                    {item.status}
+                  </Badge>
+                </TableCell>
+                <TableCell>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button aria-haspopup="true" size="icon" variant="ghost">
+                        <MoreHorizontal className="h-4 w-4" />
+                        <span className="sr-only">Toggle menu</span>
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem>Edit</DropdownMenuItem>
+                      <DropdownMenuItem>Archive</DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </CardContent>
+    </Card>
+  );
+}

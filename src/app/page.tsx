@@ -1,3 +1,34 @@
+import { AppSidebar } from '@/components/dashboard/app-sidebar';
+import { DashboardHeader } from '@/components/dashboard/header';
+import { InventoryAlerts } from '@/components/dashboard/inventory-alerts';
+import { MenuItemsTable } from '@/components/dashboard/menu-items-table';
+import { OrderAnalyticsChart } from '@/components/dashboard/order-analytics-chart';
+import { PerformanceSummary } from '@/components/dashboard/performance-summary';
+import { Promotions } from '@/components/dashboard/promotions';
+import { StatCards } from '@/components/dashboard/stat-cards';
+import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar';
+
 export default function Home() {
-  return <></>;
+  return (
+    <SidebarProvider>
+      <AppSidebar />
+      <SidebarInset>
+        <DashboardHeader />
+        <main className="p-4 sm:p-6 lg:p-8 space-y-6">
+          <StatCards />
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="lg:col-span-2 space-y-6">
+              <OrderAnalyticsChart />
+              <MenuItemsTable />
+            </div>
+            <div className="space-y-6">
+              <PerformanceSummary />
+              <InventoryAlerts />
+              <Promotions />
+            </div>
+          </div>
+        </main>
+      </SidebarInset>
+    </SidebarProvider>
+  );
 }
