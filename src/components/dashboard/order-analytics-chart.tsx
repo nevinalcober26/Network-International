@@ -9,7 +9,7 @@ import {
   CardTitle,
   CardDescription,
 } from '@/components/ui/card';
-import { ChartTooltipContent } from '@/components/ui/chart';
+import { ChartContainer, ChartTooltipContent } from '@/components/ui/chart';
 
 const generateChartData = () => [
   { date: 'Mon', orders: Math.floor(Math.random() * 200) + 50 },
@@ -20,6 +20,13 @@ const generateChartData = () => [
   { date: 'Sat', orders: Math.floor(Math.random() * 200) + 50 },
   { date: 'Sun', orders: Math.floor(Math.random() * 200) + 50 },
 ];
+
+const chartConfig = {
+  orders: {
+    label: 'Orders',
+    color: 'hsl(var(--primary))',
+  },
+};
 
 export function OrderAnalyticsChart() {
   const [data, setData] = useState<any[]>([]);
@@ -37,7 +44,7 @@ export function OrderAnalyticsChart() {
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <div className="h-[300px]">
+        <ChartContainer config={chartConfig} className="h-[300px] w-full">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={data}>
               <XAxis
@@ -58,10 +65,10 @@ export function OrderAnalyticsChart() {
                 cursor={{ fill: 'hsl(var(--accent))', radius: '0.25rem' }}
                 content={<ChartTooltipContent />}
                />
-              <Bar dataKey="orders" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="orders" fill="var(--color-orders)" radius={[4, 4, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
-        </div>
+        </ChartContainer>
       </CardContent>
     </Card>
   );
