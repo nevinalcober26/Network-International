@@ -38,6 +38,11 @@ export default function LoginPage() {
   }
 
   const handleSignUp = async () => {
+    if (!email) {
+      setError('Please enter a valid email address.');
+      return;
+    }
+    setError('');
     try {
       initiateEmailSignUp(auth, email, password);
     } catch (e: any) {
@@ -46,6 +51,11 @@ export default function LoginPage() {
   };
 
   const handleSignIn = async () => {
+    if (!email) {
+      setError('Please enter a valid email address.');
+      return;
+    }
+    setError('');
     try {
       initiateEmailSignIn(auth, email, password);
     } catch (e: any) {
