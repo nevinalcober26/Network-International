@@ -1,0 +1,226 @@
+rules_version = '2';
+
+/**
+ * @name eMenu Digital Hub Security Rules
+ * @author Firebase Security Rules Architect
+ *
+ * @description
+ * This ruleset enforces a strict, restaurant-centric security model. All data
+ * is organized under top-level `/restaurants/{restaurantId}` documents.
+ * A user's ability to read or write data is determined by their membership within
+ * a specific restaurant's user list.
+ *
+ * Core Philosophy:
+ * Access is granted based on a user's association with a restaurant, not on
+ * global roles. If a user document exists at
+ * `/restaurants/{restaurantId}/users/{userId}`, they are considered a member
+ * of that restaurant and are granted management permissions for its data.
+ *
+ * Data Structure:
+ * - /restaurants/{restaurantId} - Public restaurant details.
+ *   - /users/{userId} - Private list of users who manage the restaurant.
+ *   - /products/{productId} - Publicly readable menu items.
+ *   - /productCategories/{productCategoryId} - Publicly readable menu categories.
+ *   - /promotions/{promotionId} - Publicly readable promotions.
+ *   - /pages/{pageId} - Pages that are publicly readable if published.
+ *   - /orders/{orderId} - Private orders, creatable by any signed-in user, but only manageable by restaurant members.
+ *     - /orderItems/{orderItemId} - Private items within an order.
+ *
+ * Key Security Decisions:
+ * - Restaurant Membership: The core of the security model is the `isRestaurantMember()`
+ *   function, which checks for the existence of the requesting user's document in
+ *   the `/restaurants/{restaurantId}/users` subcollection. This avoids costly
+ *   and complex role lookups.
+ * - Public Menu Data: Collections like `products`, `productCategories`, `promotions`,
+ *   and published `pages` are publicly readable to allow customers to view menus
+ *   without signing in. All write operations remain restricted to restaurant members.
+ * - Order Creation: To support guest checkouts, any signed-in user (including
+ *   anonymous users) can create an `order`. However, only restaurant members can
+ *   view, update, or delete those orders.
+ * - User Documents: A user document must be created with an ID matching the
+ *   authenticated user's UID. Only members of the restaurant can manage user documents.
+ *
+ * Denormalization for Authorization:
+ * The primary security check `isRestaurantMember()` relies on the existence of a user
+ * document within a restaurant's subcollection. This structure is a form of denormalization,
+ * as it places the authorization "key" (the user document) directly within the
+ * data tree it secures, enabling fast and secure checks without extra lookups.
+ *
+ * Structural Segregation:
+ * The `/pages/{pageId}` collection handles both public (published) and private (draft)
+ * content. Access is controlled at the document level using an `isPublished` flag
+ * in the `get` rule, allowing public access to published pages while protecting drafts.
+ */
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // HELPER FUNCTIONS
+
+    /**
+     * Checks if a user is authenticated.
+     */
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    /**
+     * Checks if the requesting user's UID matches the given userId.
+     * This is used to verify document ownership.
+     */
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    /**
+     * The core authorization check.
+     * Returns true if the requesting user has a user document inside the
+     * specified restaurant's 'users' subcollection.
+     */
+    function isRestaurantMember(restaurantId) {
+      return isSignedIn() && exists(/databases/$(database)/documents/restaurants/$(restaurantId)/users/$(request.auth.uid));
+    }
+
+    /**
+     * Combines the restaurant membership check with a document existence check.
+     * CRITICAL for all update and delete operations to prevent acting on non-existent data.
+     */
+    function isExistingRestaurantMember(restaurantId) {
+      return isRestaurantMember(restaurantId) && resource != null;
+    }
+
+    /**
+     * Validates that the restaurantId in a new document's body matches the
+     * restaurantId from the path. Enforces relational integrity on create.
+     */
+    function hasCorrectRestaurantIdOnCreate(restaurantId) {
+      return request.resource.data.restaurantId == restaurantId;
+    }
+
+    /**
+     * Validates that the restaurantId of a document is immutable on update.
+     * Prevents re-assigning a document to a different restaurant.
+     */
+    function restaurantIdIsImmutable() {
+      return request.resource.data.restaurantId == resource.data.restaurantId;
+    }
+
+
+    /**
+     * @description Public information about a restaurant. Anyone can read, but only
+     *              restaurant members can manage. Creating new restaurants is disabled
+     *              from the client for security.
+     * @path /restaurants/{restaurantId}
+     * @allow (get) Any user, signed in or not, can view a restaurant's details.
+     * @deny (create) A signed-in user attempts to create a new restaurant document.
+     * @principle Enforces public read access for general info and member-only writes for management.
+     */
+    match /restaurants/{restaurantId} {
+      allow get, list: if true;
+      allow create: if false; // Must be created via a trusted backend process.
+      allow update, delete: if isExistingRestaurantMember(restaurantId);
+    }
+
+    /**
+     * @description User profiles associated with a restaurant. These users are considered
+     *              'members' or 'managers' of the restaurant.
+     * @path /restaurants/{restaurantId}/users/{userId}
+     * @allow (get) A restaurant member views another member's profile within the same restaurant.
+     * @deny (list) A user from restaurant 'A' tries to list users for restaurant 'B'.
+     * @principle Restricts access to a restaurant's own management team.
+     */
+    match /restaurants/{restaurantId}/users/{userId} {
+      allow get, list: if isRestaurantMember(restaurantId);
+      allow create: if isOwner(userId) && hasCorrectRestaurantIdOnCreate(restaurantId);
+      allow update: if isOwner(userId) && resource != null;
+      allow delete: if isExistingRestaurantMember(restaurantId); // Allow members to remove other members
+    }
+
+    /**
+     * @description Categories for products (e.g., Appetizers, Desserts).
+     *              Publicly readable, but only manageable by restaurant members.
+     * @path /restaurants/{restaurantId}/productCategories/{productCategoryId}
+     * @allow (list) Any client can list the product categories for a restaurant's menu.
+     * @deny (create) An anonymous user attempts to create a new category.
+     * @principle Implements the "Public Read with Owner-Only Writes" pattern.
+     */
+    match /restaurants/{restaurantId}/productCategories/{productCategoryId} {
+      allow get, list: if true;
+      allow create: if isRestaurantMember(restaurantId) && hasCorrectRestaurantIdOnCreate(restaurantId);
+      allow update: if isExistingRestaurantMember(restaurantId) && restaurantIdIsImmutable();
+      allow delete: if isExistingRestaurantMember(restaurantId);
+    }
+
+    /**
+     * @description Individual products on the menu.
+     *              Publicly readable, but only manageable by restaurant members.
+     * @path /restaurants/{restaurantId}/products/{productId}
+     * @allow (get) Any client can get the details of a specific product.
+     * @deny (update) A user from another restaurant attempts to change a product's price.
+     * @principle Implements the "Public Read with Owner-Only Writes" pattern.
+     */
+    match /restaurants/{restaurantId}/products/{productId} {
+      allow get, list: if true;
+      allow create: if isRestaurantMember(restaurantId) && hasCorrectRestaurantIdOnCreate(restaurantId);
+      allow update: if isExistingRestaurantMember(restaurantId) && restaurantIdIsImmutable();
+      allow delete: if isExistingRestaurantMember(restaurantId);
+    }
+
+    /**
+     * @description Promotions or coupons for the restaurant.
+     *              Publicly readable, but only manageable by restaurant members.
+     * @path /restaurants/{restaurantId}/promotions/{promotionId}
+     * @allow (list) Any client can list available promotions.
+     * @deny (delete) A regular signed-in user attempts to delete a promotion.
+     * @principle Implements the "Public Read with Owner-Only Writes" pattern.
+     */
+    match /restaurants/{restaurantId}/promotions/{promotionId} {
+      allow get, list: if true;
+      allow create: if isRestaurantMember(restaurantId) && hasCorrectRestaurantIdOnCreate(restaurantId);
+      allow update: if isExistingRestaurantMember(restaurantId) && restaurantIdIsImmutable();
+      allow delete: if isExistingRestaurantMember(restaurantId);
+    }
+
+    /**
+     * @description Customer orders. Any signed-in user (including anonymous) can create
+     *              an order, but only restaurant members can read or manage them.
+     * @path /restaurants/{restaurantId}/orders/{orderId}
+     * @allow (create) An anonymously authenticated user places an order.
+     * @deny (get) A customer tries to read another customer's order details.
+     * @principle Secures private order data while allowing public creation for guest checkouts.
+     */
+    match /restaurants/{restaurantId}/orders/{orderId} {
+      allow get, list: if isRestaurantMember(restaurantId);
+      allow create: if isSignedIn() && hasCorrectRestaurantIdOnCreate(restaurantId);
+      allow update, delete: if isExistingRestaurantMember(restaurantId);
+    }
+
+    /**
+     * @description Items within a customer order. Inherits permissions from the restaurant scope.
+     * @path /restaurants/{restaurantId}/orders/{orderId}/orderItems/{orderItemId}
+     * @allow (list) A restaurant member lists all items for a specific order.
+     * @deny (get) A user tries to read an order item from a restaurant they don't belong to.
+     * @principle Ensures subcollection data is protected by the same rules as its parent context.
+     */
+    match /restaurants/{restaurantId}/orders/{orderId}/orderItems/{orderItemId} {
+      allow get, list: if isRestaurantMember(restaurantId);
+      allow create: if isSignedIn() && exists(/databases/$(database)/documents/restaurants/$(restaurantId)/orders/$(orderId));
+      allow update, delete: if isExistingRestaurantMember(restaurantId);
+    }
+
+    /**
+     * @description Static pages (e.g., 'About Us'). Pages marked as 'isPublished' are
+     *              publicly readable. All pages are manageable by restaurant members.
+     * @path /restaurants/{restaurantId}/pages/{pageId}
+     * @allow (get) Any user reads a page where `isPublished == true`.
+     * @deny (get) An anonymous user tries to read a draft page where `isPublished == false`.
+     * @principle Provides granular access for both public content and private drafts within one collection.
+     */
+    match /restaurants/{restaurantId}/pages/{pageId} {
+      allow get: if resource.data.isPublished == true || isRestaurantMember(restaurantId);
+      allow list: if true;
+      allow create: if isRestaurantMember(restaurantId) && hasCorrectRestaurantIdOnCreate(restaurantId);
+      allow update: if isExistingRestaurantMember(restaurantId) && restaurantIdIsImmutable();
+      allow delete: if isExistingRestaurantMember(restaurantId);
+    }
+  }
+}

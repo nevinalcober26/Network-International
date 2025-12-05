@@ -1,0 +1,497 @@
+{
+  "entities": {
+    "Restaurant": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Restaurant",
+      "type": "object",
+      "description": "Represents a restaurant using the eMenu Digital Hub.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Restaurant entity."
+        },
+        "name": {
+          "type": "string",
+          "description": "The name of the restaurant."
+        },
+        "address": {
+          "type": "string",
+          "description": "The address of the restaurant."
+        },
+        "contactEmail": {
+          "type": "string",
+          "description": "The contact email address for the restaurant.",
+          "format": "email"
+        },
+        "contactPhone": {
+          "type": "string",
+          "description": "The contact phone number for the restaurant."
+        }
+      },
+      "required": [
+        "id",
+        "name"
+      ]
+    },
+    "User": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "User",
+      "type": "object",
+      "description": "Represents a user of the eMenu Digital Hub, typically a restaurant owner or manager.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the User entity."
+        },
+        "restaurantId": {
+          "type": "string",
+          "description": "Reference to Restaurant. (Relationship: Restaurant 1:N User)"
+        },
+        "firstName": {
+          "type": "string",
+          "description": "The first name of the user."
+        },
+        "lastName": {
+          "type": "string",
+          "description": "The last name of the user."
+        },
+        "email": {
+          "type": "string",
+          "description": "The email address of the user.",
+          "format": "email"
+        },
+        "role": {
+          "type": "string",
+          "description": "The role of the user within the restaurant (e.g., owner, manager)."
+        }
+      },
+      "required": [
+        "id",
+        "firstName",
+        "lastName",
+        "email",
+        "restaurantId"
+      ]
+    },
+    "ProductCategory": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "ProductCategory",
+      "type": "object",
+      "description": "Represents a category of products in the eMenu.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the ProductCategory entity."
+        },
+        "restaurantId": {
+          "type": "string",
+          "description": "Reference to Restaurant. (Relationship: Restaurant 1:N ProductCategory)"
+        },
+        "name": {
+          "type": "string",
+          "description": "The name of the product category (e.g., Appetizers, Main Courses)."
+        },
+        "description": {
+          "type": "string",
+          "description": "A description of the product category."
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "restaurantId"
+      ]
+    },
+    "Product": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Product",
+      "type": "object",
+      "description": "Represents a product offered in the eMenu.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Product entity."
+        },
+        "restaurantId": {
+          "type": "string",
+          "description": "Reference to Restaurant. (Relationship: Restaurant 1:N Product)"
+        },
+        "productCategoryId": {
+          "type": "string",
+          "description": "Reference to ProductCategory. (Relationship: ProductCategory 1:N Product)"
+        },
+        "name": {
+          "type": "string",
+          "description": "The name of the product."
+        },
+        "description": {
+          "type": "string",
+          "description": "A description of the product."
+        },
+        "price": {
+          "type": "number",
+          "description": "The price of the product."
+        },
+        "imageUrl": {
+          "type": "string",
+          "description": "URL of the product image, can be null.",
+          "format": "uri"
+        },
+        "inventory": {
+          "type": "number",
+          "description": "Current stock level of the product."
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "description",
+        "price",
+        "restaurantId",
+        "productCategoryId"
+      ]
+    },
+    "Promotion": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Promotion",
+      "type": "object",
+      "description": "Represents a promotion or coupon for menu items.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Promotion entity."
+        },
+        "restaurantId": {
+          "type": "string",
+          "description": "Reference to Restaurant. (Relationship: Restaurant 1:N Promotion)"
+        },
+        "name": {
+          "type": "string",
+          "description": "The name of the promotion."
+        },
+        "description": {
+          "type": "string",
+          "description": "A description of the promotion."
+        },
+        "discountType": {
+          "type": "string",
+          "description": "The type of discount (e.g., percentage, fixed amount)."
+        },
+        "discountValue": {
+          "type": "number",
+          "description": "The value of the discount."
+        },
+        "startDate": {
+          "type": "string",
+          "description": "The start date of the promotion.",
+          "format": "date-time"
+        },
+        "endDate": {
+          "type": "string",
+          "description": "The end date of the promotion.",
+          "format": "date-time"
+        },
+        "productIds": {
+          "type": "array",
+          "description": "References to Products. (Relationship: Product N:N Promotion)",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "id",
+        "restaurantId",
+        "name",
+        "discountType",
+        "discountValue",
+        "startDate",
+        "endDate"
+      ]
+    },
+    "Order": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Order",
+      "type": "object",
+      "description": "Represents an order placed by a customer.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Order entity."
+        },
+        "restaurantId": {
+          "type": "string",
+          "description": "Reference to Restaurant. (Relationship: Restaurant 1:N Order)"
+        },
+        "orderDate": {
+          "type": "string",
+          "description": "The date and time the order was placed.",
+          "format": "date-time"
+        },
+        "totalAmount": {
+          "type": "number",
+          "description": "The total amount of the order."
+        },
+        "customerName": {
+          "type": "string",
+          "description": "The name of the customer who placed the order."
+        },
+        "customerContact": {
+          "type": "string",
+          "description": "The contact information of the customer (e.g., phone number)."
+        }
+      },
+      "required": [
+        "id",
+        "restaurantId",
+        "orderDate",
+        "totalAmount"
+      ]
+    },
+    "OrderItem": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "OrderItem",
+      "type": "object",
+      "description": "Represents an item within an order.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the OrderItem entity."
+        },
+        "orderId": {
+          "type": "string",
+          "description": "Reference to Order. (Relationship: Order 1:N OrderItem)"
+        },
+        "productId": {
+          "type": "string",
+          "description": "Reference to Product. (Relationship: Product 1:N OrderItem)"
+        },
+        "quantity": {
+          "type": "number",
+          "description": "The quantity of the product in the order item."
+        },
+        "itemPrice": {
+          "type": "number",
+          "description": "The price of the item at the time of the order."
+        }
+      },
+      "required": [
+        "id",
+        "orderId",
+        "productId",
+        "quantity",
+        "itemPrice"
+      ]
+    },
+    "Page": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Page",
+      "type": "object",
+      "description": "Represents a static page in the eMenu Digital Hub.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Page entity."
+        },
+        "restaurantId": {
+          "type": "string",
+          "description": "Reference to Restaurant. (Relationship: Restaurant 1:N Page)"
+        },
+        "title": {
+          "type": "string",
+          "description": "The title of the page."
+        },
+        "content": {
+          "type": "string",
+          "description": "The HTML content of the page."
+        },
+        "slug": {
+          "type": "string",
+          "description": "The URL-friendly slug for the page."
+        },
+        "isPublished": {
+          "type": "boolean",
+          "description": "Indicates whether the page is published and visible."
+        }
+      },
+      "required": [
+        "id",
+        "restaurantId",
+        "title",
+        "content",
+        "slug"
+      ]
+    }
+  },
+  "auth": {
+    "providers": [
+      "password",
+      "anonymous"
+    ]
+  },
+  "firestore": {
+    "structure": [
+      {
+        "path": "/restaurants/{restaurantId}",
+        "definition": {
+          "entityName": "Restaurant",
+          "schema": {
+            "$ref": "#/backend/entities/Restaurant"
+          },
+          "description": "Stores restaurant information. Top-level entity, with all other entities scoped under it.",
+          "params": [
+            {
+              "name": "restaurantId",
+              "description": "Unique identifier for the restaurant."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/restaurants/{restaurantId}/users/{userId}",
+        "definition": {
+          "entityName": "User",
+          "schema": {
+            "$ref": "#/backend/entities/User"
+          },
+          "description": "Stores user accounts associated with a restaurant. Path-based ownership ensures only the restaurant can manage its users.",
+          "params": [
+            {
+              "name": "restaurantId",
+              "description": "Unique identifier for the restaurant."
+            },
+            {
+              "name": "userId",
+              "description": "Unique identifier for the user."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/restaurants/{restaurantId}/productCategories/{productCategoryId}",
+        "definition": {
+          "entityName": "ProductCategory",
+          "schema": {
+            "$ref": "#/backend/entities/ProductCategory"
+          },
+          "description": "Stores product categories for a restaurant. Path-based ownership.",
+          "params": [
+            {
+              "name": "restaurantId",
+              "description": "Unique identifier for the restaurant."
+            },
+            {
+              "name": "productCategoryId",
+              "description": "Unique identifier for the product category."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/restaurants/{restaurantId}/products/{productId}",
+        "definition": {
+          "entityName": "Product",
+          "schema": {
+            "$ref": "#/backend/entities/Product"
+          },
+          "description": "Stores products for a restaurant. Path-based ownership.",
+          "params": [
+            {
+              "name": "restaurantId",
+              "description": "Unique identifier for the restaurant."
+            },
+            {
+              "name": "productId",
+              "description": "Unique identifier for the product."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/restaurants/{restaurantId}/promotions/{promotionId}",
+        "definition": {
+          "entityName": "Promotion",
+          "schema": {
+            "$ref": "#/backend/entities/Promotion"
+          },
+          "description": "Stores promotions for a restaurant. Path-based ownership.",
+          "params": [
+            {
+              "name": "restaurantId",
+              "description": "Unique identifier for the restaurant."
+            },
+            {
+              "name": "promotionId",
+              "description": "Unique identifier for the promotion."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/restaurants/{restaurantId}/orders/{orderId}",
+        "definition": {
+          "entityName": "Order",
+          "schema": {
+            "$ref": "#/backend/entities/Order"
+          },
+          "description": "Stores orders for a restaurant. Path-based ownership.",
+          "params": [
+            {
+              "name": "restaurantId",
+              "description": "Unique identifier for the restaurant."
+            },
+            {
+              "name": "orderId",
+              "description": "Unique identifier for the order."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/restaurants/{restaurantId}/orders/{orderId}/orderItems/{orderItemId}",
+        "definition": {
+          "entityName": "OrderItem",
+          "schema": {
+            "$ref": "#/backend/entities/OrderItem"
+          },
+          "description": "Stores order items for an order. Nested under orders for data locality.",
+          "params": [
+            {
+              "name": "restaurantId",
+              "description": "Unique identifier for the restaurant."
+            },
+            {
+              "name": "orderId",
+              "description": "Unique identifier for the order."
+            },
+            {
+              "name": "orderItemId",
+              "description": "Unique identifier for the order item."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/restaurants/{restaurantId}/pages/{pageId}",
+        "definition": {
+          "entityName": "Page",
+          "schema": {
+            "$ref": "#/backend/entities/Page"
+          },
+          "description": "Stores static pages for a restaurant. Path-based ownership.",
+          "params": [
+            {
+              "name": "restaurantId",
+              "description": "Unique identifier for the restaurant."
+            },
+            {
+              "name": "pageId",
+              "description": "Unique identifier for the page."
+            }
+          ]
+        }
+      }
+    ],
+    "reasoning": "The Firestore structure is designed to ensure Authorization Independence, DBAC, and support secure list operations (QAPs). It prioritizes path-based ownership for private user data and uses denormalization via membership maps for collaborative data. The structure incorporates Structural Segregation by maintaining homogeneous security postures within collections.\n\nRestaurants are the top-level entity. Each restaurant 'owns' users, products, categories, promotions, orders, order items, and pages. User documents are stored directly under the restaurant to simplify ownership-based security rules. This provides Authorization Independence as well as making it trivial to perform list operations for a specific restaurant.\n\nData like Products and ProductCategories are also nested under `/restaurants/{restaurantId}`. This simplifies filtering and listing products/categories specific to a restaurant. Orders and OrderItems follow a similar pattern, ensuring all relevant data for a restaurant's operations is easily accessible and manageable under their designated path.\n\nPages are also stored under each restaurant, facilitating easy management and retrieval of restaurant-specific content. The use of restaurantId ensures that all collections are properly scoped and secured.\n\nAuthentication is handled by Firebase Auth, with roles managed implicitly via user documents associated with each restaurant."
+  }
+}
