@@ -1,7 +1,22 @@
 'use client';
+import { useSearchParams } from 'next/navigation';
 import { AppSidebar } from '@/components/dashboard/app-sidebar';
 import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar';
 import { ProtectedRoute } from '@/components/auth/protected-route';
+import { OnboardingWizard } from '@/components/dashboard/onboarding-wizard';
+import React from 'react';
+
+function OnboardingWrapper({ children }: { children: React.ReactNode }) {
+  const searchParams = useSearchParams();
+  const showOnboarding = searchParams.get('onboarding') === 'true';
+
+  return (
+    <>
+      <div className={showOnboarding ? 'blur-sm' : ''}>{children}</div>
+      {showOnboarding && <OnboardingWizard />}
+    </>
+  );
+}
 
 export default function DashboardLayout({
   children,
@@ -12,7 +27,11 @@ export default function DashboardLayout({
     <ProtectedRoute>
       <SidebarProvider>
         <AppSidebar />
-        <SidebarInset>{children}</SidebarInset>
+        <SidebarInset>
+          <React.Suspense fallback={<div>Loading...</div>}>
+            <OnboardingWrapper>{children}</OnboardingWrapper>
+          </React.Suspense>
+        </SidebarInset>
       </SidebarProvider>
     </ProtectedRoute>
   );

@@ -33,7 +33,8 @@ export default function SignupPage() {
     if (!auth) return;
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (user) {
-        router.push('/dashboard');
+        // Redirect to dashboard with onboarding flag
+        router.push('/dashboard?onboarding=true');
       }
     });
 
