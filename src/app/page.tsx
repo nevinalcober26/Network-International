@@ -1,48 +1,103 @@
-import { AppSidebar } from '@/components/dashboard/app-sidebar';
-import { DashboardHeader } from '@/components/dashboard/header';
-import { LatestUpdates } from '@/components/dashboard/latest-updates';
-import { MenuItemsTable } from '@/components/dashboard/menu-items-table';
-import { OrderAnalyticsChart } from '@/components/dashboard/order-analytics-chart';
-import { RecentActivityHeader } from '@/components/dashboard/recent-activity-header';
-import { StatCards } from '@/components/dashboard/stat-cards';
-import { WelcomeBanner } from '@/components/dashboard/welcome-banner';
-import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar';
-import { InventoryAlerts } from '@/components/dashboard/inventory-alerts';
-import { PerformanceSummary } from '@/components/dashboard/performance-summary';
-import { PopularItems } from '@/components/dashboard/popular-items';
+'use client';
+import { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { EMenuIcon } from '@/components/dashboard/app-sidebar';
+import { useAuth } from '@/firebase';
+import {
+  initiateEmailSignUp,
+  initiateEmailSignIn,
+} from '@/firebase/non-blocking-login';
+import { useRouter } from 'next/navigation';
+import { useUser } from '@/firebase';
 
-export default function Home() {
+export default function LoginPage() {
+  const auth = useAuth();
+  const router = useRouter();
+  const { user, isUserLoading } = useUser();
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+
+  if (isUserLoading) {
+    return <div>Loading...</div>;
+  }
+
+  if (user) {
+    router.push('/dashboard');
+    return null;
+  }
+
+  const handleSignUp = async () => {
+    try {
+      initiateEmailSignUp(auth, email, password);
+    } catch (e: any) {
+      setError(e.message);
+    }
+  };
+
+  const handleSignIn = async () => {
+    try {
+      initiateEmailSignIn(auth, email, password);
+    } catch (e: any) {
+      setError(e.message);
+    }
+  };
+
   return (
-    <SidebarProvider>
-      <AppSidebar />
-      <SidebarInset>
-        <DashboardHeader />
-        <main className="p-4 sm:p-6 lg:p-8 space-y-6">
-          <WelcomeBanner />
-          <StatCards />
-
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div className="lg:col-span-2 space-y-6">
-              <OrderAnalyticsChart />
-              <MenuItemsTable />
-            </div>
-            <div className="space-y-6">
-              <PopularItems />
-            </div>
+    <div className="flex items-center justify-center min-h-screen bg-background">
+      <Card className="w-full max-w-sm">
+        <CardHeader className="space-y-1">
+          <div className="flex justify-center mb-4">
+            <EMenuIcon />
           </div>
-          
-          <RecentActivityHeader />
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div className="lg:col-span-2">
-              <LatestUpdates />
-            </div>
-            <div className="space-y-6">
-              <InventoryAlerts />
-              <PerformanceSummary />
-            </div>
+          <CardTitle className="text-2xl text-center">Login</CardTitle>
+          <CardDescription className="text-center">
+            Enter your email below to login to your account
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="grid gap-4">
+          <div className="grid gap-2">
+            <Label htmlFor="email">Email</Label>
+            <Input
+              id="email"
+              type="email"
+              placeholder="m@example.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+            />
           </div>
-        </main>
-      </SidebarInset>
-    </SidebarProvider>
+          <div className="grid gap-2">
+            <Label htmlFor="password">Password</Label>
+            <Input
+              id="password"
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+            />
+          </div>
+          {error && <p className="text-red-500 text-sm">{error}</p>}
+        </CardContent>
+        <CardFooter className="flex flex-col gap-2">
+          <Button className="w-full" onClick={handleSignIn}>
+            Sign in
+          </Button>
+          <Button variant="outline" className="w-full" onClick={handleSignUp}>
+            Sign up
+          </Button>
+        </CardFooter>
+      </Card>
+    </div>
   );
 }
