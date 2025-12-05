@@ -12,8 +12,26 @@ import {
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
-import { Zap, Edit, Clock, HelpCircle, ArrowRight } from 'lucide-react';
+import {
+  Zap,
+  Edit,
+  Clock,
+  HelpCircle,
+  ArrowRight,
+  Building,
+  Upload,
+  Palette,
+} from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { Input } from '../ui/input';
+import { Label } from '../ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '../ui/select';
 
 const steps = [
   'Welcome',
@@ -24,6 +42,104 @@ const steps = [
   'Publish',
   'QR',
 ];
+
+const BusinessProfileStep = ({
+  onNext,
+  onSkip,
+}: {
+  onNext: () => void;
+  onSkip: () => void;
+}) => (
+  <>
+    <DialogHeader className="text-left">
+      <DialogTitle className="text-2xl font-bold">
+        Tell us about your business
+      </DialogTitle>
+      <DialogDescription>
+        This information will be used to create your public profile and legal
+        documents.
+      </DialogDescription>
+    </DialogHeader>
+    <div className="space-y-6 py-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="space-y-2">
+          <Label htmlFor="business-name">Business Name</Label>
+          <Input id="business-name" placeholder="e.g., The Gourmet Place" />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="business-category">Business Category</Label>
+          <Select>
+            <SelectTrigger id="business-category">
+              <SelectValue placeholder="Select a category" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="restaurant">Restaurant</SelectItem>
+              <SelectItem value="cafe">Cafe</SelectItem>
+              <SelectItem value="hotel">Hotel</SelectItem>
+              <SelectItem value="bar">Bar</SelectItem>
+              <SelectItem value="other">Other</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="space-y-2">
+          <Label htmlFor="country">Country</Label>
+          <Select>
+            <SelectTrigger id="country">
+              <SelectValue placeholder="Select a country" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="us">United States</SelectItem>
+              <SelectItem value="ca">Canada</SelectItem>
+              <SelectItem value="gb">United Kingdom</SelectItem>
+              <SelectItem value="au">Australia</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="city">City or Area</Label>
+          <Input id="city" placeholder="e.g., New York" />
+        </div>
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
+        <div className="space-y-2">
+          <Label htmlFor="logo">Business Logo (Optional)</Label>
+          <div className="flex items-center gap-4">
+            <div className="flex items-center justify-center w-24 h-24 bg-muted rounded-lg">
+              <Upload className="h-8 w-8 text-muted-foreground" />
+            </div>
+            <Button variant="outline" asChild>
+              <label htmlFor="logo-upload" className="cursor-pointer">
+                Upload Logo
+                <Input id="logo-upload" type="file" className="sr-only" />
+              </label>
+            </Button>
+          </div>
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="brand-color">Brand Primary Color (Optional)</Label>
+          <div className="flex items-center gap-2">
+            <Input type="color" id="brand-color" className="w-12 h-12 p-1" defaultValue="#18B4A6" />
+             <p className="text-sm text-muted-foreground">
+              This will be used for buttons and highlights.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+    <DialogFooter className="flex-col-reverse sm:flex-row sm:justify-end w-full">
+      <div className="flex items-center gap-4">
+        <Button variant="ghost" onClick={onSkip}>
+          Save & Exit
+        </Button>
+        <Button onClick={onNext}>
+          Next <ArrowRight className="ml-2 h-4 w-4" />
+        </Button>
+      </div>
+    </DialogFooter>
+  </>
+);
 
 export function OnboardingWizard() {
   const [currentStep, setCurrentStep] = useState(0);
@@ -38,7 +154,7 @@ export function OnboardingWizard() {
   if (!isOpen) {
     return null;
   }
-  
+
   const progressPercentage = ((currentStep + 1) / steps.length) * 100;
 
   const WelcomeStep = () => (
@@ -86,7 +202,7 @@ export function OnboardingWizard() {
         </Card>
       </div>
       <DialogFooter className="flex-col-reverse sm:flex-row sm:justify-between w-full">
-         <Button variant="ghost" className="flex items-center gap-2">
+        <Button variant="ghost" className="flex items-center gap-2">
           <HelpCircle className="h-4 w-4" />
           Need Help?
         </Button>
@@ -106,14 +222,38 @@ export function OnboardingWizard() {
     switch (currentStep) {
       case 0:
         return <WelcomeStep />;
+      case 1:
+        return (
+          <BusinessProfileStep
+            onNext={() => setCurrentStep(currentStep + 1)}
+            onSkip={handleClose}
+          />
+        );
       default:
         return (
-          <div className='text-center p-8'>
-            <p className='text-lg'>Step {currentStep + 1} placeholder.</p>
-            <Button onClick={() => setCurrentStep(currentStep + 1)}>Next</Button>
-            {currentStep > 0 && <Button variant="outline" onClick={() => setCurrentStep(currentStep - 1)}>Back</Button>}
+          <div className="text-center p-8">
+            <p className="text-lg">Step {currentStep + 1} placeholder.</p>
+            <Button
+              onClick={() => {
+                if (currentStep < steps.length - 1) {
+                  setCurrentStep(currentStep + 1);
+                } else {
+                  handleClose();
+                }
+              }}
+            >
+              {currentStep === steps.length - 1 ? 'Finish' : 'Next'}
+            </Button>
+            {currentStep > 0 && (
+              <Button
+                variant="outline"
+                onClick={() => setCurrentStep(currentStep - 1)}
+              >
+                Back
+              </Button>
+            )}
           </div>
-        )
+        );
     }
   };
 
@@ -125,9 +265,9 @@ export function OnboardingWizard() {
           <div className="w-full mb-8">
             <div className="flex justify-between mb-2">
               {steps.map((step, index) => (
-                <div key={step} className="text-center">
+                <div key={step} className="text-center w-full">
                   <div
-                    className={`text-sm font-medium ${
+                    className={`text-xs md:text-sm font-medium ${
                       index <= currentStep
                         ? 'text-primary'
                         : 'text-muted-foreground'
@@ -143,10 +283,8 @@ export function OnboardingWizard() {
               You&apos;re {Math.round(progressPercentage)}% done!
             </div>
           </div>
-          
-          <div className="flex-grow">
-            {renderStep()}
-          </div>
+
+          <div className="flex-grow">{renderStep()}</div>
         </div>
       </DialogContent>
     </Dialog>
