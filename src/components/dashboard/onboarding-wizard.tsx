@@ -21,6 +21,8 @@ import {
   Building,
   Upload,
   Palette,
+  GripVertical,
+  Plus,
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { Input } from '../ui/input';
@@ -32,6 +34,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '../ui/select';
+import { Badge } from '../ui/badge';
+import Image from 'next/image';
 
 const steps = [
   'Welcome',
@@ -141,6 +145,128 @@ const BusinessProfileStep = ({
   </>
 );
 
+const MenuStep = ({
+  onNext,
+  onBack,
+  onSkip,
+}: {
+  onNext: () => void;
+  onBack: () => void;
+  onSkip: () => void;
+}) => {
+  const categories = [
+    { name: 'Starters', items: 5 },
+    { name: 'Main Courses', items: 12 },
+    { name: 'Desserts', items: 4 },
+    { name: 'Drinks', items: 8 },
+  ];
+  const products = [
+    {
+      name: 'Margherita Pizza',
+      price: '$12.50',
+      image: 'https://picsum.photos/seed/1/100/100',
+    },
+    {
+      name: 'Spaghetti Carbonara',
+      price: '$14.00',
+      image: 'https://picsum.photos/seed/2/100/100',
+    },
+    {
+      name: 'Caesar Salad',
+      price: '$9.00',
+      image: 'https://picsum.photos/seed/3/100/100',
+    },
+    {
+      name: 'Tiramisu',
+      price: '$7.50',
+      image: 'https://picsum.photos/seed/4/100/100',
+    },
+  ];
+
+  return (
+    <>
+      <DialogHeader className="text-left">
+        <DialogTitle className="text-2xl font-bold">
+          Build Your Menu
+        </DialogTitle>
+        <DialogDescription>
+          Add categories and items to your menu. You can drag and drop to reorder them.
+        </DialogDescription>
+      </DialogHeader>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 py-6 min-h-[400px]">
+        {/* Categories Column */}
+        <div className="md:col-span-1 bg-muted/50 rounded-lg p-4 flex flex-col">
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="font-semibold">Categories</h3>
+            <Button variant="ghost" size="sm">
+              <Plus className="h-4 w-4 mr-2" /> Add
+            </Button>
+          </div>
+          <div className="space-y-2">
+            {categories.map((cat, index) => (
+              <Card key={cat.name} className={`p-3 flex items-center justify-between cursor-pointer ${index === 1 ? 'bg-primary/20 border-primary' : 'bg-card'}`}>
+                <div className="flex items-center gap-2">
+                  <GripVertical className="h-5 w-5 text-muted-foreground cursor-grab" />
+                  <div>
+                    <p className="font-medium text-sm">{cat.name}</p>
+                    <p className="text-xs text-muted-foreground">{cat.items} items</p>
+                  </div>
+                </div>
+                <Badge variant="secondary">{cat.items}</Badge>
+              </Card>
+            ))}
+          </div>
+        </div>
+
+        {/* Products Column */}
+        <div className="md:col-span-2 p-4 rounded-lg border">
+          <div className="flex justify-between items-center mb-4">
+            <div>
+              <h3 className="font-semibold text-lg">Main Courses</h3>
+              <p className="text-sm text-muted-foreground">Add or reorder items in this category.</p>
+            </div>
+            <Button size="sm">
+              <Plus className="h-4 w-4 mr-2" /> Add Item
+            </Button>
+          </div>
+          <div className="space-y-2">
+            {products.map((product) => (
+              <Card key={product.name} className="p-3 flex items-center gap-4 cursor-pointer hover:bg-muted/50">
+                 <GripVertical className="h-5 w-5 text-muted-foreground cursor-grab" />
+                <Image
+                  src={product.image}
+                  alt={product.name}
+                  width={48}
+                  height={48}
+                  className="rounded-md"
+                />
+                <div className="flex-grow">
+                  <p className="font-medium">{product.name}</p>
+                </div>
+                <p className="font-semibold">{product.price}</p>
+              </Card>
+            ))}
+          </div>
+        </div>
+      </div>
+      <DialogFooter className="flex-col-reverse sm:flex-row sm:justify-between w-full">
+        <Button variant="ghost" onClick={onBack}>
+          Back
+        </Button>
+        <div className="flex items-center gap-4">
+          <Button variant="link" onClick={onSkip}>
+            I&apos;ll do this later
+          </Button>
+          <Button onClick={onNext}>
+            Continue to Design <ArrowRight className="ml-2 h-4 w-4" />
+          </Button>
+        </div>
+      </DialogFooter>
+    </>
+  );
+};
+
+
 export function OnboardingWizard() {
   const [currentStep, setCurrentStep] = useState(0);
   const [isOpen, setIsOpen] = useState(true);
@@ -229,29 +355,39 @@ export function OnboardingWizard() {
             onSkip={handleClose}
           />
         );
+      case 3:
+        return (
+          <MenuStep
+            onNext={() => setCurrentStep(currentStep + 1)}
+            onBack={() => setCurrentStep(currentStep - 1)}
+            onSkip={handleClose}
+          />
+        );
       default:
         return (
           <div className="text-center p-8">
-            <p className="text-lg">Step {currentStep + 1} placeholder.</p>
-            <Button
-              onClick={() => {
-                if (currentStep < steps.length - 1) {
-                  setCurrentStep(currentStep + 1);
-                } else {
-                  handleClose();
-                }
-              }}
-            >
-              {currentStep === steps.length - 1 ? 'Finish' : 'Next'}
-            </Button>
-            {currentStep > 0 && (
+            <p className="text-lg">Step {currentStep + 1} ({steps[currentStep]}) placeholder.</p>
+            <div className="flex justify-center gap-4 mt-4">
+              {currentStep > 0 && (
+                <Button
+                  variant="outline"
+                  onClick={() => setCurrentStep(currentStep - 1)}
+                >
+                  Back
+                </Button>
+              )}
               <Button
-                variant="outline"
-                onClick={() => setCurrentStep(currentStep - 1)}
+                onClick={() => {
+                  if (currentStep < steps.length - 1) {
+                    setCurrentStep(currentStep + 1);
+                  } else {
+                    handleClose();
+                  }
+                }}
               >
-                Back
+                {currentStep === steps.length - 1 ? 'Finish' : 'Next'}
               </Button>
-            )}
+            </div>
           </div>
         );
     }
