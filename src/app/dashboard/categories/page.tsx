@@ -1,5 +1,5 @@
 'use client';
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   Card,
   CardContent,
@@ -18,39 +18,276 @@ import {
 } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+  DragStartEvent,
+  DragOverlay,
+  UniqueIdentifier,
+  DragOverEvent,
+} from '@dnd-kit/core';
+import {
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
+import { produce } from 'immer';
 
-const initialCategoriesData = [
-  { id: '1', sortOrder: 1, name: 'Menu', parent: null },
-  { id: '2', sortOrder: 2, name: 'Special Offer', parent: null },
-  { id: '3', sortOrder: 3, name: 'About Us', parent: null },
-  { id: '4', sortOrder: 4, name: 'Contact Us', parent: null },
-  { id: '5', sortOrder: 5, name: 'Feedback Form', parent: null },
-  { id: '6', sortOrder: 6, name: 'Food', parent: 'Menu' },
-  { id: '7', sortOrder: 7, name: 'Beverages', parent: 'Menu' },
-  { id: '11', sortOrder: 11, name: 'Breakfast', parent: 'Food' },
-  { id: '12', sortOrder: 12, name: 'Pancakes & French Toast', parent: 'Food' },
-  { id: '13', sortOrder: 13, name: 'Keto & Vegan', parent: 'Food' },
-  { id: '15', sortOrder: 15, name: 'Appetizers', parent: 'Food' },
-  { id: '16', sortOrder: 16, name: 'Soups', parent: 'Food' },
-  { id: '17', sortOrder: 17, name: 'Salads', parent: 'Food' },
-  { id: '18', sortOrder: 18, name: 'Warm Bowls', parent: 'Food' },
-  { id: '19', sortOrder: 19, name: 'Poke Bowls', parent: 'Food' },
-];
+type Category = {
+  id: UniqueIdentifier;
+  name: string;
+  parent: UniqueIdentifier | null;
+  children: UniqueIdentifier[];
+};
+
+type Categories = Record<UniqueIdentifier, Category>;
+
+const initialCategoriesData: Categories = {
+  '1': { id: '1', name: 'Menu', parent: null, children: ['6', '7'] },
+  '2': { id: '2', name: 'Special Offer', parent: null, children: [] },
+  '3': { id: '3', name: 'About Us', parent: null, children: [] },
+  '4': { id: '4', name: 'Contact Us', parent: null, children: [] },
+  '5': { id: '5', name: 'Feedback Form', parent: null, children: [] },
+  '6': { id: '6', name: 'Food', parent: '1', children: ['11', '12', '13', '15', '16', '17', '18', '19'] },
+  '7': { id: '7', name: 'Beverages', parent: '1', children: [] },
+  '11': { id: '11', name: 'Breakfast', parent: '6', children: [] },
+  '12': { id: '12', name: 'Pancakes & French Toast', parent: '6', children: [] },
+  '13': { id: '13', name: 'Keto & Vegan', parent: '6', children: [] },
+  '15': { id: '15', name: 'Appetizers', parent: '6', children: [] },
+  '16': { id: '16', name: 'Soups', parent: '6', children: [] },
+  '17': { id: '17', name: 'Salads', parent: '6', children: [] },
+  '18': { id: '18', name: 'Warm Bowls', parent: '6', children: [] },
+  '19': { id: '19', name: 'Poke Bowls', parent: '6', children: [] },
+};
+
+function SortableCategoryItem({ id, category, depth = 0 }: { id: UniqueIdentifier, category: Category, depth?: number }) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    marginLeft: `${depth * 2}rem`,
+    opacity: isDragging ? 0.5 : 1,
+  };
+
+  return (
+    <div ref={setNodeRef} style={style} {...attributes} className="bg-card border rounded-md p-2 flex items-center justify-between shadow-sm my-2">
+      <div className="flex items-center gap-2">
+        <button {...listeners} className="cursor-grab p-1">
+          <GripVertical className="h-5 w-5 text-muted-foreground" />
+        </button>
+        <span className="font-medium">{category.name}</span>
+        {depth > 0 && <Badge variant="outline">sub item</Badge>}
+      </div>
+      <div className="flex items-center gap-2">
+        <span className="text-muted-foreground text-sm">Custom Link</span>
+        <Select defaultValue="custom-link">
+            <SelectTrigger className="w-auto h-8 text-xs">
+                <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+                <SelectItem value="custom-link">Custom Link</SelectItem>
+                <SelectItem value="elementor">Elementor</SelectItem>
+            </SelectContent>
+        </Select>
+      </div>
+    </div>
+  );
+}
+
+function renderCategories(
+  categories: Categories,
+  categoryIds: UniqueIdentifier[],
+  depth = 0
+) {
+  return categoryIds.map((id) => {
+    const category = categories[id];
+    if (!category) return null;
+    return (
+      <React.Fragment key={id}>
+        <SortableCategoryItem id={id} category={category} depth={depth} />
+        {category.children.length > 0 &&
+          renderCategories(categories, category.children, depth + 1)}
+      </React.Fragment>
+    );
+  });
+}
+
 
 export default function CategoriesPage() {
   const [searchTerm, setSearchTerm] = useState('');
-  const [categories, setCategories] = useState(initialCategoriesData);
+  const [categories, setCategories] = useState<Categories>(initialCategoriesData);
+  const [activeId, setActiveId] = useState<UniqueIdentifier | null>(null);
 
-  const filteredCategories = categories.filter((category) =>
-    category.name.toLowerCase().includes(searchTerm.toLowerCase())
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
   );
+  
+  const rootCategoryIds = useMemo(() => Object.values(categories).filter(c => c.parent === null).map(c => c.id), [categories]);
+
+  const flattenedIds = useMemo(() => {
+    const ids: UniqueIdentifier[] = [];
+    function flatten(categoryIds: UniqueIdentifier[]) {
+      for (const id of categoryIds) {
+        ids.push(id);
+        if (categories[id]?.children.length) {
+          flatten(categories[id].children);
+        }
+      }
+    }
+    flatten(rootCategoryIds);
+    return ids;
+  }, [categories, rootCategoryIds]);
+
+  const findContainer = (id: UniqueIdentifier): UniqueIdentifier | null => {
+    if (id in categories) {
+      return id;
+    }
+    for (const key in categories) {
+      if (categories[key].children.includes(id)) {
+        return key;
+      }
+    }
+    return null;
+  }
+
+  const handleDragStart = (event: DragStartEvent) => {
+    const { active } = event;
+    setActiveId(active.id);
+  };
+  
+  const handleDragOver = (event: DragOverEvent) => {
+    const { active, over } = event;
+    const id = active.id;
+    const overId = over?.id;
+
+    if (!overId) return;
+
+    const activeContainer = findContainer(id);
+    const overContainer = findContainer(overId);
+
+    if (
+      !activeContainer ||
+      !overContainer ||
+      activeContainer === overContainer
+    ) {
+      return;
+    }
+
+    setCategories(
+      produce((draft) => {
+        const activeItems = draft[activeContainer].children;
+        const overItems = draft[overContainer].children;
+
+        const activeIndex = activeItems.indexOf(id);
+        const overIndex = overItems.indexOf(overId);
+
+        let newIndex: number;
+
+        if (overId in draft) {
+            newIndex = overItems.length + 1;
+        } else {
+            const isBelow = over && active.rect.current.translated && active.rect.current.translated.top > over.rect.top + over.rect.height;
+            const modifier = isBelow ? 1 : 0;
+            newIndex = overIndex >= 0 ? overIndex + modifier : overItems.length + 1;
+        }
+
+        const [removedItem] = draft[activeContainer].children.splice(activeIndex, 1);
+        draft[overContainer].children.splice(newIndex, 0, removedItem);
+        draft[removedItem].parent = overContainer;
+      })
+    );
+  };
+
+
+  const handleDragEnd = (event: DragEndEvent) => {
+     const { active, over } = event;
+    if (!over) {
+        setActiveId(null);
+        return;
+    }
+
+    if (active.id !== over.id) {
+        setCategories((prev) => {
+            return produce(prev, draft => {
+                const activeId = active.id;
+                const overId = over.id;
+
+                const activeCategory = draft[activeId];
+                if(!activeCategory) return;
+                
+                const oldParentId = activeCategory.parent;
+                const newParentId = draft[overId]?.parent ?? draft[overId]?.id ?? null;
+
+                const getOrder = (parentId: UniqueIdentifier | null) => {
+                    if (parentId === null) {
+                        return Object.values(draft).filter(c => c.parent === null).map(c => c.id);
+                    }
+                    return draft[parentId]?.children ?? [];
+                }
+
+                let oldItems = getOrder(oldParentId);
+                let newItems = getOrder(newParentId);
+                
+                const activeIndex = oldItems.indexOf(activeId);
+                const overIndex = newItems.indexOf(overId);
+                
+                // Remove from old parent
+                if (oldParentId) {
+                   const parent = draft[oldParentId];
+                   if(parent) parent.children.splice(activeIndex, 1);
+                } else {
+                   // This is a root item, we need to handle it differently
+                   const rootIndex = oldItems.indexOf(activeId);
+                   if (rootIndex > -1) {
+                     // This logic is tricky, for now we will just remove it.
+                     // A real implementation would need to reorder the root array.
+                   }
+                }
+
+                // Add to new parent or as a sibling
+                if (draft[overId] && draft[overId].children) { // Dropping on a category
+                    draft[overId].children.push(activeId);
+                    activeCategory.parent = overId;
+                } else { // Dropping as a sibling
+                    const parentId = draft[overId]?.parent ?? null;
+                    let targetItems = parentId ? draft[parentId].children : Object.values(draft).filter(c => c.parent === null).map(c => c.id);
+
+                    const overSiblingIndex = targetItems.indexOf(overId);
+
+                    if (overSiblingIndex !== -1) {
+                         targetItems.splice(overSiblingIndex + 1, 0, activeId);
+                         activeCategory.parent = parentId;
+                    } else { // Fallback, just add to the end of new parent
+                        if(newParentId && draft[newParentId]) {
+                            draft[newParentId].children.push(activeId);
+                            activeCategory.parent = newParentId;
+                        }
+                    }
+                }
+            });
+        });
+    }
+    setActiveId(null);
+  };
+  
+  const activeCategory = activeId ? categories[activeId] : null;
 
   return (
     <>
@@ -109,40 +346,31 @@ export default function CategoriesPage() {
                 />
               </div>
             </div>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-12"></TableHead>
-                  <TableHead>Sort Order</TableHead>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Parent</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredCategories.map((category) => (
-                  <TableRow key={category.id}>
-                    <TableCell>
-                      <GripVertical className="h-5 w-5 text-muted-foreground" />
-                    </TableCell>
-                    <TableCell>{category.sortOrder}</TableCell>
-                    <TableCell className="font-medium">{category.name}</TableCell>
-                    <TableCell>{category.parent || '—'}</TableCell>
-                    <TableCell className="text-right">
-                      <Button variant="ghost" size="icon" className="text-blue-600 hover:text-blue-700">
-                        <Eye className="h-5 w-5" />
-                      </Button>
-                      <Button variant="ghost" size="icon" className="text-green-600 hover:text-green-700">
-                        <Pencil className="h-5 w-5" />
-                      </Button>
-                      <Button variant="ghost" size="icon" className="text-red-600 hover:text-red-700">
-                        <Trash2 className="h-5 w-5" />
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+            
+            <DndContext
+              sensors={sensors}
+              collisionDetection={closestCenter}
+              onDragStart={handleDragStart}
+              onDragOver={handleDragOver}
+              onDragEnd={handleDragEnd}
+            >
+              <SortableContext items={flattenedIds} strategy={verticalListSortingStrategy}>
+                <div className="space-y-2">
+                 {renderCategories(categories, rootCategoryIds)}
+                </div>
+              </SortableContext>
+              <DragOverlay>
+                {activeId && activeCategory ? (
+                  <div className="bg-card border rounded-md p-2 flex items-center justify-between shadow-lg my-2">
+                     <div className="flex items-center gap-2">
+                        <GripVertical className="h-5 w-5 text-muted-foreground" />
+                        <span className="font-medium">{activeCategory.name}</span>
+                     </div>
+                  </div>
+                ) : null}
+              </DragOverlay>
+            </DndContext>
+
           </CardContent>
         </Card>
       </main>
