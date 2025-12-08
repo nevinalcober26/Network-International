@@ -289,7 +289,7 @@ function BoardColumn({
             {isAddingItem ? (
               <div className="w-full space-y-2">
                 <Textarea 
-                  placeholder="Enter a title for this card..."
+                  placeholder="Enter a title for this category"
                   rows={3}
                   value={newItemName}
                   onChange={(e) => setNewItemName(e.target.value)}
@@ -486,63 +486,66 @@ export default function CategoriesPage() {
     
     const isColumnDrag = active.data.current?.type === 'Column';
 
-    if (isColumnDrag && findColumn(overId)) {
-        setBoard(produce(draft => {
-            const oldIndex = draft.findIndex(c => c.id === activeId);
-            const newIndex = draft.findIndex(c => c.id === overId);
-            if (oldIndex !== -1 && newIndex !== -1) {
-              const [movedColumn] = draft.splice(oldIndex, 1);
-              draft.splice(newIndex, 0, movedColumn);
-            }
-        }));
-        return;
+    if (isColumnDrag) {
+      setBoard(produce(draft => {
+        const oldIndex = draft.findIndex(c => c.id === activeId);
+        const newIndex = draft.findIndex(c => c.id === overId);
+        
+        // Check if overId is a column ID before proceeding
+        const overColumn = findColumn(overId);
+        if (overColumn && oldIndex !== -1 && newIndex !== -1) {
+            const [movedColumn] = draft.splice(oldIndex, 1);
+            draft.splice(newIndex, 0, movedColumn);
+        }
+      }));
+      return;
     }
+
 
     const isItemDrag = active.data.current?.type === 'Item';
 
     if(isItemDrag) {
       setBoard(produce(draft => {
+        // Find active item and its original location
         const { item: activeItem, parent: activeParent, column: activeColumn } = findItemData(activeId);
         
         if (!activeItem || !activeParent || !activeColumn) return;
 
-        // Find where the active item is and remove it
-        const activeIndex = activeParent.findIndex(i => i.id === activeId);
-        activeParent.splice(activeIndex, 1);
-        
         // --- Find Drop Target ---
+        const { item: overItem, parent: overParent, column: overColumn, itemIndexInParent: overIndex } = findItemData(overId);
 
-        // Case 1: Drop over a column
-        const overColumn = draft.find(c => c.id === overId);
-        if (overColumn) {
-          overColumn.items.push(activeItem);
-          return;
+        // Case 1: Dropping over a column (but not on an item)
+        const overColumnContainer = findColumn(overId);
+        if (overColumnContainer) {
+            const activeIndex = activeParent.findIndex(i => i.id === activeId);
+            activeParent.splice(activeIndex, 1);
+            overColumnContainer.items.push(activeItem);
+            return;
         }
 
-        // Case 2: Drop over another item
-        const { item: overItem, parent: overParent, column: overItemColumn, itemIndexInParent: overIndex } = findItemData(overId);
-        
-        if (overItem) {
+        // If we are dropping over an item
+        if (overItem && overColumn) {
+          // Remove active item from its original position first
+          const activeIndex = activeParent.findIndex(i => i.id === activeId);
+          activeParent.splice(activeIndex, 1);
+          
           // Logic to nest inside another item
           if (!overItem.children) {
               overItem.children = [];
           }
           overItem.children.unshift(activeItem);
+        } else if (overParent && overColumn) {
+            // Case 2: Reorder within a list or move to another list
+            const activeIndex = activeParent.findIndex(i => i.id === activeId);
+            activeParent.splice(activeIndex, 1);
+            
+            const overIndex = overParent.findIndex(i => i.id === overId);
+            overParent.splice(overIndex + 1, 0, activeItem);
         } else {
-            // Case 3: Reorder within a list (or move to a different column's root)
-             const targetColumn = draft.find(c => c.items.some(item => findItemRecursive(overId, [item]).item));
-             if (targetColumn) {
-                const { parent: targetParent } = findItemRecursive(overId, targetColumn.items);
-                if (targetParent) {
-                    const overIndex = targetParent.findIndex(i => i.id === overId);
-                    targetParent.splice(overIndex + 1, 0, activeItem);
-                }
-             } else {
-                 // Fallback to active column if something goes wrong
-                 const originalCol = draft.find(c => c.id === activeColumn.id);
-                 if (originalCol) {
-                    originalCol.items.push(activeItem);
-                 }
+             // Fallback to active column if something goes wrong
+             const originalCol = draft.find(c => c.id === activeColumn.id);
+             if (originalCol && !findItemData(activeId).item) { // Ensure it wasn't re-added
+                originalCol.items.push(activeItem);
              }
         }
       }));
