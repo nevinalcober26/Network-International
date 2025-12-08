@@ -24,31 +24,119 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Upload } from 'lucide-react';
 import type { Column, Item } from './page';
 import Image from 'next/image';
+import { UniqueIdentifier } from '@dnd-kit/core';
 
 interface CategorySheetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   category: Column | Item | null;
+  board: Column[];
 }
+
+const findItem = (
+  items: Item[],
+  itemId: UniqueIdentifier
+): { item: Item | null; parentId: UniqueIdentifier | null } => {
+  for (const item of items) {
+    if (item.id === itemId) return { item, parentId: null }; // This is a top-level item, parent is column
+    if (item.children) {
+      const found = findItem(item.children, itemId);
+      if (found.item) {
+        // If found in children, the current item is the parent
+        if (found.parentId === null) {
+          return { item: found.item, parentId: item.id };
+        }
+        return found;
+      }
+    }
+  }
+  return { item: null, parentId: null };
+};
+
+const findParent = (
+  board: Column[],
+  itemId: UniqueIdentifier
+): UniqueIdentifier | null => {
+  for (const column of board) {
+    if (column.items.some((item) => item.id === itemId)) {
+      return column.id;
+    }
+    for (const item of column.items) {
+      const { item: foundItem, parentId } = findItem(item.children, itemId);
+      if (foundItem) {
+        return parentId ?? item.id;
+      }
+    }
+  }
+  return null;
+};
+
+const getCategoryOptions = (
+  board: Column[],
+  currentCategoryId?: UniqueIdentifier
+) => {
+  const options: { label: string; value: string; depth: number }[] = [];
+
+  const traverseItems = (items: Item[], depth: number) => {
+    for (const item of items) {
+      // Exclude the current category and its children from being a parent option
+      if (item.id === currentCategoryId) continue;
+
+      options.push({
+        label: item.name,
+        value: item.id.toString(),
+        depth: depth,
+      });
+      if (item.children) {
+        traverseItems(item.children, depth + 1);
+      }
+    }
+  };
+
+  board.forEach((column) => {
+    options.push({
+      label: column.name,
+      value: column.id.toString(),
+      depth: 0,
+    });
+    traverseItems(column.items, 1);
+  });
+
+  return options;
+};
 
 export function CategorySheet({
   open,
   onOpenChange,
   category,
+  board,
 }: CategorySheetProps) {
   const [disableLink, setDisableLink] = useState(false);
   const [enableSpecial, setEnableSpecial] = useState(false);
+  const [parentValue, setParentValue] = useState<string | undefined>(undefined);
 
   useEffect(() => {
-    // When the sheet opens or the category changes, reset the state
-    // In a real app, you would set this based on the category's properties
-    if (category) {
+    if (category && open) {
+      // In a real app, you would set this based on the category's properties
       setDisableLink(false);
       setEnableSpecial(false);
+
+      if ('items' in category) {
+        // It's a column, it has no parent
+        setParentValue('none');
+      } else {
+        const parentId = findParent(board, category.id);
+        setParentValue(parentId ? parentId.toString() : 'none');
+      }
     }
-  }, [category, open]);
+  }, [category, open, board]);
 
   if (!category) return null;
+
+  const categoryOptions = getCategoryOptions(
+    board,
+    'items' in category ? undefined : category.id
+  );
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -82,14 +170,26 @@ export function CategorySheet({
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="parent">Parent</Label>
-                  <Select>
+                  <Select
+                    value={parentValue}
+                    onValueChange={setParentValue}
+                  >
                     <SelectTrigger id="parent">
                       <SelectValue placeholder="Select a parent category" />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="none">None</SelectItem>
-                      <SelectItem value="food">Food</SelectItem>
-                      <SelectItem value="beverages">Beverages</SelectItem>
+                      {categoryOptions.map((option) => (
+                        <SelectItem
+                          key={option.value}
+                          value={option.value}
+                        >
+                          <span style={{ paddingLeft: `${option.depth * 1.5}rem` }}>
+                            {option.depth > 0 && '↳ '}
+                            {option.label}
+                          </span>
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>
@@ -97,123 +197,180 @@ export function CategorySheet({
                   <Label>Image</Label>
                   <div className="flex items-center gap-6">
                     <div className="w-40 h-24 rounded-md border border-dashed flex items-center justify-center bg-muted">
-                        <Image src="https://picsum.photos/seed/menu/160/96" width={160} height={96} alt="Category image" className="rounded-md object-cover"/>
+                      <Image
+                        src="https://picsum.photos/seed/menu/160/96"
+                        width={160}
+                        height={96}
+                        alt="Category image"
+                        className="rounded-md object-cover"
+                      />
                     </div>
                     <div className="flex flex-col gap-2">
-                        <Button variant="outline" asChild>
-                           <label htmlFor="image-upload" className="cursor-pointer">
-                                <Upload className="mr-2 h-4 w-4" />
-                                Upload Image
-                                <Input id="image-upload" type="file" className="sr-only" />
-                            </label>
-                        </Button>
-                        <Button variant="ghost" className="text-destructive hover:text-destructive">Clear</Button>
-                        <p className="text-xs text-muted-foreground">Recommended: 900px x 500px</p>
+                      <Button variant="outline" asChild>
+                        <label
+                          htmlFor="image-upload"
+                          className="cursor-pointer"
+                        >
+                          <Upload className="mr-2 h-4 w-4" />
+                          Upload Image
+                          <Input
+                            id="image-upload"
+                            type="file"
+                            className="sr-only"
+                          />
+                        </label>
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        className="text-destructive hover:text-destructive"
+                      >
+                        Clear
+                      </Button>
+                      <p className="text-xs text-muted-foreground">
+                        Recommended: 900px x 500px
+                      </p>
                     </div>
                   </div>
                 </div>
               </TabsContent>
               <TabsContent value="display" className="p-6 space-y-6">
-                 <h3 className="font-medium text-lg">Display Settings</h3>
-                 <div className="flex items-center justify-between rounded-lg border p-4">
-                    <div className="space-y-0.5">
-                      <Label htmlFor="display-fullwidth">Display Fullwidth</Label>
-                      <p className="text-xs text-muted-foreground">If enabled, will display the category in fullwidth in the app.</p>
-                    </div>
-                    <Switch id="display-fullwidth" />
-                 </div>
-                 <div className="flex items-center justify-between rounded-lg border p-4">
-                    <div className="space-y-0.5">
-                      <Label htmlFor="hidden-title">Hidden Title</Label>
-                      <p className="text-xs text-muted-foreground">If enabled, category title will not be displayed.</p>
-                    </div>
-                    <Switch id="hidden-title" />
-                 </div>
-                 <div className="flex items-center justify-between rounded-lg border p-4">
-                    <div className="space-y-0.5">
-                      <Label htmlFor="hidden-image">Hidden Image</Label>
-                      <p className="text-xs text-muted-foreground">If enabled, category image will not be displayed.</p>
-                    </div>
-                    <Switch id="hidden-image" />
-                 </div>
-                 <div className="flex items-center justify-between rounded-lg border p-4">
-                    <div className="space-y-0.5">
-                      <Label htmlFor="card-shadow">Card Shadow</Label>
-                      <p className="text-xs text-muted-foreground">If enabled, the category card will display with shadow.</p>
-                    </div>
-                    <Switch id="card-shadow" />
-                 </div>
+                <h3 className="font-medium text-lg">Display Settings</h3>
+                <div className="flex items-center justify-between rounded-lg border p-4">
+                  <div className="space-y-0.5">
+                    <Label htmlFor="display-fullwidth">
+                      Display Fullwidth
+                    </Label>
+                    <p className="text-xs text-muted-foreground">
+                      If enabled, will display the category in fullwidth in the
+                      app.
+                    </p>
+                  </div>
+                  <Switch id="display-fullwidth" />
+                </div>
+                <div className="flex items-center justify-between rounded-lg border p-4">
+                  <div className="space-y-0.5">
+                    <Label htmlFor="hidden-title">Hidden Title</Label>
+                    <p className="text-xs text-muted-foreground">
+                      If enabled, category title will not be displayed.
+                    </p>
+                  </div>
+                  <Switch id="hidden-title" />
+                </div>
+                <div className="flex items-center justify-between rounded-lg border p-4">
+                  <div className="space-y-0.5">
+                    <Label htmlFor="hidden-image">Hidden Image</Label>
+                    <p className="text-xs text-muted-foreground">
+                      If enabled, category image will not be displayed.
+                    </p>
+                  </div>
+                  <Switch id="hidden-image" />
+                </div>
+                <div className="flex items-center justify-between rounded-lg border p-4">
+                  <div className="space-y-0.5">
+                    <Label htmlFor="card-shadow">Card Shadow</Label>
+                    <p className="text-xs text-muted-foreground">
+                      If enabled, the category card will display with shadow.
+                    </p>
+                  </div>
+                  <Switch id="card-shadow" />
+                </div>
               </TabsContent>
               <TabsContent value="advanced" className="p-6 space-y-6">
                 <h3 className="font-medium text-lg">Visibility</h3>
                 <div className="flex items-center justify-between rounded-lg border p-4">
-                    <div className="space-y-0.5">
-                        <Label htmlFor="hidden">Hidden</Label>
-                        <p className="text-xs text-muted-foreground">If enabled, this category will be hidden and not displayed in the app.</p>
-                    </div>
-                    <Switch id="hidden" />
+                  <div className="space-y-0.5">
+                    <Label htmlFor="hidden">Hidden</Label>
+                    <p className="text-xs text-muted-foreground">
+                      If enabled, this category will be hidden and not
+                      displayed in the app.
+                    </p>
+                  </div>
+                  <Switch id="hidden" />
                 </div>
 
                 <div className="rounded-lg border p-4 space-y-4">
-                    <div className="flex items-center justify-between">
-                        <div className="space-y-0.5">
-                            <Label htmlFor="disable-link">Disable Link</Label>
-                            <p className="text-xs text-muted-foreground">If enabled, this category will not be clickable, and not shown in menu.</p>
-                        </div>
-                        <Switch 
-                          id="disable-link" 
-                          checked={disableLink}
-                          onCheckedChange={setDisableLink}
-                        />
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label htmlFor="disable-link">Disable Link</Label>
+                      <p className="text-xs text-muted-foreground">
+                        If enabled, this category will not be clickable, and not
+                        shown in menu.
+                      </p>
                     </div>
+                    <Switch
+                      id="disable-link"
+                      checked={disableLink}
+                      onCheckedChange={setDisableLink}
+                    />
+                  </div>
 
-                    {disableLink && (
-                      <div className="space-y-2 pt-4 border-t">
-                        <Label htmlFor="external-link">External Link</Label>
-                        <Input id="external-link" placeholder="https://www.example.com" />
-                        <p className="text-xs text-muted-foreground">If provided, this product will be a link to the external URL.</p>
-                      </div>
-                    )}
+                  {disableLink && (
+                    <div className="space-y-2 pt-4 border-t">
+                      <Label htmlFor="external-link">External Link</Label>
+                      <Input
+                        id="external-link"
+                        placeholder="https://www.example.com"
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        If provided, this product will be a link to the external
+                        URL.
+                      </p>
+                    </div>
+                  )}
                 </div>
 
-                <h3 className="font-medium text-lg mt-6">Special Category Settings</h3>
-                 <div className="rounded-lg border p-4 space-y-4">
-                    <div className="flex items-center justify-between">
-                        <div className="space-y-0.5">
-                            <Label htmlFor="enable-special">Enable Special Category</Label>
-                            <p className="text-xs text-muted-foreground">If enabled, this category will act as a special category.</p>
-                        </div>
-                        <Switch 
-                          id="enable-special"
-                          checked={enableSpecial}
-                          onCheckedChange={setEnableSpecial}
-                        />
+                <h3 className="font-medium text-lg mt-6">
+                  Special Category Settings
+                </h3>
+                <div className="rounded-lg border p-4 space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label htmlFor="enable-special">
+                        Enable Special Category
+                      </Label>
+                      <p className="text-xs text-muted-foreground">
+                        If enabled, this category will act as a special
+                        category.
+                      </p>
                     </div>
-                    
-                    {enableSpecial && (
-                      <div className="pt-4 border-t space-y-6">
-                        <div className="space-y-2">
-                          <Label htmlFor="special-type">Special Category Type</Label>
-                          <Select>
-                            <SelectTrigger id="special-type">
-                              <SelectValue placeholder="Select type of products to display" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="popular">Popular</SelectItem>
-                              <SelectItem value="new">New</SelectItem>
-                              <SelectItem value="featured">Featured</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
-                        <div className="flex items-center justify-between rounded-lg border p-4">
-                            <div className="space-y-0.5">
-                                <Label htmlFor="display-separate">Display products in separate categories</Label>
-                                <p className="text-xs text-muted-foreground">If enabled, products will be displayed in separate categories.</p>
-                            </div>
-                           <Switch id="display-separate" />
-                        </div>
+                    <Switch
+                      id="enable-special"
+                      checked={enableSpecial}
+                      onCheckedChange={setEnableSpecial}
+                    />
+                  </div>
+
+                  {enableSpecial && (
+                    <div className="pt-4 border-t space-y-6">
+                      <div className="space-y-2">
+                        <Label htmlFor="special-type">
+                          Special Category Type
+                        </Label>
+                        <Select>
+                          <SelectTrigger id="special-type">
+                            <SelectValue placeholder="Select type of products to display" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="popular">Popular</SelectItem>
+                            <SelectItem value="new">New</SelectItem>
+                            <SelectItem value="featured">Featured</SelectItem>
+                          </SelectContent>
+                        </Select>
                       </div>
-                    )}
+                      <div className="flex items-center justify-between rounded-lg border p-4">
+                        <div className="space-y-0.5">
+                          <Label htmlFor="display-separate">
+                            Display products in separate categories
+                          </Label>
+                          <p className="text-xs text-muted-foreground">
+                            If enabled, products will be displayed in separate
+                            categories.
+                          </p>
+                        </div>
+                        <Switch id="display-separate" />
+                      </div>
+                    </div>
+                  )}
                 </div>
               </TabsContent>
             </Tabs>

@@ -260,7 +260,11 @@ function BoardColumn({
             </DropdownMenu>
           </div>
         </CardHeader>
-        <CardContent className={cn('transition-all duration-200', column.items.length > 0 ? 'p-3' : 'p-0', isDragging && "min-h-[100px]")}>
+        <CardContent className={cn(
+          'transition-all duration-200', 
+          column.items.length > 0 ? 'p-3' : 'p-0',
+          isDragging && "min-h-[100px]"
+        )}>
           <SortableContext items={allItemIds} strategy={verticalListSortingStrategy}>
             {column.items.map((item) => (
                 <SortableItem
@@ -562,6 +566,7 @@ export default function CategoriesPage() {
                     isEditing={editingColumnId === column.id}
                     onTitleClick={() => {
                         setEditingColumnId(column.id);
+                        setSelectedCategory(null);
                     }}
                     onTitleChange={(e) => handleColumnNameChange(column.id, e.target.value)}
                     onTitleBlur={() => setEditingColumnId(null)}
@@ -625,6 +630,7 @@ export default function CategoriesPage() {
             }
         }}
         category={selectedCategory}
+        board={board}
         />
     </>
   );
