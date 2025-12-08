@@ -5,29 +5,9 @@ import {
   CardContent,
   CardHeader,
   CardTitle,
-  CardDescription,
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import {
-  Plus,
-  GripVertical,
-  ChevronDown,
-  Trash2,
-} from 'lucide-react';
-import { Input } from '@/components/ui/input';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from '@/components/ui/accordion';
+import { Plus, GripVertical, MoreHorizontal } from 'lucide-react';
 import {
   DndContext,
   closestCenter,
@@ -39,90 +19,56 @@ import {
   DragOverlay,
   UniqueIdentifier,
   DragStartEvent,
+  DragOverEvent,
 } from '@dnd-kit/core';
 import {
   SortableContext,
   sortableKeyboardCoordinates,
   useSortable,
+  horizontalListSortingStrategy,
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { produce } from 'immer';
 import { Badge } from '@/components/ui/badge';
-import { Checkbox } from '@/components/ui/checkbox';
 
-type Category = {
+type Item = {
   id: UniqueIdentifier;
   name: string;
-  originalName: string;
-  children: Category[];
 };
 
-type FlattenedCategory = Category & {
-  parentId: UniqueIdentifier | null;
-  depth: number;
+type Column = {
+  id: UniqueIdentifier;
+  name: string;
+  items: Item[];
 };
 
-const initialCategoriesData: Category[] = [
+const initialBoardData: Column[] = [
   {
-    id: '1',
-    name: 'Menu',
-    originalName: 'Menu',
-    children: [
-      {
-        id: '6',
-        name: 'Food',
-        originalName: 'Food',
-        children: [
-          { id: '11', name: 'Breakfast', originalName: 'Breakfast', children: [] },
-          { id: '12', name: 'Pancakes & French Toast', originalName: 'Pancakes & French Toast', children: [] },
-          { id: '13', name: 'Keto & Vegan', originalName: 'Keto & Vegan', children: [] },
-        ],
-      },
-      { id: '7', name: 'Beverages', originalName: 'Beverages', children: [] },
+    id: 'food',
+    name: 'Food',
+    items: [
+      { id: 'item-1', name: 'Breakfast' },
+      { id: 'item-2', name: 'Pancakes & French Toast' },
+      { id: 'item-3', name: 'Keto & Vegan' },
     ],
   },
-  { id: '2', name: 'Special Offer', originalName: 'Special Offer', children: [] },
-  { id: '3', name: 'About Us', originalName: 'About Us', children: [] },
+  {
+    id: 'beverages',
+    name: 'Beverages',
+    items: [
+      { id: 'item-4', name: 'Coffee' },
+      { id: 'item-5', name: 'Juices' },
+    ],
+  },
+  {
+    id: 'specials',
+    name: 'Special Offers',
+    items: [],
+  },
 ];
 
-function flattenCategories(
-  categories: Category[],
-  parentId: UniqueIdentifier | null = null,
-  depth = 0
-): FlattenedCategory[] {
-  return categories.reduce<FlattenedCategory[]>((acc, category) => {
-    return [
-      ...acc,
-      { ...category, parentId, depth },
-      ...flattenCategories(category.children, category.id, depth + 1),
-    ];
-  }, []);
-}
-
-function unflattenCategories(
-  flattenedCategories: FlattenedCategory[]
-): Category[] {
-  const tree: Category[] = [];
-  const mapped: Record<UniqueIdentifier, Category> = {};
-
-  flattenedCategories.forEach((item) => {
-    const { id, name, originalName } = item;
-    mapped[id] = { id, name, originalName, children: [] };
-  });
-
-  flattenedCategories.forEach((item) => {
-    if (item.parentId && mapped[item.parentId]) {
-      mapped[item.parentId].children.push(mapped[item.id]);
-    } else {
-      tree.push(mapped[item.id]);
-    }
-  });
-
-  return tree;
-}
-
-function SortableCategoryItem({ item }: { item: FlattenedCategory }) {
+function SortableItem({ item }: { item: Item }) {
   const {
     attributes,
     listeners,
@@ -135,105 +81,69 @@ function SortableCategoryItem({ item }: { item: FlattenedCategory }) {
   const style = {
     transform: CSS.Translate.toString(transform),
     transition,
-    marginLeft: `${item.depth * 2}rem`,
     opacity: isDragging ? 0.5 : 1,
   };
 
   return (
-    <Card
-      ref={setNodeRef}
-      style={style}
-      className="mb-2 relative"
-      {...attributes}
-    >
-      <div className="flex items-center justify-between p-3 border-b">
-        <div className="flex items-center gap-2">
-          <button {...listeners} className="cursor-grab p-1">
-            <GripVertical className="h-5 w-5 text-muted-foreground" />
-          </button>
-          <span className="font-medium">{item.name}</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <span className="text-sm text-muted-foreground">
-            {item.depth > 0 ? 'Sub-item' : 'Category'}
-          </span>
-          <AccordionTrigger className="p-2 hover:no-underline rounded-md hover:bg-accent [&[data-state=open]>svg]:rotate-180">
-            <ChevronDown className="h-4 w-4" />
-          </AccordionTrigger>
-        </div>
-      </div>
-      <AccordionContent className="p-4 space-y-4">
-        <div className="space-y-2">
-          <label htmlFor={`nav-label-${item.id}`} className="text-sm font-medium">Navigation Label</label>
-          <Input id={`nav-label-${item.id}`} defaultValue={item.name} />
-        </div>
-        <div className="flex justify-between items-center">
-            <p className="text-sm">Original: {item.originalName}</p>
-            <Button variant="link" className="text-red-500 hover:text-red-600 p-0 h-auto">
-                <Trash2 className="h-4 w-4 mr-1"/>
-                Remove
-            </Button>
-        </div>
-      </AccordionContent>
-    </Card>
-  );
-}
-
-function AvailableItemsPanel() {
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Available Items</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <Accordion type="multiple" className="w-full">
-          <AccordionItem value="pages">
-            <AccordionTrigger>Pages</AccordionTrigger>
-            <AccordionContent className="p-2 space-y-2 max-h-40 overflow-y-auto">
-              <div className="flex items-center space-x-2">
-                <Checkbox id="page-home" />
-                <label htmlFor="page-home" className="text-sm font-medium">Home</label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <Checkbox id="page-about" />
-                <label htmlFor="page-about" className="text-sm font-medium">About Us</label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <Checkbox id="page-contact" />
-                <label htmlFor="page-contact" className="text-sm font-medium">Contact</label>
-              </div>
-            </AccordionContent>
-          </AccordionItem>
-          <AccordionItem value="products">
-            <AccordionTrigger>Products</AccordionTrigger>
-            <AccordionContent>
-              <p className="p-2 text-sm text-muted-foreground">Product items will appear here.</p>
-            </AccordionContent>
-          </AccordionItem>
-          <AccordionItem value="links">
-            <AccordionTrigger>Custom Links</AccordionTrigger>
-            <AccordionContent className="p-2 space-y-4">
-              <div className="space-y-2">
-                <Input placeholder="URL"/>
-                <Input placeholder="Link Text"/>
-              </div>
-              <Button size="sm" className="w-full">Add to Menu</Button>
-            </AccordionContent>
-          </AccordionItem>
-        </Accordion>
-        <Button className="w-full mt-4">Add to Menu</Button>
+    <Card ref={setNodeRef} style={style} className="mb-3" {...attributes}>
+      <CardContent className="p-3 flex items-center justify-between">
+        <span className="font-medium text-sm">{item.name}</span>
+        <button {...listeners} className="cursor-grab p-1 text-muted-foreground hover:text-foreground">
+          <GripVertical className="h-5 w-5" />
+        </button>
       </CardContent>
     </Card>
   );
 }
 
+function BoardColumn({ column }: { column: Column }) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: column.id });
+
+  const style = {
+    transform: CSS.Translate.toString(transform),
+    transition,
+    opacity: isDragging ? 0.8 : 1,
+  };
+  
+  const itemIds = useMemo(() => column.items.map(i => i.id), [column.items]);
+
+  return (
+    <div ref={setNodeRef} style={style} className="flex-shrink-0 w-80">
+      <Card className="bg-muted/50">
+        <CardHeader className="p-3 flex flex-row items-center justify-between border-b" {...attributes} {...listeners}>
+          <CardTitle className="text-base font-semibold cursor-grab">{column.name}</CardTitle>
+          <div className="flex items-center gap-2">
+            <Badge variant="secondary">{column.items.length}</Badge>
+            <Button variant="ghost" size="icon" className="h-7 w-7">
+                <MoreHorizontal className="h-4 w-4" />
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent className="p-3 min-h-[100px]">
+          <SortableContext items={itemIds} strategy={verticalListSortingStrategy}>
+            {column.items.map((item) => (
+              <SortableItem key={item.id} item={item} />
+            ))}
+          </SortableContext>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
 
 export default function CategoriesPage() {
-  const [categories, setCategories] = useState<Category[]>(initialCategoriesData);
-  const [activeId, setActiveId] = useState<UniqueIdentifier | null>(null);
-
-  const flattenedItems = useMemo(() => flattenCategories(categories), [categories]);
-  const flattenedIds = useMemo(() => flattenedItems.map(({ id }) => id), [flattenedItems]);
+  const [board, setBoard] = useState<Column[]>(initialBoardData);
+  const [activeColumn, setActiveColumn] = useState<Column | null>(null);
+  const [activeItem, setActiveItem] = useState<Item | null>(null);
+  
+  const columnIds = useMemo(() => board.map(col => col.id), [board]);
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -242,97 +152,147 @@ export default function CategoriesPage() {
     })
   );
 
+  const findColumn = (id: UniqueIdentifier) => board.find(col => col.id === id);
+  const findItem = (id: UniqueIdentifier) => board.flatMap(col => col.items).find(item => item.id === id);
+  const findColumnOfItem = (id: UniqueIdentifier) => board.find(col => col.items.some(item => item.id === id));
+
   const handleDragStart = (event: DragStartEvent) => {
-    setActiveId(event.active.id);
+    const { active } = event;
+    if (findColumn(active.id)) {
+        setActiveColumn(findColumn(active.id));
+    } else if (findItem(active.id)) {
+        setActiveItem(findItem(active.id));
+    }
+  };
+
+  const handleDragOver = (event: DragOverEvent) => {
+    const { active, over } = event;
+    if (!over || !activeItem) return;
+
+    const activeContainer = findColumnOfItem(active.id);
+    const overContainer = findColumn(over.id) || findColumnOfItem(over.id);
+
+    if (!activeContainer || !overContainer || activeContainer.id === overContainer.id) {
+      return;
+    }
+
+    setBoard(produce(board => {
+        const activeColumn = board.find(c => c.id === activeContainer.id)!;
+        const overColumn = board.find(c => c.id === overContainer.id)!;
+        
+        const activeIndex = activeColumn.items.findIndex(i => i.id === active.id);
+        const [movedItem] = activeColumn.items.splice(activeIndex, 1);
+        
+        let overIndex = overColumn.items.findIndex(i => i.id === over.id);
+        if (overIndex === -1) {
+            // Dropping on column, not on an item
+            overIndex = overColumn.items.length;
+        }
+
+        overColumn.items.splice(overIndex, 0, movedItem);
+    }));
   };
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
-    setActiveId(null);
+    setActiveColumn(null);
+    setActiveItem(null);
 
-    if (over && active.id !== over.id) {
-        setCategories((prev) => {
-            const oldIndex = flattenedIds.indexOf(active.id);
-            const newIndex = flattenedIds.indexOf(over.id);
-            
-            // This is a simplified reordering logic.
-            // A production-ready solution would need more complex logic to handle nesting.
-            const newItems = Array.from(flattenedItems);
-            const [movedItem] = newItems.splice(oldIndex, 1);
-            newItems.splice(newIndex, 0, movedItem);
+    if (!over) return;
+    
+    if (active.id === over.id) return;
+    
+    // Dragging a column
+    if (activeColumn) {
+        setBoard(produce(board => {
+            const oldIndex = board.findIndex(c => c.id === active.id);
+            const newIndex = board.findIndex(c => c.id === over.id);
+            const [movedColumn] = board.splice(oldIndex, 1);
+            board.splice(newIndex, 0, movedColumn);
+        }));
+        return;
+    }
 
-            return unflattenCategories(newItems);
-        });
+    // Dragging an item
+    if (activeItem) {
+        const activeContainer = findColumnOfItem(active.id)!;
+        const overContainer = findColumnOfItem(over.id) || findColumn(over.id)!;
+
+        setBoard(produce(board => {
+            const activeCol = board.find(c => c.id === activeContainer.id)!;
+            const overCol = board.find(c => c.id === overContainer.id)!;
+
+            const activeIndex = activeCol.items.findIndex(i => i.id === active.id);
+            const [movedItem] = activeCol.items.splice(activeIndex, 1);
+
+            let overIndex = overCol.items.findIndex(i => i.id === over.id);
+            // If dropping on the column itself, add to the end
+            if (overIndex === -1 && findColumn(over.id)) {
+                overIndex = overCol.items.length;
+            }
+
+            overCol.items.splice(overIndex, 0, movedItem);
+        }));
     }
   };
-
-  const activeItem = activeId ? flattenedItems.find(({ id }) => id === activeId) : null;
 
   return (
     <>
       <header className="sticky top-0 z-10 flex h-16 items-center gap-4 border-b bg-card px-4 sm:px-6 lg:px-8 justify-between">
         <h1 className="text-xl font-semibold flex items-center gap-2">
-          Menu Editor
+          Menu Board Editor
           <Badge variant="destructive">BLOOMSBURY'S (RAS AL KHAIMAH)</Badge>
         </h1>
         <div className="flex items-center gap-4">
-          <Button>PUBLISH</Button>
-          <Select defaultValue="en">
-            <SelectTrigger className="w-auto">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="en">English (EN)</SelectItem>
-              <SelectItem value="es">Spanish (ES)</SelectItem>
-            </SelectContent>
-          </Select>
+          <Button>
+            <Plus className="mr-2 h-4 w-4" /> Add Category
+          </Button>
+          <Button variant="secondary">PUBLISH</Button>
         </div>
       </header>
 
-      <main className="p-4 sm:p-6 lg:p-8 grid grid-cols-1 md:grid-cols-3 gap-8">
-        <div className="md:col-span-1">
-          <AvailableItemsPanel />
-        </div>
-        <div className="md:col-span-2">
-          <Card>
-            <CardHeader>
-              <CardTitle>Menu Structure</CardTitle>
-              <CardDescription>
-                Drag and drop menu items to reorder them.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <DndContext
-                sensors={sensors}
-                collisionDetection={closestCenter}
-                onDragStart={handleDragStart}
-                onDragEnd={handleDragEnd}
-              >
-                <SortableContext items={flattenedIds} strategy={verticalListSortingStrategy}>
-                  <Accordion type="multiple" className="w-full">
-                    {flattenedItems.map((item) => (
-                      <AccordionItem key={item.id} value={item.id.toString()} className="border-b-0">
-                        <SortableCategoryItem item={item} />
-                      </AccordionItem>
-                    ))}
-                  </Accordion>
-                </SortableContext>
-                <DragOverlay>
-                  {activeItem ? (
-                     <Card className="shadow-lg">
-                        <div className="flex items-center justify-between p-3">
-                            <div className="flex items-center gap-2">
-                                <GripVertical className="h-5 w-5 text-muted-foreground" />
-                                <span className="font-medium">{activeItem.name}</span>
-                            </div>
-                        </div>
+      <main className="p-4 sm:p-6 lg:p-8 flex-grow">
+        <DndContext
+          sensors={sensors}
+          collisionDetection={closestCenter}
+          onDragStart={handleDragStart}
+          onDragOver={handleDragOver}
+          onDragEnd={handleDragEnd}
+        >
+          <div className="flex gap-6 overflow-x-auto pb-4">
+              <SortableContext items={columnIds} strategy={horizontalListSortingStrategy}>
+                {board.map((column) => (
+                  <BoardColumn key={column.id} column={column} />
+                ))}
+              </SortableContext>
+          </div>
+          <DragOverlay>
+            {activeColumn ? (
+                <div className="flex-shrink-0 w-80">
+                    <Card className="bg-card opacity-90 shadow-2xl">
+                        <CardHeader className="p-3 flex flex-row items-center justify-between border-b">
+                          <CardTitle className="text-base font-semibold">{activeColumn.name}</CardTitle>
+                        </CardHeader>
+                        <CardContent className="p-3 min-h-[100px]">
+                            <SortableContext items={activeColumn.items.map(i => i.id)} strategy={verticalListSortingStrategy}>
+                                {activeColumn.items.map(item => (
+                                    <SortableItem key={item.id} item={item} />
+                                ))}
+                            </SortableContext>
+                        </CardContent>
                     </Card>
-                  ) : null}
-                </DragOverlay>
-              </DndContext>
-            </CardContent>
-          </Card>
-        </div>
+                </div>
+            ) : null}
+            {activeItem ? (
+                <Card>
+                    <CardContent className="p-3 flex items-center justify-between">
+                        <span className="font-medium text-sm">{activeItem.name}</span>
+                        <GripVertical className="h-5 w-5 text-muted-foreground" />
+                    </CardContent>
+                </Card>
+            ) : null}
+          </DragOverlay>
+        </DndContext>
       </main>
     </>
   );
