@@ -20,8 +20,6 @@ import {
   DragOverlay,
   UniqueIdentifier,
   DragStartEvent,
-  DragOverEvent,
-  MeasuringStrategy,
 } from '@dnd-kit/core';
 import {
   SortableContext,
@@ -83,6 +81,9 @@ function SortableItem({
   onTitleClick,
   onTitleChange,
   onTitleBlur,
+  editingItemId,
+  setEditingItemId,
+  handleItemNameChange,
 }: { 
   item: Item, 
   depth?: number,
@@ -90,6 +91,9 @@ function SortableItem({
   onTitleClick: () => void;
   onTitleChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onTitleBlur: () => void;
+  editingItemId: UniqueIdentifier | null;
+  setEditingItemId: (id: UniqueIdentifier | null) => void;
+  handleItemNameChange: (itemId: UniqueIdentifier, newName: string) => void;
 }) {
   const {
     attributes,
@@ -159,6 +163,9 @@ function SortableItem({
                         onTitleClick={() => setEditingItemId(child.id)}
                         onTitleChange={(e) => handleItemNameChange(child.id, e.target.value)}
                         onTitleBlur={() => setEditingItemId(null)}
+                        editingItemId={editingItemId}
+                        setEditingItemId={setEditingItemId}
+                        handleItemNameChange={handleItemNameChange}
                       />)}
                  </SortableContext>
             </div>
@@ -228,6 +235,9 @@ function BoardColumn({
             onTitleClick={() => setEditingItemId(item.id)}
             onTitleChange={(e) => handleItemNameChange(item.id, e.target.value)}
             onTitleBlur={() => setEditingItemId(null)}
+            editingItemId={editingItemId}
+            setEditingItemId={setEditingItemId}
+            handleItemNameChange={handleItemNameChange}
         />
     );
 };
@@ -236,8 +246,8 @@ function BoardColumn({
   return (
     <div ref={setNodeRef} style={style} className="flex-shrink-0 w-80">
       <Card className="bg-muted/50 flex flex-col h-full">
-        <CardHeader className="p-3 flex flex-row items-center justify-between border-b" {...attributes}>
-           <div className="flex-grow" onClick={onTitleClick}>
+        <CardHeader className="p-3 flex flex-row items-center justify-between border-b">
+           <div className="flex-grow cursor-pointer" onClick={onTitleClick}>
             {isEditing ? (
               <Input
                   ref={inputRef}
@@ -252,14 +262,14 @@ function BoardColumn({
                   className="text-base font-semibold border-2 border-primary h-8"
               />
             ) : (
-              <CardTitle className="text-base font-semibold cursor-pointer py-1 px-2">
+              <CardTitle className="text-base font-semibold py-1 px-2">
                   {column.name}
               </CardTitle>
             )}
           </div>
           <div className="flex items-center gap-2">
             <Badge variant="secondary">{flattenItems(column.items).length}</Badge>
-            <Button {...listeners} variant="ghost" size="icon" className="h-7 w-7 cursor-grab">
+            <Button {...attributes} {...listeners} variant="ghost" size="icon" className="h-7 w-7 cursor-grab">
                 <MoreHorizontal className="h-4 w-4" />
             </Button>
           </div>
@@ -413,62 +423,61 @@ export default function CategoriesPage() {
     const isColumnDrag = active.data.current?.type === 'Column';
 
     if (isColumnDrag) {
-        setBoard(produce(board => {
-            const oldIndex = board.findIndex(c => c.id === activeId);
-            const newIndex = board.findIndex(c => c.id === overId);
+        setBoard(produce(draft => {
+            const oldIndex = draft.findIndex(c => c.id === activeId);
+            const newIndex = draft.findIndex(c => c.id === overId);
             if (oldIndex !== -1 && newIndex !== -1) {
-              const [movedColumn] = board.splice(oldIndex, 1);
-              board.splice(newIndex, 0, movedColumn);
+              const [movedColumn] = draft.splice(oldIndex, 1);
+              draft.splice(newIndex, 0, movedColumn);
             }
         }));
         return;
     }
 
     const isItemDrag = active.data.current?.type === 'Item';
+
     if(isItemDrag) {
-        setBoard(produce(draft => {
-            const { item: activeItem, parent: activeParent, column: activeColumn } = findItemData(activeId);
-            if (!activeItem || !activeParent || !activeColumn) return;
+      setBoard(produce(draft => {
+        const { item: activeItem, parent: activeParent, column: activeColumn } = findItemData(activeId);
+        
+        if (!activeItem || !activeParent || !activeColumn) return;
 
-            // Remove active item from its original position
-            const activeIndex = activeParent.findIndex(i => i.id === activeId);
-            activeParent.splice(activeIndex, 1);
+        // Remove active item from its original position
+        const activeIndex = activeParent.findIndex(i => i.id === activeId);
+        activeParent.splice(activeIndex, 1);
 
-            let { item: overItem, parent: overParent, column: overColumn, itemIndexInParent: overIndex } = findItemData(overId);
+        // Case 1: Drop over a column
+        const overIsColumn = findColumn(overId);
+        if (overIsColumn) {
+          const targetColumn = draft.find(c => c.id === overId);
+          if (targetColumn) {
+            targetColumn.items.push(activeItem);
+          }
+          return;
+        }
+
+        // Case 2: Drop over another item
+        let { item: overItem, parent: overParent, column: overColumn, itemIndexInParent: overIndex } = findItemData(overId);
+        if (overItem && overParent && overColumn) {
             
-            // Scenario 1: Dropping over a column
-            const overIsColumn = findColumn(overId);
-            if (overIsColumn) {
-                const targetColumn = draft.find(c => c.id === overId);
-                targetColumn?.items.push(activeItem);
-                return;
-            }
+            // Find the items in the draft state to modify them
+            const { parent: draftOverParent, index: draftOverIndex } = findItemRecursive(overId, draft.flatMap(c => c.items));
+            const { item: draftOverItem } = findItemData(overId);
 
-            if (!overItem || !overParent || !overColumn) return;
-
-            // Scenario 2: Dropping over an item (nesting)
-            // For simplicity, we'll assume a direct drop ON an item is for nesting.
-            // A more advanced solution could use drop indicators.
-            // We also need to find the item in the draft state.
-            const { item: draftOverItem } = findItemRecursive(overId, draft.flatMap(c => c.items));
-            if(draftOverItem) {
-                 draftOverItem.children.push(activeItem);
-                 return;
-            }
-
-            // Scenario 3: Reordering within the same or different list
-            const { item: draftOverItemForReorder, parent: draftOverParent, index: draftOverIndex } = findItemRecursive(overId, draft.flatMap(c => c.items));
-            if (draftOverParent) {
+            if (draftOverParent && draftOverIndex !== -1) {
+                // simple reordering for now
+                // A better approach would be to check if dropping on top half or bottom half
                 draftOverParent.splice(draftOverIndex, 0, activeItem);
+            } else {
+              // Maybe it's a new column
+               const targetColumn = draft.find(c => c.id === overColumn.id);
+               targetColumn?.items.push(activeItem);
             }
-        }));
+        }
+      }));
     }
   };
   
-  const flattenItems = (items: Item[]): Item[] => {
-    return items.flatMap(item => [item, ...flattenItems(item.children || [])]);
-  };
-
   return (
     <>
       <header className="sticky top-0 z-10 flex h-16 items-center gap-4 border-b bg-card px-4 sm:px-6 lg:px-8 justify-between">
@@ -487,7 +496,6 @@ export default function CategoriesPage() {
           collisionDetection={closestCenter}
           onDragStart={handleDragStart}
           onDragEnd={handleDragEnd}
-          measuring={{ droppable: { strategy: MeasuringStrategy.Always } }}
         >
           <div className="flex gap-6 overflow-x-auto pb-4 items-start">
               <SortableContext items={columnIds} strategy={horizontalListSortingStrategy}>
