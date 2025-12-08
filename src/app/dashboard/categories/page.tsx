@@ -16,7 +16,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
-import { Plus, GripVertical, MoreHorizontal, CornerDownRight, X, LayoutGrid, List } from 'lucide-react';
+import { Plus, GripVertical, MoreHorizontal, CornerDownRight, X, LayoutGrid, List, ArrowUpDown } from 'lucide-react';
 import {
   DndContext,
   closestCenter,
@@ -45,6 +45,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { CategorySheet } from './category-sheet';
 import { cn } from '@/lib/utils';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 
 export type Item = {
@@ -311,88 +312,181 @@ function BoardColumn({
   );
 }
 
-const ListView = ({ 
-  board, 
+type ListItem = {
+  id: UniqueIdentifier;
+  name: string;
+  type: 'main' | 'sub';
+  depth: number;
+  originalItem: Column | Item;
+};
+
+const ListView = ({
+  board,
   onSelect,
   onDeleteItem,
-}: { 
+}: {
   board: Column[];
   onSelect: (item: Column | Item) => void;
   onDeleteItem: (itemId: UniqueIdentifier) => void;
 }) => {
+  const [searchTerm, setSearchTerm] = useState('');
+  const [sortConfig, setSortConfig] = useState<{ key: keyof ListItem; direction: 'ascending' | 'descending' } | null>({ key: 'name', direction: 'ascending' });
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [currentPage, setCurrentPage] = useState(1);
 
-  const ListItem = ({ item, depth = 0 }: { item: Item; depth: number }) => (
-    <>
-      <TableRow>
-        <TableCell>
-          <div className="flex items-center" style={{ paddingLeft: `${depth * 2}rem` }}>
-            {depth > 0 && <CornerDownRight className="h-4 w-4 mr-2 text-muted-foreground" />}
-            <span className="font-medium">{item.name}</span>
-          </div>
-        </TableCell>
-        <TableCell>
-          <Badge variant="outline">{item.children.length > 0 ? 'Parent' : 'Item'}</Badge>
-        </TableCell>
-        <TableCell className="text-right">
-            <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon" className="h-8 w-8">
-                        <MoreHorizontal className="h-4 w-4" />
-                    </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                    <DropdownMenuItem onClick={() => onSelect(item)}>Edit</DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => onDeleteItem(item.id)} className="text-red-500">Delete</DropdownMenuItem>
-                </DropdownMenuContent>
-            </DropdownMenu>
-        </TableCell>
-      </TableRow>
-      {item.children.map(child => <ListItem key={child.id} item={child} depth={depth + 1} />)}
-    </>
-  );
+  const flattenedList = useMemo((): ListItem[] => {
+    const list: ListItem[] = [];
+    board.forEach(column => {
+      list.push({ id: column.id, name: column.name, type: 'main', depth: 0, originalItem: column });
+      const traverse = (items: Item[], depth: number) => {
+        items.forEach(item => {
+          list.push({ id: item.id, name: item.name, type: 'sub', depth: depth + 1, originalItem: item });
+          if (item.children) {
+            traverse(item.children, depth + 1);
+          }
+        });
+      };
+      traverse(column.items, 0);
+    });
+    return list;
+  }, [board]);
 
+  const filteredAndSortedList = useMemo(() => {
+    let filtered = flattenedList.filter(item => item.name.toLowerCase().includes(searchTerm.toLowerCase()));
+
+    if (sortConfig !== null) {
+      filtered.sort((a, b) => {
+        if (a[sortConfig.key] < b[sortConfig.key]) {
+          return sortConfig.direction === 'ascending' ? -1 : 1;
+        }
+        if (a[sortConfig.key] > b[sortConfig.key]) {
+          return sortConfig.direction === 'ascending' ? 1 : -1;
+        }
+        return 0;
+      });
+    }
+
+    return filtered;
+  }, [flattenedList, searchTerm, sortConfig]);
+
+  const paginatedList = useMemo(() => {
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    return filteredAndSortedList.slice(startIndex, startIndex + itemsPerPage);
+  }, [filteredAndSortedList, currentPage, itemsPerPage]);
+  
+  const totalPages = Math.ceil(filteredAndSortedList.length / itemsPerPage);
+
+  const requestSort = (key: keyof ListItem) => {
+    let direction: 'ascending' | 'descending' = 'ascending';
+    if (sortConfig && sortConfig.key === key && sortConfig.direction === 'ascending') {
+      direction = 'descending';
+    }
+    setSortConfig({ key, direction });
+  };
+  
   return (
     <Card>
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Category Name</TableHead>
-            <TableHead>Type</TableHead>
-            <TableHead className="text-right">Actions</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {board.map(column => (
-            <React.Fragment key={column.id}>
-              <TableRow className="bg-muted/50 hover:bg-muted/50">
+      <CardHeader>
+        <div className="flex justify-between items-center">
+            <div className="flex items-center gap-4">
+              <Input
+                placeholder="Search categories..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="max-w-sm"
+              />
+              <div className="flex items-center space-x-2">
+                <p className="text-sm text-muted-foreground">Show</p>
+                <Select value={String(itemsPerPage)} onValueChange={(value) => setItemsPerPage(Number(value))}>
+                  <SelectTrigger className="w-[80px]">
+                    <SelectValue placeholder={itemsPerPage} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="10">10</SelectItem>
+                    <SelectItem value="25">25</SelectItem>
+                    <SelectItem value="50">50</SelectItem>
+                  </SelectContent>
+                </Select>
+                 <p className="text-sm text-muted-foreground">entries</p>
+              </div>
+            </div>
+             <Button>
+                <Plus className="mr-2 h-4 w-4" /> Add Category
+            </Button>
+        </div>
+      </CardHeader>
+      <CardContent>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>
+                <Button variant="ghost" onClick={() => requestSort('name')}>
+                  Category Name
+                  <ArrowUpDown className="ml-2 h-4 w-4" />
+                </Button>
+              </TableHead>
+              <TableHead>Type</TableHead>
+              <TableHead className="text-right">Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {paginatedList.map(({ id, name, type, depth, originalItem }) => (
+              <TableRow key={id}>
                 <TableCell>
-                  <span className="font-semibold text-lg">{column.name}</span>
+                  <div className="flex items-center" style={{ paddingLeft: `${depth * 1.5}rem` }}>
+                    {depth > 0 && <CornerDownRight className="h-4 w-4 mr-2 text-muted-foreground" />}
+                    <span className="font-medium">{name}</span>
+                  </div>
                 </TableCell>
                 <TableCell>
-                  <Badge>Main Category</Badge>
+                  <Badge variant={type === 'main' ? 'default' : 'outline'}>
+                    {type === 'main' ? 'Main Category' : 'Sub Category'}
+                  </Badge>
                 </TableCell>
                 <TableCell className="text-right">
-                    <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon" className="h-8 w-8">
-                                <MoreHorizontal className="h-4 w-4" />
-                            </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                            <DropdownMenuItem onClick={() => onSelect(column)}>Edit</DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => {}} className="text-red-500">Delete</DropdownMenuItem>
-                        </DropdownMenuContent>
-                    </DropdownMenu>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="icon" className="h-8 w-8">
+                        <MoreHorizontal className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem onClick={() => onSelect(originalItem)}>Edit</DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => onDeleteItem(id)} className="text-red-500">Delete</DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </TableCell>
               </TableRow>
-              {column.items.map(item => <ListItem key={item.id} item={item} depth={0} />)}
-            </React.Fragment>
-          ))}
-        </TableBody>
-      </Table>
+            ))}
+          </TableBody>
+        </Table>
+      </CardContent>
+      <CardFooter className="flex items-center justify-between">
+         <div className="text-sm text-muted-foreground">
+          Showing <strong>{Math.min((currentPage - 1) * itemsPerPage + 1, filteredAndSortedList.length)}</strong> to <strong>{Math.min(currentPage * itemsPerPage, filteredAndSortedList.length)}</strong> of <strong>{filteredAndSortedList.length}</strong> entries
+        </div>
+        <div className="flex items-center space-x-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+            disabled={currentPage === 1}
+          >
+            Previous
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+            disabled={currentPage === totalPages}
+          >
+            Next
+          </Button>
+        </div>
+      </CardFooter>
     </Card>
   );
-}
+};
 
 export default function CategoriesPage() {
   const [board, setBoard] = useState<Column[]>(initialBoardData);
@@ -744,3 +838,5 @@ export default function CategoriesPage() {
     </>
   );
 }
+
+    
