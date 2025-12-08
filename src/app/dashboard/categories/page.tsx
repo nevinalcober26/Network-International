@@ -220,7 +220,7 @@ function BoardColumn({
   
   return (
     <div ref={setNodeRef} style={style} className="flex-shrink-0 w-80">
-      <Card className="bg-muted/50">
+      <Card>
         <CardHeader {...attributes} className="p-3 flex flex-row items-center justify-between border-b" >
            <div className="flex-grow" onClick={(e) => { e.stopPropagation(); onTitleClick(); }}>
             {isEditing ? (
@@ -260,7 +260,7 @@ function BoardColumn({
             </DropdownMenu>
           </div>
         </CardHeader>
-        <CardContent className={cn(column.items.length > 0 ? 'p-3' : 'p-0', isDragging && "min-h-[100px]")}>
+        <CardContent className={cn('transition-all duration-200', column.items.length > 0 ? 'p-3' : 'p-0', isDragging && "min-h-[100px]")}>
           <SortableContext items={allItemIds} strategy={verticalListSortingStrategy}>
             {column.items.map((item) => (
                 <SortableItem
@@ -272,7 +272,7 @@ function BoardColumn({
              ))}
           </SortableContext>
         </CardContent>
-        <CardFooter className="p-3 border-t">
+        <CardFooter className="p-3 border-t mt-auto">
             {isAddingItem ? (
               <div className="w-full space-y-2">
                 <Textarea 
@@ -449,83 +449,94 @@ export default function CategoriesPage() {
     const { active, over } = event;
     setActiveColumn(null);
     setActiveItem(null);
-
+  
     if (!over) return;
-    
+  
     const activeId = active.id;
     const overId = over.id;
+  
     if (activeId === overId) return;
-    
+  
     const activeIsColumn = active.data.current?.type === 'Column';
     if (activeIsColumn) {
       setBoard(produce(draft => {
-        const oldIndex = draft.findIndex(c => c.id === activeId);
-        const newIndex = draft.findIndex(c => c.id === overId);
-        if (oldIndex !== -1 && newIndex !== -1) {
-            const [movedColumn] = draft.splice(oldIndex, 1);
-            draft.splice(newIndex, 0, movedColumn);
+        const activeIndex = draft.findIndex(c => c.id === activeId);
+        const overIndex = draft.findIndex(c => c.id === overId);
+        if (activeIndex !== -1 && overIndex !== -1) {
+          const [movedColumn] = draft.splice(activeIndex, 1);
+          draft.splice(overIndex, 0, movedColumn);
         }
       }));
       return;
     }
-
+  
     const activeIsItem = active.data.current?.type === 'Item';
-    if(activeIsItem) {
+    if (activeIsItem) {
       setBoard(produce(draft => {
-          let activeItem: Item | null = null;
-          let originalParent: Item[] | null = null;
-          let originalIndex = -1;
-
-          // 1. Find and remove active item from its original position
+        let activeItem: Item | null = null;
+        let originalParent: Item[] | null = null;
+        let originalIndex: number = -1;
+  
+        // 1. Find and remove the active item from its original position
+        for (const col of draft) {
+          const { item, parent, index } = findItemAndParent(activeId, col.items);
+          if (item) {
+            activeItem = item;
+            originalParent = parent;
+            originalIndex = index;
+            parent?.splice(index, 1);
+            break;
+          }
+        }
+  
+        if (!activeItem) return;
+  
+        // 2. Find where to drop the item
+        const overIsColumn = draft.some(c => c.id === overId);
+  
+        if (overIsColumn) {
+          // Case 1: Dropped in a column (but not on an item)
+          const targetColumn = draft.find(c => c.id === overId);
+          // Simple approach: add to the end. A more complex check could find the closest item to drop near.
+          targetColumn?.items.push(activeItem);
+        } else {
+          // Case 2: Dropped on another item (nesting or reordering)
+          let dropped = false;
           for (const col of draft) {
-              const { item, parent, index } = findItemAndParent(activeId, col.items);
-              if (item && parent) {
-                  activeItem = { ...item };
-                  originalParent = parent;
-                  originalIndex = index;
-                  parent.splice(index, 1);
-                  break;
-              }
+            const { item: overItem, parent: overParent, index: overIndex } = findItemAndParent(overId, col.items);
+  
+            if (overItem) {
+              // Option A: Dropped ON an item to nest it
+              overItem.children.push(activeItem);
+              dropped = true;
+              break;
+            } else if (overParent) {
+              // Option B: Dropped in a list to reorder
+              overParent.splice(overIndex, 0, activeItem);
+              dropped = true;
+              break;
+            }
           }
-
-          if (!activeItem) return;
-
-          // 2. Find drop position and insert the item
-          let overIsColumn = draft.some(c => c.id === overId);
-
-          if (overIsColumn) {
-              const targetColumn = draft.find(c => c.id === overId);
-              targetColumn?.items.push(activeItem);
-          } else {
-              // Dropped on an item or in a list
-              let foundOver = false;
-              for (const col of draft) {
-                  const { item: overItem, parent: overItemParent, index: overItemIndex } = findItemAndParent(overId, col.items);
-                  if (overItem) {
-                      // Simple nesting: drop inside another item
-                      overItem.children.push(activeItem);
-                      foundOver = true;
-                      break;
-                  }
-              }
-
-              // Dropped in a list (not on an item)
-              if (!foundOver) {
-                  for (const col of draft) {
-                      const { parent, index } = findItemAndParent(overId, col.items);
-                      if (parent) {
-                          parent.splice(index, 0, activeItem);
-                          foundOver = true;
-                          break;
-                      }
-                  }
-              }
-
-              if (!foundOver && originalParent) {
-                 // Fallback: couldn't find a drop target, put it back
-                 originalParent.splice(originalIndex, 0, activeItem);
-              }
+  
+          if (!dropped) {
+            // Fallback for when dropping in an empty space within a list
+            // Find the column where overId might be an item.
+            const overColumnId = findContainer(overId);
+            const overColumn = draft.find(c => c.id === overColumnId);
+            if(overColumn) {
+                const { parent, index } = findItemAndParent(overId, overColumn.items);
+                if(parent && index > -1){
+                  parent.splice(index, 0, activeItem);
+                  dropped = true;
+                }
+            }
           }
+  
+          if (!dropped && originalParent) {
+            // If we still haven't dropped it, return it to its original spot
+            originalParent.splice(originalIndex, 0, activeItem);
+          }
+        }
       }));
     }
   };
@@ -559,13 +570,17 @@ export default function CategoriesPage() {
                     isEditing={editingColumnId === column.id}
                     onTitleClick={() => {
                         setEditingColumnId(column.id);
+                        setSelectedCategory(null);
                     }}
                     onTitleChange={(e) => handleColumnNameChange(column.id, e.target.value)}
                     onTitleBlur={() => setEditingColumnId(null)}
                     onAddItem={() => handleAddNewItem(column.id)}
                     onDeleteColumn={handleDeleteColumn}
                     onDeleteItem={handleDeleteItem}
-                    onSelect={setSelectedCategory}
+                    onSelect={(item) => {
+                      setEditingColumnId(null);
+                      setSelectedCategory(item);
+                    }}
                     isAddingItem={addingToColumnId === column.id}
                     onToggleAddItem={() => handleToggleAddItem(column.id)}
                     newItemName={newItemName}
