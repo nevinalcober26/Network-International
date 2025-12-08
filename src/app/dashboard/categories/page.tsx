@@ -674,40 +674,25 @@ export default function CategoriesPage() {
     const newCategory: Item = { id: newItemId, name, children: [] };
 
     setBoard(produce(draft => {
-      if (parentId === 'none' || parentId === null) {
+      if (parentId === 'none') {
         const newColumnId = `col-${Date.now()}`;
-        const newColumn = draft.find(col => col.name.toLowerCase() === name.toLowerCase());
-        if(newColumn) {
-          newColumn.items.push(newCategory);
-        } else {
-           draft.push({
-            id: newColumnId,
-            name: name,
-            items: [],
-          });
-        }
+        draft.push({
+          id: newColumnId,
+          name: name,
+          items: [],
+        });
       } else {
-        let parentFound = false;
         const parentColumn = draft.find(col => col.id === parentId);
         if (parentColumn) {
           parentColumn.items.push(newCategory);
-          parentFound = true;
         } else {
           for (const col of draft) {
             const { item: parentItem } = findItemAndParent(parentId, col.items);
             if (parentItem) {
               parentItem.children.push(newCategory);
-              parentFound = true;
               break;
             }
           }
-        }
-         if (!parentFound) {
-            draft.push({
-                id: `col-${Date.now()}`,
-                name: name,
-                items: [],
-            });
         }
       }
     }));
@@ -806,17 +791,13 @@ export default function CategoriesPage() {
         if (!activeItem) return;
   
         // 2. Find where to drop the item
-        let overIsColumn = draft.some(c => c.id === overId);
-        const overIsItem = !overIsColumn;
-
+        
         // Check if dropping on an item (to nest)
-        if (overIsItem) {
-            for (const col of draft) {
-                const { item: overItem } = findItemAndParent(overId, col.items);
-                if (overItem) {
-                    overItem.children.push(activeItem);
-                    return; // End the operation
-                }
+        for (const col of draft) {
+            const { item: overItem } = findItemAndParent(overId, col.items);
+            if (overItem) {
+                overItem.children.push(activeItem);
+                return; // End the operation
             }
         }
 
@@ -884,7 +865,6 @@ export default function CategoriesPage() {
                       isEditing={editingColumnId === column.id}
                       onTitleClick={() => {
                           setEditingColumnId(column.id);
-                          setSelectedCategory(null);
                       }}
                       onTitleChange={(e) => handleColumnNameChange(column.id, e.target.value)}
                       onTitleBlur={() => setEditingColumnId(null)}
@@ -967,3 +947,5 @@ export default function CategoriesPage() {
     </>
   );
 }
+
+    
