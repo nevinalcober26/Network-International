@@ -19,7 +19,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Checkbox } from '@/components/ui/checkbox';
+import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Upload } from 'lucide-react';
 import type { Column, Item } from './page';
@@ -106,104 +106,106 @@ export function CategorySheet({
               </TabsContent>
               <TabsContent value="display" className="p-6 space-y-6">
                  <h3 className="font-medium text-lg">Display Settings</h3>
-                 <div className="flex items-start space-x-3">
-                    <Checkbox id="display-fullwidth" className="mt-1" />
-                    <div className="grid gap-1.5 leading-none">
+                 <div className="flex items-center justify-between rounded-lg border p-4">
+                    <div>
                       <Label htmlFor="display-fullwidth">Display Fullwidth</Label>
-                      <p className="text-xs text-muted-foreground">If checked, will display the category in fullwidth in the app.</p>
+                      <p className="text-xs text-muted-foreground">If enabled, will display the category in fullwidth in the app.</p>
                     </div>
+                    <Switch id="display-fullwidth" />
                  </div>
-                 <div className="flex items-start space-x-3">
-                    <Checkbox id="hidden-title" className="mt-1" />
-                    <div className="grid gap-1.5 leading-none">
+                 <div className="flex items-center justify-between rounded-lg border p-4">
+                    <div>
                       <Label htmlFor="hidden-title">Hidden Title</Label>
-                      <p className="text-xs text-muted-foreground">If checked, category title will not be displayed.</p>
+                      <p className="text-xs text-muted-foreground">If enabled, category title will not be displayed.</p>
                     </div>
+                    <Switch id="hidden-title" />
                  </div>
-                 <div className="flex items-start space-x-3">
-                    <Checkbox id="hidden-image" className="mt-1" />
-                    <div className="grid gap-1.5 leading-none">
+                 <div className="flex items-center justify-between rounded-lg border p-4">
+                    <div>
                       <Label htmlFor="hidden-image">Hidden Image</Label>
-                      <p className="text-xs text-muted-foreground">If checked, category image will not be displayed.</p>
+                      <p className="text-xs text-muted-foreground">If enabled, category image will not be displayed.</p>
                     </div>
+                    <Switch id="hidden-image" />
                  </div>
-                 <div className="flex items-start space-x-3">
-                    <Checkbox id="card-shadow" className="mt-1" />
-                    <div className="grid gap-1.5 leading-none">
+                 <div className="flex items-center justify-between rounded-lg border p-4">
+                    <div>
                       <Label htmlFor="card-shadow">Card Shadow</Label>
-                      <p className="text-xs text-muted-foreground">If checked, the category card will display with shadow.</p>
+                      <p className="text-xs text-muted-foreground">If enabled, the category card will display with shadow.</p>
                     </div>
+                    <Switch id="card-shadow" />
                  </div>
               </TabsContent>
               <TabsContent value="advanced" className="p-6 space-y-6">
                 <h3 className="font-medium text-lg">Visibility</h3>
-                <div className="flex items-start space-x-3">
-                    <Checkbox id="hidden" className="mt-1" />
-                    <div className="grid gap-1.5 leading-none">
+                <div className="flex items-center justify-between rounded-lg border p-4">
+                    <div>
                         <Label htmlFor="hidden">Hidden</Label>
-                        <p className="text-xs text-muted-foreground">If checked, this category will be hidden and not displayed in the app.</p>
+                        <p className="text-xs text-muted-foreground">If enabled, this category will be hidden and not displayed in the app.</p>
                     </div>
+                    <Switch id="hidden" />
                 </div>
 
-                <div className="flex items-start space-x-3">
-                    <Checkbox 
-                      id="disable-link" 
-                      className="mt-1" 
-                      checked={disableLink}
-                      onCheckedChange={(checked) => setDisableLink(Boolean(checked))}
-                    />
-                    <div className="grid gap-1.5 leading-none">
-                        <Label htmlFor="disable-link">Disable Link</Label>
-                        <p className="text-xs text-muted-foreground">If checked, this category will not be clickable, and not shown in menu.</p>
+                <div className="rounded-lg border p-4 space-y-4">
+                    <div className="flex items-center justify-between">
+                        <div>
+                            <Label htmlFor="disable-link">Disable Link</Label>
+                            <p className="text-xs text-muted-foreground">If enabled, this category will not be clickable, and not shown in menu.</p>
+                        </div>
+                        <Switch 
+                          id="disable-link" 
+                          checked={disableLink}
+                          onCheckedChange={setDisableLink}
+                        />
                     </div>
-                </div>
 
-                {disableLink && (
-                  <div className="space-y-2 pl-6">
-                    <Label htmlFor="external-link">External Link</Label>
-                    <Input id="external-link" placeholder="https://www.example.com" />
-                    <p className="text-xs text-muted-foreground">If provided, this product will be a link to the external URL.</p>
-                  </div>
-                )}
+                    {disableLink && (
+                      <div className="space-y-2 pt-4 border-t">
+                        <Label htmlFor="external-link">External Link</Label>
+                        <Input id="external-link" placeholder="https://www.example.com" />
+                        <p className="text-xs text-muted-foreground">If provided, this product will be a link to the external URL.</p>
+                      </div>
+                    )}
+                </div>
 
                 <h3 className="font-medium text-lg mt-6">Special Category Settings</h3>
-                <div className="flex items-start space-x-3">
-                    <Checkbox 
-                      id="enable-special" 
-                      className="mt-1"
-                      checked={enableSpecial}
-                      onCheckedChange={(checked) => setEnableSpecial(Boolean(checked))}
-                    />
-                    <div className="grid gap-1.5 leading-none">
-                        <Label htmlFor="enable-special">Enable Special Category</Label>
-                        <p className="text-xs text-muted-foreground">If checked, this category will act as a special category.</p>
-                    </div>
-                </div>
-                
-                {enableSpecial && (
-                  <div className="pl-6 space-y-6">
-                    <div className="space-y-2">
-                      <Label htmlFor="special-type">Special Category Type</Label>
-                      <Select>
-                        <SelectTrigger id="special-type">
-                          <SelectValue placeholder="Select type of products to display" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="popular">Popular</SelectItem>
-                          <SelectItem value="new">New</SelectItem>
-                          <SelectItem value="featured">Featured</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="flex items-start space-x-3">
-                        <Checkbox id="display-separate" className="mt-1" />
-                        <div className="grid gap-1.5 leading-none">
-                            <Label htmlFor="display-separate">Display products in separate categories</Label>
-                            <p className="text-xs text-muted-foreground">If checked, products will be displayed in separate categories.</p>
+                 <div className="rounded-lg border p-4 space-y-4">
+                    <div className="flex items-center justify-between">
+                        <div>
+                            <Label htmlFor="enable-special">Enable Special Category</Label>
+                            <p className="text-xs text-muted-foreground">If enabled, this category will act as a special category.</p>
                         </div>
+                        <Switch 
+                          id="enable-special"
+                          checked={enableSpecial}
+                          onCheckedChange={setEnableSpecial}
+                        />
                     </div>
-                  </div>
-                )}
+                    
+                    {enableSpecial && (
+                      <div className="pt-4 border-t space-y-6">
+                        <div className="space-y-2">
+                          <Label htmlFor="special-type">Special Category Type</Label>
+                          <Select>
+                            <SelectTrigger id="special-type">
+                              <SelectValue placeholder="Select type of products to display" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="popular">Popular</SelectItem>
+                              <SelectItem value="new">New</SelectItem>
+                              <SelectItem value="featured">Featured</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div className="flex items-center justify-between rounded-lg border p-4">
+                            <div>
+                                <Label htmlFor="display-separate">Display products in separate categories</Label>
+                                <p className="text-xs text-muted-foreground">If enabled, products will be displayed in separate categories.</p>
+                            </div>
+                           <Switch id="display-separate" />
+                        </div>
+                      </div>
+                    )}
+                </div>
               </TabsContent>
             </Tabs>
           </div>
