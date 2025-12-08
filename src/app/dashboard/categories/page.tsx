@@ -79,10 +79,6 @@ const initialBoardData: Column[] = [
 function SortableItem({ 
   item, 
   depth = 0,
-  isEditing,
-  onTitleClick,
-  onTitleChange,
-  onTitleBlur,
   editingItemId,
   setEditingItemId,
   handleItemNameChange,
@@ -91,10 +87,6 @@ function SortableItem({
 }: { 
   item: Item, 
   depth?: number,
-  isEditing: boolean;
-  onTitleClick: () => void;
-  onTitleChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  onTitleBlur: () => void;
   editingItemId: UniqueIdentifier | null;
   setEditingItemId: (id: UniqueIdentifier | null) => void;
   handleItemNameChange: (itemId: UniqueIdentifier, newName: string) => void;
@@ -116,6 +108,7 @@ function SortableItem({
     opacity: isDragging ? 0.5 : 1,
   };
 
+  const isEditing = editingItemId === item.id;
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -124,6 +117,11 @@ function SortableItem({
       inputRef.current?.select();
     }
   }, [isEditing]);
+  
+  const onTitleClick = () => setEditingItemId(item.id);
+  const onTitleBlur = () => setEditingItemId(null);
+  const onTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => handleItemNameChange(item.id, e.target.value);
+
 
   return (
     <div ref={setNodeRef} style={style} {...attributes}>
@@ -136,7 +134,7 @@ function SortableItem({
                 {[...Array(depth)].map((_, i) => (
                   <CornerDownRight key={i} className="h-4 w-4 text-muted-foreground" />
                 ))}
-                 <div className="flex-grow" onClick={(e) => {e.stopPropagation(); onTitleClick();}}>
+                 <div className="flex-grow" onClick={(e) => { e.stopPropagation(); if (isEditing) return; onSelect(item);}}>
                   {isEditing ? (
                      <Input
                         ref={inputRef}
@@ -175,13 +173,11 @@ function SortableItem({
                         key={child.id} 
                         item={child} 
                         depth={depth + 1} 
-                        isEditing={editingItemId === child.id}
-                        onTitleClick={() => setEditingItemId(child.id)}
-                        onTitleChange={(e) => handleItemNameChange(child.id, e.target.value)}
-                        onTitleBlur={() => setEditingItemId(null)}
+                        editingItemId={editingItemId}
+                        setEditingItemId={setEditingItemId}
+                        handleItemNameChange={handleItemNameChange}
                         onDeleteItem={onDeleteItem}
                         onSelect={onSelect}
-                        {...{ editingItemId, setEditingItemId, handleItemNameChange }}
                       />)}
                  </SortableContext>
             </div>
@@ -253,10 +249,6 @@ function BoardColumn({
             key={item.id}
             item={item}
             depth={depth}
-            isEditing={editingItemId === item.id}
-            onTitleClick={() => setEditingItemId(item.id)}
-            onTitleChange={(e) => handleItemNameChange(item.id, e.target.value)}
-            onTitleBlur={() => setEditingItemId(null)}
             editingItemId={editingItemId}
             setEditingItemId={setEditingItemId}
             handleItemNameChange={handleItemNameChange}
@@ -529,18 +521,19 @@ export default function CategoriesPage() {
         
         if (overItem && overParent && overColumn) {
             // Logic to drop over an item to make it a child
-            if (over.data.current?.type === 'Item') {
-                const {item: draftTargetItem } = findItemRecursive(overId, draft.flatMap(c=>c.items));
-                if(draftTargetItem) {
-                    draftTargetItem.children.push(activeItem);
+            const isDroppingOnItem = over.data.current?.type === 'Item';
+            if (isDroppingOnItem) {
+                const { item: draftOverItem } = findItemRecursive(overId, draft.flatMap(c=>c.items));
+                if(draftOverItem) {
+                    draftOverItem.children.push(activeItem);
                     return;
                 }
             }
-
+            
             // Logic to reorder within the same or different list
              const { parent: draftOverParent, index: draftOverIndexInParent } = findItemRecursive(overId, draft.flatMap(c => c.items));
             if (draftOverParent && draftOverIndexInParent !== -1) {
-                draftOverParent.splice(draftOverIndexInParent, 0, activeItem);
+                draftOverParent.splice(draftOverIndexInParent + 1, 0, activeItem);
             } else {
                const targetColumn = draft.find(c => c.id === overColumn.id);
                targetColumn?.items.push(activeItem);
