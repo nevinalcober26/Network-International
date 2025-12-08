@@ -32,6 +32,7 @@ import { CSS } from '@dnd-kit/utilities';
 import { produce } from 'immer';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 
 type Item = {
   id: UniqueIdentifier;
@@ -84,6 +85,7 @@ function SortableItem({
   editingItemId,
   setEditingItemId,
   handleItemNameChange,
+  onDeleteItem,
 }: { 
   item: Item, 
   depth?: number,
@@ -94,6 +96,7 @@ function SortableItem({
   editingItemId: UniqueIdentifier | null;
   setEditingItemId: (id: UniqueIdentifier | null) => void;
   handleItemNameChange: (itemId: UniqueIdentifier, newName: string) => void;
+  onDeleteItem: (itemId: UniqueIdentifier) => void;
 }) {
   const {
     attributes,
@@ -149,7 +152,17 @@ function SortableItem({
                   )}
                  </div>
                 </div>
-                <MoreHorizontal className="h-5 w-5 text-muted-foreground" />
+                <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon" className="h-6 w-6">
+                            <MoreHorizontal className="h-4 w-4 text-muted-foreground" />
+                        </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={() => setEditingItemId(item.id)}>Edit</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => onDeleteItem(item.id)} className="text-red-500">Delete</DropdownMenuItem>
+                    </DropdownMenuContent>
+                </DropdownMenu>
             </CardContent>
         </Card>
         {item.children && item.children.length > 0 && (
@@ -166,6 +179,7 @@ function SortableItem({
                         editingItemId={editingItemId}
                         setEditingItemId={setEditingItemId}
                         handleItemNameChange={handleItemNameChange}
+                        onDeleteItem={onDeleteItem}
                       />)}
                  </SortableContext>
             </div>
@@ -185,6 +199,8 @@ function BoardColumn({
   editingItemId,
   setEditingItemId,
   handleItemNameChange,
+  onDeleteColumn,
+  onDeleteItem,
 }: { 
   column: Column;
   isEditing: boolean;
@@ -195,6 +211,8 @@ function BoardColumn({
   editingItemId: UniqueIdentifier | null;
   setEditingItemId: (id: UniqueIdentifier | null) => void;
   handleItemNameChange: (itemId: UniqueIdentifier, newName: string) => void;
+  onDeleteColumn: (columnId: UniqueIdentifier) => void;
+  onDeleteItem: (itemId: UniqueIdentifier) => void;
 }) {
   const {
     attributes,
@@ -238,6 +256,7 @@ function BoardColumn({
             editingItemId={editingItemId}
             setEditingItemId={setEditingItemId}
             handleItemNameChange={handleItemNameChange}
+            onDeleteItem={onDeleteItem}
         />
     );
 };
@@ -246,8 +265,8 @@ function BoardColumn({
   return (
     <div ref={setNodeRef} style={style} className="flex-shrink-0 w-80">
       <Card className="bg-muted/50 flex flex-col h-full">
-        <CardHeader className="p-3 flex flex-row items-center justify-between border-b">
-           <div className="flex-grow cursor-pointer" onClick={onTitleClick}>
+        <CardHeader {...attributes} {...listeners} className="p-3 flex flex-row items-center justify-between border-b cursor-grab">
+           <div className="flex-grow" onClick={(e) => { e.stopPropagation(); onTitleClick(); }}>
             {isEditing ? (
               <Input
                   ref={inputRef}
@@ -269,9 +288,17 @@ function BoardColumn({
           </div>
           <div className="flex items-center gap-2">
             <Badge variant="secondary">{flattenItems(column.items).length}</Badge>
-            <Button {...attributes} {...listeners} variant="ghost" size="icon" className="h-7 w-7 cursor-grab">
-                <MoreHorizontal className="h-4 w-4" />
-            </Button>
+            <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="icon" className="h-7 w-7 cursor-pointer" onClick={(e) => e.stopPropagation()}>
+                        <MoreHorizontal className="h-4 w-4" />
+                    </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                    <DropdownMenuItem onClick={onTitleClick}>Edit</DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => onDeleteColumn(column.id)} className="text-red-500">Delete</DropdownMenuItem>
+                </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </CardHeader>
         <CardContent className="p-3 min-h-[100px] flex-grow">
@@ -354,6 +381,15 @@ export default function CategoriesPage() {
         }
     }));
   };
+  
+  const handleDeleteColumn = (columnId: UniqueIdentifier) => {
+    setBoard(produce(board => {
+        const index = board.findIndex(c => c.id === columnId);
+        if (index !== -1) {
+            board.splice(index, 1);
+        }
+    }));
+  };
 
   const handleItemNameChange = (itemId: UniqueIdentifier, newName: string) => {
       setBoard(produce(draft => {
@@ -377,6 +413,29 @@ export default function CategoriesPage() {
           }
       }));
   };
+
+    const handleDeleteItem = (itemId: UniqueIdentifier) => {
+        setBoard(produce(draft => {
+            const findAndRemove = (items: Item[]): boolean => {
+                for (let i = 0; i < items.length; i++) {
+                    if (items[i].id === itemId) {
+                        items.splice(i, 1);
+                        return true;
+                    }
+                    if (items[i].children && findAndRemove(items[i].children)) {
+                        return true;
+                    }
+                }
+                return false;
+            };
+
+            for (const column of draft) {
+                if (findAndRemove(column.items)) {
+                    break;
+                }
+            }
+        }));
+    };
 
 
   const handleAddNewItem = (columnId: UniqueIdentifier) => {
@@ -446,7 +505,7 @@ export default function CategoriesPage() {
         const activeIndex = activeParent.findIndex(i => i.id === activeId);
         activeParent.splice(activeIndex, 1);
 
-        // Case 1: Drop over a column
+        // Case 1: Drop over a column to add to the end of its root items
         const overIsColumn = findColumn(overId);
         if (overIsColumn) {
           const targetColumn = draft.find(c => c.id === overId);
@@ -458,18 +517,25 @@ export default function CategoriesPage() {
 
         // Case 2: Drop over another item
         let { item: overItem, parent: overParent, column: overColumn, itemIndexInParent: overIndex } = findItemData(overId);
+        
         if (overItem && overParent && overColumn) {
+            // Logic to drop over an item - make it a child or reorder
+            const { item: draftOverItem, parent: draftOverParent, index: draftOverIndexInParent } = findItemRecursive(overId, draft.flatMap(c => c.items));
             
-            // Find the items in the draft state to modify them
-            const { parent: draftOverParent, index: draftOverIndex } = findItemRecursive(overId, draft.flatMap(c => c.items));
-            const { item: draftOverItem } = findItemData(overId);
+            // To make it a child, we'll push to its children array
+            // A more complex logic could check drag position (e.g. top half vs bottom half)
+            // For now, let's try a simple nesting approach.
+            // Let's assume for now dropping on an item makes it a child.
+            const {item: draftTargetItem } = findItemRecursive(overId, draft.flatMap(c=>c.items));
+            if(draftTargetItem) {
+              draftTargetItem.children.push(activeItem);
+              return;
+            }
 
-            if (draftOverParent && draftOverIndex !== -1) {
-                // simple reordering for now
-                // A better approach would be to check if dropping on top half or bottom half
-                draftOverParent.splice(draftOverIndex, 0, activeItem);
+            // Fallback to reordering if we couldn't nest
+            if (draftOverParent && draftOverIndexInParent !== -1) {
+                draftOverParent.splice(draftOverIndexInParent, 0, activeItem);
             } else {
-              // Maybe it's a new column
                const targetColumn = draft.find(c => c.id === overColumn.id);
                targetColumn?.items.push(activeItem);
             }
@@ -513,6 +579,8 @@ export default function CategoriesPage() {
                     editingItemId={editingItemId}
                     setEditingItemId={setEditingItemId}
                     handleItemNameChange={handleItemNameChange}
+                    onDeleteColumn={handleDeleteColumn}
+                    onDeleteItem={handleDeleteItem}
                   />
                 ))}
               </SortableContext>
