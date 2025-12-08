@@ -107,22 +107,7 @@ function SortableItem({
     transition,
     opacity: isDragging ? 0.5 : 1,
   };
-
-  const isEditing = editingItemId === item.id;
-  const inputRef = useRef<HTMLInputElement>(null);
-
-  useEffect(() => {
-    if (isEditing) {
-      inputRef.current?.focus();
-      inputRef.current?.select();
-    }
-  }, [isEditing]);
   
-  const onTitleClick = () => setEditingItemId(item.id);
-  const onTitleBlur = () => setEditingItemId(null);
-  const onTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => handleItemNameChange(item.id, e.target.value);
-
-
   return (
     <div ref={setNodeRef} style={style} {...attributes}>
         <Card className="mb-2" onClick={() => onSelect(item)}>
@@ -134,23 +119,8 @@ function SortableItem({
                 {[...Array(depth)].map((_, i) => (
                   <CornerDownRight key={i} className="h-4 w-4 text-muted-foreground" />
                 ))}
-                 <div className="flex-grow" onClick={(e) => { e.stopPropagation(); if (isEditing) return; onSelect(item);}}>
-                  {isEditing ? (
-                     <Input
-                        ref={inputRef}
-                        value={item.name}
-                        onChange={onTitleChange}
-                        onBlur={onTitleBlur}
-                        onKeyDown={(e) => {
-                            if (e.key === 'Enter') {
-                                onTitleBlur();
-                            }
-                        }}
-                        className="text-sm font-medium border-2 border-primary h-7"
-                    />
-                  ) : (
+                 <div className="flex-grow" onClick={(e) => { e.stopPropagation(); onSelect(item);}}>
                     <span className="font-medium text-sm cursor-pointer py-1 px-2 block">{item.name}</span>
-                  )}
                  </div>
                 </div>
                 <DropdownMenu>
@@ -160,7 +130,7 @@ function SortableItem({
                         </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={(e) => {e.stopPropagation(); setEditingItemId(item.id)}}>Edit</DropdownMenuItem>
+                        <DropdownMenuItem onClick={(e) => {e.stopPropagation(); onSelect(item);}}>Edit</DropdownMenuItem>
                         <DropdownMenuItem onClick={(e) => {e.stopPropagation(); onDeleteItem(item.id)}} className="text-red-500">Delete</DropdownMenuItem>
                     </DropdownMenuContent>
                 </DropdownMenu>
@@ -278,7 +248,7 @@ function BoardColumn({
                   className="text-base font-semibold border-2 border-primary h-8"
               />
             ) : (
-              <CardTitle className="text-base font-semibold py-1 px-2 cursor-pointer" onClick={() => onSelect(column)}>
+              <CardTitle className="text-base font-semibold py-1 px-2 cursor-pointer">
                   {column.name}
               </CardTitle>
             )}
@@ -295,7 +265,7 @@ function BoardColumn({
                     </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
-                    <DropdownMenuItem onClick={onTitleClick}>Edit</DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => onSelect(column)}>Edit</DropdownMenuItem>
                     <DropdownMenuItem onClick={() => onDeleteColumn(column.id)} className="text-red-500">Delete</DropdownMenuItem>
                 </DropdownMenuContent>
             </DropdownMenu>
@@ -507,12 +477,9 @@ export default function CategoriesPage() {
         activeParent.splice(activeIndex, 1);
 
         // Case 1: Drop over a column to add to the end of its root items
-        const overIsColumn = findColumn(overId);
+        const overIsColumn = draft.find(c => c.id === overId);
         if (overIsColumn) {
-          const targetColumn = draft.find(c => c.id === overId);
-          if (targetColumn) {
-            targetColumn.items.push(activeItem);
-          }
+          overIsColumn.items.push(activeItem);
           return;
         }
 
@@ -520,28 +487,55 @@ export default function CategoriesPage() {
         const { item: overItem, parent: overParent, column: overColumn, itemIndexInParent: overIndex } = findItemData(overId);
         
         if (overItem && overParent && overColumn) {
-            // Logic to drop over an item to make it a child
             const isDroppingOnItem = over.data.current?.type === 'Item';
             if (isDroppingOnItem) {
-                const { item: draftOverItem } = findItemRecursive(overId, draft.flatMap(c=>c.items));
-                if(draftOverItem) {
-                    draftOverItem.children.push(activeItem);
-                    return;
+                // Find the draft version of overItem
+                const findAndNest = (items: Item[]): boolean => {
+                    for (const item of items) {
+                        if (item.id === overId) {
+                            item.children.push(activeItem);
+                            return true;
+                        }
+                        if (item.children && findAndNest(item.children)) {
+                            return true;
+                        }
+                    }
+                    return false;
+                };
+
+                for (const col of draft) {
+                    if (findAndNest(col.items)) return;
                 }
             }
-            
-            // Logic to reorder within the same or different list
-             const { parent: draftOverParent, index: draftOverIndexInParent } = findItemRecursive(overId, draft.flatMap(c => c.items));
-            if (draftOverParent && draftOverIndexInParent !== -1) {
-                draftOverParent.splice(draftOverIndexInParent + 1, 0, activeItem);
-            } else {
-               const targetColumn = draft.find(c => c.id === overColumn.id);
-               targetColumn?.items.push(activeItem);
-            }
         } else {
-            // Fallback: if dropping somewhere not on an item or column, put it back
-            const originalCol = draft.find(c => c.id === activeColumn.id);
-            originalCol?.items.push(activeItem);
+             // Case 3: Reorder within the same list or move to a new list root
+            const targetColumn = draft.find(c => c.id === activeColumn.id); // Default to original column
+            
+            const findAndInsert = (items: Item[]): boolean => {
+                for(let i=0; i < items.length; i++) {
+                    if (items[i].id === overId) {
+                        items.splice(i + 1, 0, activeItem);
+                        return true;
+                    }
+                     if (items[i].children && findAndInsert(items[i].children)) {
+                        return true;
+                    }
+                }
+                return false;
+            }
+
+            let inserted = false;
+            for(const col of draft) {
+                if (findAndInsert(col.items)) {
+                    inserted = true;
+                    break;
+                }
+            }
+
+            if (!inserted && targetColumn) {
+                 // Fallback: Add to root of original column
+                 targetColumn.items.push(activeItem);
+            }
         }
       }));
     }
