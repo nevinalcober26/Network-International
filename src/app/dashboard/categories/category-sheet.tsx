@@ -71,7 +71,7 @@ const findParent = (
   return null;
 };
 
-const getCategoryOptions = (
+export const getCategoryOptions = (
   board: Column[],
   currentCategoryId?: UniqueIdentifier
 ) => {

@@ -43,9 +43,11 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { CategorySheet } from './category-sheet';
+import { CategorySheet, getCategoryOptions } from './category-sheet';
 import { cn } from '@/lib/utils';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
 
 
 export type Item = {
@@ -490,6 +492,81 @@ const ListView = ({
   );
 };
 
+const AddCategoryDialog = ({
+  open,
+  onOpenChange,
+  onAddCategory,
+  board,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onAddCategory: (name: string, parentId: UniqueIdentifier | 'none') => void;
+  board: Column[];
+}) => {
+  const [name, setName] = useState('');
+  const [parentId, setParentId] = useState<string>('none');
+  const categoryOptions = useMemo(() => getCategoryOptions(board), [board]);
+
+  const handleSave = () => {
+    if (name.trim()) {
+      onAddCategory(name, parentId);
+      onOpenChange(false);
+      setName('');
+      setParentId('none');
+    }
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Add New Category</DialogTitle>
+          <DialogDescription>
+            Enter a name and select a parent for your new category.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="space-y-4 py-4">
+          <div className="space-y-2">
+            <Label htmlFor="new-category-name">Category Name</Label>
+            <Input
+              id="new-category-name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="e.g., Desserts"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="parent">Parent</Label>
+            <Select value={parentId} onValueChange={setParentId}>
+              <SelectTrigger id="parent">
+                <SelectValue placeholder="Select a parent category" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">None (Top-level)</SelectItem>
+                {categoryOptions.map((option) => (
+                  <SelectItem key={option.value} value={option.value}>
+                    <span style={{ paddingLeft: `${option.depth * 1.5}rem` }}>
+                      {option.depth > 0 && '↳ '}
+                      {option.label}
+                    </span>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>
+            Cancel
+          </Button>
+          <Button onClick={handleSave}>Save Category</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+};
+
+
 export default function CategoriesPage() {
   const [board, setBoard] = useState<Column[]>(initialBoardData);
   const [activeColumn, setActiveColumn] = useState<Column | null>(null);
@@ -499,6 +576,8 @@ export default function CategoriesPage() {
   const [addingToColumnId, setAddingToColumnId] = useState<UniqueIdentifier | null>(null);
   const [newItemName, setNewItemName] = useState('');
   const [view, setView] = useState<'board' | 'list'>('board');
+  const [isAddCategoryDialogOpen, setIsAddCategoryDialogOpen] = useState(false);
+
   
   const columnIds = useMemo(() => board.map(col => col.id), [board]);
 
@@ -590,6 +669,41 @@ export default function CategoriesPage() {
       }));
   };
 
+  const handleAddCategoryFromDialog = (name: string, parentId: UniqueIdentifier | 'none') => {
+    const newItemId = `item-${Date.now()}`;
+    const newCategory: Item = { id: newItemId, name, children: [] };
+
+    setBoard(produce(draft => {
+      if (parentId === 'none') {
+        // It's a new top-level column
+        const newColumnId = `col-${Date.now()}`;
+        draft.push({
+            id: newColumnId,
+            name: name,
+            items: [],
+        });
+      } else {
+        // It's a sub-category, find the parent
+        let parentFound = false;
+        // Check if parent is a column
+        const parentColumn = draft.find(col => col.id === parentId);
+        if (parentColumn) {
+          parentColumn.items.push(newCategory);
+          parentFound = true;
+        } else {
+          // Check if parent is another item
+          for (const col of draft) {
+            const { item: parentItem } = findItemAndParent(parentId, col.items);
+            if (parentItem) {
+              parentItem.children.push(newCategory);
+              parentFound = true;
+              break;
+            }
+          }
+        }
+      }
+    }));
+  };
 
   const handleAddNewItem = (columnId: UniqueIdentifier) => {
       if (!newItemName.trim()) return;
@@ -694,10 +808,12 @@ export default function CategoriesPage() {
           // Case 2: Dropped on another item (nesting or reordering)
           let dropped = false;
           for (const col of draft) {
-            const { item: overItem } = findItemAndParent(overId, col.items);
+            const { item: overItem, parent: overParent, index: overIndex } = findItemAndParent(overId, col.items);
   
             if (overItem) {
-              // Dropped ON an item to nest it
+              // Logic to decide whether to nest or reorder
+              // For simplicity, let's say dropping on an item always nests it.
+              // More complex logic could check drop position (e.g., top/bottom half)
               overItem.children.push(activeItem);
               dropped = true;
               break;
@@ -705,7 +821,7 @@ export default function CategoriesPage() {
           }
           
           if (!dropped) {
-            // Dropped BETWEEN items to reorder
+            // Case 3: Dropped BETWEEN items to reorder
              for (const col of draft) {
                 const { parent, index } = findItemAndParent(overId, col.items);
                 if (parent) {
@@ -765,6 +881,7 @@ export default function CategoriesPage() {
                       isEditing={editingColumnId === column.id}
                       onTitleClick={() => {
                           setEditingColumnId(column.id);
+                          // setSelectedCategory(null);
                       }}
                       onTitleChange={(e) => handleColumnNameChange(column.id, e.target.value)}
                       onTitleBlur={() => setEditingColumnId(null)}
@@ -824,7 +941,7 @@ export default function CategoriesPage() {
             board={board}
             onSelect={(item) => setSelectedCategory(item)}
             onDeleteItem={handleDeleteItem}
-            onAddCategory={handleAddNewColumn}
+            onAddCategory={() => setIsAddCategoryDialogOpen(true)}
           />
         )}
       </main>
@@ -837,6 +954,12 @@ export default function CategoriesPage() {
         }}
         category={selectedCategory}
         board={board}
+        />
+        <AddCategoryDialog
+          open={isAddCategoryDialogOpen}
+          onOpenChange={setIsAddCategoryDialogOpen}
+          onAddCategory={handleAddCategoryFromDialog}
+          board={board}
         />
     </>
   );
