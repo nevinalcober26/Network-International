@@ -156,37 +156,60 @@ export default function CategoriesPage() {
   const findItem = (id: UniqueIdentifier) => board.flatMap(col => col.items).find(item => item.id === id);
   const findColumnOfItem = (id: UniqueIdentifier) => board.find(col => col.items.some(item => item.id === id));
 
+  const handleAddNewColumn = () => {
+    setBoard(produce(board => {
+        board.push({
+            id: `col-${Date.now()}`,
+            name: 'New Category',
+            items: [],
+        });
+    }));
+  };
+
   const handleDragStart = (event: DragStartEvent) => {
     const { active } = event;
-    if (findColumn(active.id)) {
-        setActiveColumn(findColumn(active.id));
-    } else if (findItem(active.id)) {
-        setActiveItem(findItem(active.id));
+    const activeId = active.id;
+    const column = findColumn(activeId);
+    if (column) {
+      setActiveColumn(column);
+      return;
+    }
+    const item = findItem(activeId);
+    if (item) {
+      setActiveItem(item);
     }
   };
 
   const handleDragOver = (event: DragOverEvent) => {
-    const { active, over } = event;
+    const { active, over, draggingRect } = event;
     if (!over || !activeItem) return;
 
-    const activeContainer = findColumnOfItem(active.id);
-    const overContainer = findColumn(over.id) || findColumnOfItem(over.id);
+    const activeId = active.id;
+    const overId = over.id;
 
-    if (!activeContainer || !overContainer || activeContainer.id === overContainer.id) {
+    if (activeId === overId) return;
+
+    const activeContainerId = findColumnOfItem(activeId)?.id;
+    const overContainerId = findColumn(overId)?.id || findColumnOfItem(overId)?.id;
+
+    if (!activeContainerId || !overContainerId || activeContainerId === overContainerId) {
       return;
     }
 
     setBoard(produce(board => {
-        const activeColumn = board.find(c => c.id === activeContainer.id)!;
-        const overColumn = board.find(c => c.id === overContainer.id)!;
+        const activeColumn = board.find(c => c.id === activeContainerId)!;
+        const overColumn = board.find(c => c.id === overContainerId)!;
         
-        const activeIndex = activeColumn.items.findIndex(i => i.id === active.id);
+        const activeIndex = activeColumn.items.findIndex(i => i.id === activeId);
         const [movedItem] = activeColumn.items.splice(activeIndex, 1);
         
-        let overIndex = overColumn.items.findIndex(i => i.id === over.id);
-        if (overIndex === -1) {
-            // Dropping on column, not on an item
-            overIndex = overColumn.items.length;
+        const isOverAColumn = !!findColumn(overId);
+        let overIndex;
+
+        if (isOverAColumn) {
+          overIndex = overColumn.items.length;
+        } else {
+          overIndex = overColumn.items.findIndex(i => i.id === overId);
         }
 
         overColumn.items.splice(overIndex, 0, movedItem);
@@ -200,35 +223,57 @@ export default function CategoriesPage() {
 
     if (!over) return;
     
-    if (active.id === over.id) return;
+    const activeId = active.id;
+    const overId = over.id;
+    if (activeId === overId) return;
     
+    const isColumnDrag = !!findColumn(activeId);
+
     // Dragging a column
-    if (activeColumn) {
+    if (isColumnDrag) {
         setBoard(produce(board => {
-            const oldIndex = board.findIndex(c => c.id === active.id);
-            const newIndex = board.findIndex(c => c.id === over.id);
-            const [movedColumn] = board.splice(oldIndex, 1);
-            board.splice(newIndex, 0, movedColumn);
+            const oldIndex = board.findIndex(c => c.id === activeId);
+            const newIndex = board.findIndex(c => c.id === overId);
+            if (oldIndex !== -1 && newIndex !== -1) {
+              const [movedColumn] = board.splice(oldIndex, 1);
+              board.splice(newIndex, 0, movedColumn);
+            }
         }));
         return;
     }
 
     // Dragging an item
-    if (activeItem) {
-        const activeContainer = findColumnOfItem(active.id)!;
-        const overContainer = findColumnOfItem(over.id) || findColumn(over.id)!;
+    const activeContainerId = findColumnOfItem(activeId)?.id;
+    const overContainerId = findColumn(overId)?.id || findColumnOfItem(overId)?.id;
 
-        setBoard(produce(board => {
-            const activeCol = board.find(c => c.id === activeContainer.id)!;
-            const overCol = board.find(c => c.id === overContainer.id)!;
+    if (!activeContainerId || !overContainerId) return;
 
-            const activeIndex = activeCol.items.findIndex(i => i.id === active.id);
+    if (activeContainerId === overContainerId) {
+      // Just reordering within the same column
+      setBoard(produce(board => {
+        const column = board.find(c => c.id === activeContainerId)!;
+        const oldIndex = column.items.findIndex(i => i.id === activeId);
+        const newIndex = column.items.findIndex(i => i.id === overId);
+        if (oldIndex !== -1 && newIndex !== -1) {
+          const [movedItem] = column.items.splice(oldIndex, 1);
+          column.items.splice(newIndex, 0, movedItem);
+        }
+      }));
+    } else {
+      // This case should be handled by onDragOver, but as a fallback:
+      setBoard(produce(board => {
+            const activeCol = board.find(c => c.id === activeContainerId)!;
+            const overCol = board.find(c => c.id === overContainerId)!;
+
+            const activeIndex = activeCol.items.findIndex(i => i.id === activeId);
             const [movedItem] = activeCol.items.splice(activeIndex, 1);
 
-            let overIndex = overCol.items.findIndex(i => i.id === over.id);
-            // If dropping on the column itself, add to the end
-            if (overIndex === -1 && findColumn(over.id)) {
+            let overIndex = overCol.items.findIndex(i => i.id === overId);
+            if (overIndex === -1 && findColumn(overId)) {
                 overIndex = overCol.items.length;
+            } else if (overIndex === -1) {
+              // Fallback if not found
+              overIndex = 0;
             }
 
             overCol.items.splice(overIndex, 0, movedItem);
@@ -244,9 +289,6 @@ export default function CategoriesPage() {
           <Badge variant="destructive">BLOOMSBURY'S (RAS AL KHAIMAH)</Badge>
         </h1>
         <div className="flex items-center gap-4">
-          <Button>
-            <Plus className="mr-2 h-4 w-4" /> Add Category
-          </Button>
           <Button variant="secondary">PUBLISH</Button>
         </div>
       </header>
@@ -265,6 +307,16 @@ export default function CategoriesPage() {
                   <BoardColumn key={column.id} column={column} />
                 ))}
               </SortableContext>
+              <div className="flex-shrink-0 w-80">
+                  <Button
+                      variant="outline"
+                      className="w-full h-full border-dashed flex-col py-12"
+                      onClick={handleAddNewColumn}
+                  >
+                      <Plus className="h-8 w-8 mb-2" />
+                      Add New Category
+                  </Button>
+              </div>
           </div>
           <DragOverlay>
             {activeColumn ? (
