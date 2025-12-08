@@ -104,14 +104,19 @@ export function AppSidebar() {
           <SidebarGroupLabel>Overview</SidebarGroupLabel>
           <SidebarMenu>
             <SidebarMenuItem>
-              <NextLink href="/dashboard" passHref>
-                <SidebarMenuButton asChild isActive={pathname.startsWith('/dashboard') && !pathname.includes('categories')} tooltip="Dashboard">
-                  <a>
-                    <PieChart />
-                    <span>Dashboard</span>
-                  </a>
-                </SidebarMenuButton>
-              </NextLink>
+              <SidebarMenuButton
+                asChild
+                isActive={
+                  pathname.startsWith('/dashboard') &&
+                  !pathname.includes('categories')
+                }
+                tooltip="Dashboard"
+              >
+                <NextLink href="/dashboard">
+                  <PieChart />
+                  <span>Dashboard</span>
+                </NextLink>
+              </SidebarMenuButton>
             </SidebarMenuItem>
             <SidebarMenuItem>
               <SidebarMenuButton href="#" tooltip="Reports">
@@ -132,14 +137,16 @@ export function AppSidebar() {
               </SidebarMenuButton>
             </SidebarMenuItem>
             <SidebarMenuItem>
-              <NextLink href="/dashboard/categories" passHref>
-                <SidebarMenuButton asChild isActive={pathname.startsWith('/dashboard/categories')} tooltip="Categories">
-                  <a>
-                    <LayoutGrid />
-                    <span>Categories</span>
-                  </a>
-                </SidebarMenuButton>
-              </NextLink>
+              <SidebarMenuButton
+                asChild
+                isActive={pathname.startsWith('/dashboard/categories')}
+                tooltip="Categories"
+              >
+                <NextLink href="/dashboard/categories">
+                  <LayoutGrid />
+                  <span>Categories</span>
+                </NextLink>
+              </SidebarMenuButton>
             </SidebarMenuItem>
           </SidebarMenu>
         </SidebarGroup>
