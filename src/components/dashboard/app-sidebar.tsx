@@ -104,7 +104,7 @@ export function AppSidebar() {
           <SidebarGroupLabel>Overview</SidebarGroupLabel>
           <SidebarMenu>
             <SidebarMenuItem>
-              <NextLink href="/dashboard" passHref legacyBehavior>
+              <NextLink href="/dashboard" passHref>
                 <SidebarMenuButton asChild isActive={pathname.startsWith('/dashboard') && !pathname.includes('categories')} tooltip="Dashboard">
                   <PieChart />
                   <span>Dashboard</span>
@@ -130,7 +130,7 @@ export function AppSidebar() {
               </SidebarMenuButton>
             </SidebarMenuItem>
             <SidebarMenuItem>
-              <NextLink href="/dashboard/categories" passHref legacyBehavior>
+              <NextLink href="/dashboard/categories" passHref>
                 <SidebarMenuButton asChild isActive={pathname.startsWith('/dashboard/categories')} tooltip="Categories">
                   <LayoutGrid />
                   <span>Categories</span>
