@@ -674,13 +674,11 @@ export default function CategoriesPage() {
     const newCategory: Item = { id: newItemId, name, children: [] };
 
     setBoard(produce(draft => {
-      if (parentId === 'none' || !parentId) {
-        // It's a new top-level column
-        const newColumnId = `col-${Date.now()}`;
+      if (parentId === 'none') {
         draft.push({
-            id: newColumnId,
-            name: name,
-            items: [],
+          id: `col-${Date.now()}`,
+          name: name,
+          items: [],
         });
       } else {
         // It's a sub-category, find the parent
@@ -702,9 +700,9 @@ export default function CategoriesPage() {
           }
         }
          if (!parentFound) {
-            const newColumnId = `col-${Date.now()}`;
+            // Failsafe: if parent not found, create as a new top-level column
             draft.push({
-                id: newColumnId,
+                id: `col-${Date.now()}`,
                 name: name,
                 items: [],
             });
@@ -806,44 +804,39 @@ export default function CategoriesPage() {
         if (!activeItem) return;
   
         // 2. Find where to drop the item
-        const overIsColumn = draft.some(c => c.id === overId);
-  
-        if (overIsColumn) {
-          // Case 1: Dropped in a column (but not on an item)
-          const targetColumn = draft.find(c => c.id === overId);
-          targetColumn?.items.push(activeItem);
-        } else {
-          // Case 2: Dropped on another item (nesting or reordering)
-          let dropped = false;
-          for (const col of draft) {
-            const { item: overItem, parent: overParent, index: overIndex } = findItemAndParent(overId, col.items);
-  
-            if (overItem) {
-              // Logic to decide whether to nest or reorder
-              // For simplicity, let's say dropping on an item always nests it.
-              // More complex logic could check drop position (e.g., top/bottom half)
-              overItem.children.push(activeItem);
-              dropped = true;
-              break;
-            }
-          }
-          
-          if (!dropped) {
-            // Case 3: Dropped BETWEEN items to reorder
-             for (const col of draft) {
-                const { parent, index } = findItemAndParent(overId, col.items);
-                if (parent) {
-                    parent.splice(index, 0, activeItem);
-                    dropped = true;
-                    break;
+        let overIsColumn = draft.some(c => c.id === overId);
+        const overIsItem = !overIsColumn;
+
+        // Check if dropping on an item (to nest)
+        if (overIsItem) {
+            for (const col of draft) {
+                const { item: overItem } = findItemAndParent(overId, col.items);
+                if (overItem) {
+                    overItem.children.push(activeItem);
+                    return; // End the operation
                 }
             }
-          }
-  
-          if (!dropped && originalParent) {
-            // If we still haven't dropped it (e.g. invalid drop), return it to its original spot
+        }
+
+        // Check if dropping into a column
+        const targetColumn = draft.find(c => c.id === overId);
+        if (targetColumn) {
+            targetColumn.items.push(activeItem);
+            return;
+        }
+
+        // Check if dropping between items (re-ordering)
+        for (const col of draft) {
+            const { parent, index } = findItemAndParent(overId, col.items);
+            if (parent) {
+                parent.splice(index, 0, activeItem);
+                return;
+            }
+        }
+        
+        // If we still haven't dropped it (e.g. invalid drop), return it to its original spot
+        if (originalParent) {
             originalParent.splice(originalIndex, 0, activeItem);
-          }
         }
       }));
     }
@@ -889,6 +882,7 @@ export default function CategoriesPage() {
                       isEditing={editingColumnId === column.id}
                       onTitleClick={() => {
                           setEditingColumnId(column.id);
+                          setSelectedCategory(null);
                       }}
                       onTitleChange={(e) => handleColumnNameChange(column.id, e.target.value)}
                       onTitleBlur={() => setEditingColumnId(null)}
@@ -946,7 +940,7 @@ export default function CategoriesPage() {
         ) : (
           <ListView 
             board={board}
-            onSelect={(item) => setSelectedCategory(item)}
+            onSelect={setSelectedCategory}
             onDeleteItem={handleDeleteItem}
             onAddCategory={() => setIsAddCategoryDialogOpen(true)}
           />
@@ -955,9 +949,9 @@ export default function CategoriesPage() {
       <CategorySheet 
         open={!!selectedCategory} 
         onOpenChange={(isOpen) => {
-            if (!isOpen) {
-                setSelectedCategory(null);
-            }
+          if (!isOpen) {
+            setSelectedCategory(null);
+          }
         }}
         category={selectedCategory}
         board={board}
