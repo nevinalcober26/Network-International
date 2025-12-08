@@ -7,8 +7,16 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
-import { Plus, GripVertical, MoreHorizontal, CornerDownRight, X } from 'lucide-react';
+import { Plus, GripVertical, MoreHorizontal, CornerDownRight, X, LayoutGrid, List } from 'lucide-react';
 import {
   DndContext,
   closestCenter,
@@ -303,6 +311,89 @@ function BoardColumn({
   );
 }
 
+const ListView = ({ 
+  board, 
+  onSelect,
+  onDeleteItem,
+}: { 
+  board: Column[];
+  onSelect: (item: Column | Item) => void;
+  onDeleteItem: (itemId: UniqueIdentifier) => void;
+}) => {
+
+  const ListItem = ({ item, depth = 0 }: { item: Item; depth: number }) => (
+    <>
+      <TableRow>
+        <TableCell>
+          <div className="flex items-center" style={{ paddingLeft: `${depth * 2}rem` }}>
+            {depth > 0 && <CornerDownRight className="h-4 w-4 mr-2 text-muted-foreground" />}
+            <span className="font-medium">{item.name}</span>
+          </div>
+        </TableCell>
+        <TableCell>
+          <Badge variant="outline">{item.children.length > 0 ? 'Parent' : 'Item'}</Badge>
+        </TableCell>
+        <TableCell className="text-right">
+            <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="icon" className="h-8 w-8">
+                        <MoreHorizontal className="h-4 w-4" />
+                    </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                    <DropdownMenuItem onClick={() => onSelect(item)}>Edit</DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => onDeleteItem(item.id)} className="text-red-500">Delete</DropdownMenuItem>
+                </DropdownMenuContent>
+            </DropdownMenu>
+        </TableCell>
+      </TableRow>
+      {item.children.map(child => <ListItem key={child.id} item={child} depth={depth + 1} />)}
+    </>
+  );
+
+  return (
+    <Card>
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Category Name</TableHead>
+            <TableHead>Type</TableHead>
+            <TableHead className="text-right">Actions</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {board.map(column => (
+            <React.Fragment key={column.id}>
+              <TableRow className="bg-muted/50 hover:bg-muted/50">
+                <TableCell>
+                  <span className="font-semibold text-lg">{column.name}</span>
+                </TableCell>
+                <TableCell>
+                  <Badge>Main Category</Badge>
+                </TableCell>
+                <TableCell className="text-right">
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon" className="h-8 w-8">
+                                <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => onSelect(column)}>Edit</DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => {}} className="text-red-500">Delete</DropdownMenuItem>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
+                </TableCell>
+              </TableRow>
+              {column.items.map(item => <ListItem key={item.id} item={item} depth={0} />)}
+            </React.Fragment>
+          ))}
+        </TableBody>
+      </Table>
+    </Card>
+  );
+}
+
 export default function CategoriesPage() {
   const [board, setBoard] = useState<Column[]>(initialBoardData);
   const [activeColumn, setActiveColumn] = useState<Column | null>(null);
@@ -311,6 +402,7 @@ export default function CategoriesPage() {
   const [selectedCategory, setSelectedCategory] = useState<Column | Item | null>(null);
   const [addingToColumnId, setAddingToColumnId] = useState<UniqueIdentifier | null>(null);
   const [newItemName, setNewItemName] = useState('');
+  const [view, setView] = useState<'board' | 'list'>('board');
   
   const columnIds = useMemo(() => board.map(col => col.id), [board]);
 
@@ -545,82 +637,99 @@ export default function CategoriesPage() {
           <Badge variant="destructive">BLOOMSBURY'S (RAS AL KHAIMAH)</Badge>
         </h1>
         <div className="flex items-center gap-4">
+          <div className="flex items-center gap-1 rounded-md bg-muted p-1">
+              <Button variant={view === 'board' ? 'secondary' : 'ghost'} size="sm" onClick={() => setView('board')}>
+                  <LayoutGrid className="h-4 w-4" />
+                  <span className="ml-2 hidden sm:inline">Board</span>
+              </Button>
+              <Button variant={view === 'list' ? 'secondary' : 'ghost'} size="sm" onClick={() => setView('list')}>
+                  <List className="h-4 w-4" />
+                  <span className="ml-2 hidden sm:inline">List</span>
+              </Button>
+          </div>
           <Button variant="secondary">PUBLISH</Button>
         </div>
       </header>
 
       <main className="p-4 sm:p-6 lg:p-8 flex-grow">
-        <DndContext
-          sensors={sensors}
-          collisionDetection={closestCenter}
-          onDragStart={handleDragStart}
-          onDragEnd={handleDragEnd}
-          onDragOver={handleDragOver}
-        >
-          <div className="flex gap-6 overflow-x-auto pb-4 items-start">
-              <SortableContext items={columnIds} strategy={horizontalListSortingStrategy}>
-                {board.map((column) => (
-                  <BoardColumn 
-                    key={column.id} 
-                    column={column} 
-                    isEditing={editingColumnId === column.id}
-                    onTitleClick={() => {
-                        setEditingColumnId(column.id);
-                        setSelectedCategory(null);
-                    }}
-                    onTitleChange={(e) => handleColumnNameChange(column.id, e.target.value)}
-                    onTitleBlur={() => setEditingColumnId(null)}
-                    onAddItem={() => handleAddNewItem(column.id)}
-                    onDeleteColumn={handleDeleteColumn}
-                    onDeleteItem={handleDeleteItem}
-                    onSelect={(item) => {
-                      setEditingColumnId(null);
-                      setSelectedCategory(item);
-                    }}
-                    isAddingItem={addingToColumnId === column.id}
-                    onToggleAddItem={() => handleToggleAddItem(column.id)}
-                    newItemName={newItemName}
-                    setNewItemName={setNewItemName}
-                    isDragging={!!activeItem}
-                  />
-                ))}
-              </SortableContext>
-              <div className="flex-shrink-0 w-80">
-                  <Button
-                      variant="outline"
-                      className="w-full h-full border-dashed flex-col py-12"
-                      onClick={handleAddNewColumn}
-                  >
-                      <Plus className="h-8 w-8 mb-2" />
-                      Add New Category
-                  </Button>
-              </div>
-          </div>
-          <DragOverlay>
-            {activeColumn ? (
+        {view === 'board' ? (
+          <DndContext
+            sensors={sensors}
+            collisionDetection={closestCenter}
+            onDragStart={handleDragStart}
+            onDragEnd={handleDragEnd}
+            onDragOver={handleDragOver}
+          >
+            <div className="flex gap-6 overflow-x-auto pb-4 items-start">
+                <SortableContext items={columnIds} strategy={horizontalListSortingStrategy}>
+                  {board.map((column) => (
+                    <BoardColumn 
+                      key={column.id} 
+                      column={column} 
+                      isEditing={editingColumnId === column.id}
+                      onTitleClick={() => {
+                          setEditingColumnId(column.id);
+                      }}
+                      onTitleChange={(e) => handleColumnNameChange(column.id, e.target.value)}
+                      onTitleBlur={() => setEditingColumnId(null)}
+                      onAddItem={() => handleAddNewItem(column.id)}
+                      onDeleteColumn={handleDeleteColumn}
+                      onDeleteItem={handleDeleteItem}
+                      onSelect={(item) => {
+                        setEditingColumnId(null);
+                        setSelectedCategory(item);
+                      }}
+                      isAddingItem={addingToColumnId === column.id}
+                      onToggleAddItem={() => handleToggleAddItem(column.id)}
+                      newItemName={newItemName}
+                      setNewItemName={setNewItemName}
+                      isDragging={!!activeItem}
+                    />
+                  ))}
+                </SortableContext>
                 <div className="flex-shrink-0 w-80">
-                    <Card className="bg-card opacity-90 shadow-2xl">
-                        <CardHeader className="p-3 flex flex-row items-center justify-between border-b">
-                          <CardTitle className="text-base font-semibold">{activeColumn.name}</CardTitle>
-                        </CardHeader>
-                        <CardContent className="p-3 min-h-[100px]">
-                            {/* Overlay doesn't need full sortable context */}
-                        </CardContent>
-                    </Card>
+                    <Button
+                        variant="outline"
+                        className="w-full h-full border-dashed flex-col py-12"
+                        onClick={handleAddNewColumn}
+                    >
+                        <Plus className="h-8 w-8 mb-2" />
+                        Add New Category
+                    </Button>
                 </div>
-            ) : null}
-            {activeItem ? (
-                <Card>
-                    <CardContent className="p-2 flex items-center justify-between">
-                         <div className="flex items-center gap-2">
-                            <GripVertical className="h-5 w-5 text-muted-foreground" />
-                            <span className="font-medium text-sm">{activeItem.name}</span>
-                        </div>
-                    </CardContent>
-                </Card>
-            ) : null}
-          </DragOverlay>
-        </DndContext>
+            </div>
+            <DragOverlay>
+              {activeColumn ? (
+                  <div className="flex-shrink-0 w-80">
+                      <Card className="bg-card opacity-90 shadow-2xl">
+                          <CardHeader className="p-3 flex flex-row items-center justify-between border-b">
+                            <CardTitle className="text-base font-semibold">{activeColumn.name}</CardTitle>
+                          </CardHeader>
+                          <CardContent className="p-3 min-h-[100px]">
+                              {/* Overlay doesn't need full sortable context */}
+                          </CardContent>
+                      </Card>
+                  </div>
+              ) : null}
+              {activeItem ? (
+                  <Card>
+                      <CardContent className="p-2 flex items-center justify-between">
+                           <div className="flex items-center gap-2">
+                              <GripVertical className="h-5 w-5 text-muted-foreground" />
+                              <span className="font-medium text-sm">{activeItem.name}</span>
+                          </div>
+                      </CardContent>
+                  </Card>
+              ) : null}
+            </DragOverlay>
+          </DndContext>
+        ) : (
+          <ListView 
+            board={board}
+            onSelect={(item) => setSelectedCategory(item)}
+            onDeleteItem={handleDeleteItem}
+          />
+        )}
       </main>
       <CategorySheet 
         open={!!selectedCategory} 
