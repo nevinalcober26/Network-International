@@ -33,14 +33,15 @@ import { produce } from 'immer';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { CategorySheet } from './category-sheet';
 
-type Item = {
+export type Item = {
   id: UniqueIdentifier;
   name: string;
   children: Item[];
 };
 
-type Column = {
+export type Column = {
   id: UniqueIdentifier;
   name: string;
   items: Item[];
@@ -86,6 +87,7 @@ function SortableItem({
   setEditingItemId,
   handleItemNameChange,
   onDeleteItem,
+  onSelect,
 }: { 
   item: Item, 
   depth?: number,
@@ -97,6 +99,7 @@ function SortableItem({
   setEditingItemId: (id: UniqueIdentifier | null) => void;
   handleItemNameChange: (itemId: UniqueIdentifier, newName: string) => void;
   onDeleteItem: (itemId: UniqueIdentifier) => void;
+  onSelect: (item: Item) => void;
 }) {
   const {
     attributes,
@@ -124,16 +127,16 @@ function SortableItem({
 
   return (
     <div ref={setNodeRef} style={style} {...attributes}>
-        <Card className="mb-2" >
+        <Card className="mb-2" onClick={() => onSelect(item)}>
             <CardContent className="p-2 flex items-center justify-between">
                 <div className="flex items-center gap-2 flex-grow">
-                 <button {...listeners} className="cursor-grab p-1 text-muted-foreground hover:text-foreground">
+                 <button {...listeners} className="cursor-grab p-1 text-muted-foreground hover:text-foreground" onClick={(e) => e.stopPropagation()}>
                     <GripVertical className="h-5 w-5" />
                 </button>
                 {[...Array(depth)].map((_, i) => (
                   <CornerDownRight key={i} className="h-4 w-4 text-muted-foreground" />
                 ))}
-                 <div className="flex-grow" onClick={onTitleClick}>
+                 <div className="flex-grow" onClick={(e) => {e.stopPropagation(); onTitleClick();}}>
                   {isEditing ? (
                      <Input
                         ref={inputRef}
@@ -154,13 +157,13 @@ function SortableItem({
                 </div>
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-6 w-6">
+                        <Button variant="ghost" size="icon" className="h-6 w-6" onClick={(e) => e.stopPropagation()}>
                             <MoreHorizontal className="h-4 w-4 text-muted-foreground" />
                         </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => setEditingItemId(item.id)}>Edit</DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => onDeleteItem(item.id)} className="text-red-500">Delete</DropdownMenuItem>
+                        <DropdownMenuItem onClick={(e) => {e.stopPropagation(); setEditingItemId(item.id)}}>Edit</DropdownMenuItem>
+                        <DropdownMenuItem onClick={(e) => {e.stopPropagation(); onDeleteItem(item.id)}} className="text-red-500">Delete</DropdownMenuItem>
                     </DropdownMenuContent>
                 </DropdownMenu>
             </CardContent>
@@ -176,10 +179,9 @@ function SortableItem({
                         onTitleClick={() => setEditingItemId(child.id)}
                         onTitleChange={(e) => handleItemNameChange(child.id, e.target.value)}
                         onTitleBlur={() => setEditingItemId(null)}
-                        editingItemId={editingItemId}
-                        setEditingItemId={setEditingItemId}
-                        handleItemNameChange={handleItemNameChange}
                         onDeleteItem={onDeleteItem}
+                        onSelect={onSelect}
+                        {...{ editingItemId, setEditingItemId, handleItemNameChange }}
                       />)}
                  </SortableContext>
             </div>
@@ -201,6 +203,7 @@ function BoardColumn({
   handleItemNameChange,
   onDeleteColumn,
   onDeleteItem,
+  onSelect,
 }: { 
   column: Column;
   isEditing: boolean;
@@ -213,6 +216,7 @@ function BoardColumn({
   handleItemNameChange: (itemId: UniqueIdentifier, newName: string) => void;
   onDeleteColumn: (columnId: UniqueIdentifier) => void;
   onDeleteItem: (itemId: UniqueIdentifier) => void;
+  onSelect: (item: Column | Item) => void;
 }) {
   const {
     attributes,
@@ -257,6 +261,7 @@ function BoardColumn({
             setEditingItemId={setEditingItemId}
             handleItemNameChange={handleItemNameChange}
             onDeleteItem={onDeleteItem}
+            onSelect={onSelect}
         />
     );
 };
@@ -265,7 +270,7 @@ function BoardColumn({
   return (
     <div ref={setNodeRef} style={style} className="flex-shrink-0 w-80">
       <Card className="bg-muted/50 flex flex-col h-full">
-        <CardHeader {...attributes} {...listeners} className="p-3 flex flex-row items-center justify-between border-b cursor-grab">
+        <CardHeader {...attributes} className="p-3 flex flex-row items-center justify-between border-b" >
            <div className="flex-grow" onClick={(e) => { e.stopPropagation(); onTitleClick(); }}>
             {isEditing ? (
               <Input
@@ -281,13 +286,16 @@ function BoardColumn({
                   className="text-base font-semibold border-2 border-primary h-8"
               />
             ) : (
-              <CardTitle className="text-base font-semibold py-1 px-2">
+              <CardTitle className="text-base font-semibold py-1 px-2 cursor-pointer" onClick={() => onSelect(column)}>
                   {column.name}
               </CardTitle>
             )}
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-0">
             <Badge variant="secondary">{flattenItems(column.items).length}</Badge>
+             <button {...listeners} className="cursor-grab p-1 text-muted-foreground hover:text-foreground">
+                <GripVertical className="h-5 w-5" />
+            </button>
             <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                     <Button variant="ghost" size="icon" className="h-7 w-7 cursor-pointer" onClick={(e) => e.stopPropagation()}>
@@ -323,6 +331,7 @@ export default function CategoriesPage() {
   const [activeItem, setActiveItem] = useState<Item | null>(null);
   const [editingColumnId, setEditingColumnId] = useState<UniqueIdentifier | null>(null);
   const [editingItemId, setEditingItemId] = useState<UniqueIdentifier | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState<Column | Item | null>(null);
   
   const columnIds = useMemo(() => board.map(col => col.id), [board]);
 
@@ -481,7 +490,7 @@ export default function CategoriesPage() {
     
     const isColumnDrag = active.data.current?.type === 'Column';
 
-    if (isColumnDrag) {
+    if (isColumnDrag && findColumn(overId)) {
         setBoard(produce(draft => {
             const oldIndex = draft.findIndex(c => c.id === activeId);
             const newIndex = draft.findIndex(c => c.id === overId);
@@ -516,29 +525,30 @@ export default function CategoriesPage() {
         }
 
         // Case 2: Drop over another item
-        let { item: overItem, parent: overParent, column: overColumn, itemIndexInParent: overIndex } = findItemData(overId);
+        const { item: overItem, parent: overParent, column: overColumn, itemIndexInParent: overIndex } = findItemData(overId);
         
         if (overItem && overParent && overColumn) {
-            // Logic to drop over an item - make it a child or reorder
-            const { item: draftOverItem, parent: draftOverParent, index: draftOverIndexInParent } = findItemRecursive(overId, draft.flatMap(c => c.items));
-            
-            // To make it a child, we'll push to its children array
-            // A more complex logic could check drag position (e.g. top half vs bottom half)
-            // For now, let's try a simple nesting approach.
-            // Let's assume for now dropping on an item makes it a child.
-            const {item: draftTargetItem } = findItemRecursive(overId, draft.flatMap(c=>c.items));
-            if(draftTargetItem) {
-              draftTargetItem.children.push(activeItem);
-              return;
+            // Logic to drop over an item to make it a child
+            if (over.data.current?.type === 'Item') {
+                const {item: draftTargetItem } = findItemRecursive(overId, draft.flatMap(c=>c.items));
+                if(draftTargetItem) {
+                    draftTargetItem.children.push(activeItem);
+                    return;
+                }
             }
 
-            // Fallback to reordering if we couldn't nest
+            // Logic to reorder within the same or different list
+             const { parent: draftOverParent, index: draftOverIndexInParent } = findItemRecursive(overId, draft.flatMap(c => c.items));
             if (draftOverParent && draftOverIndexInParent !== -1) {
                 draftOverParent.splice(draftOverIndexInParent, 0, activeItem);
             } else {
                const targetColumn = draft.find(c => c.id === overColumn.id);
                targetColumn?.items.push(activeItem);
             }
+        } else {
+            // Fallback: if dropping somewhere not on an item or column, put it back
+            const originalCol = draft.find(c => c.id === activeColumn.id);
+            originalCol?.items.push(activeItem);
         }
       }));
     }
@@ -581,6 +591,7 @@ export default function CategoriesPage() {
                     handleItemNameChange={handleItemNameChange}
                     onDeleteColumn={handleDeleteColumn}
                     onDeleteItem={handleDeleteItem}
+                    onSelect={setSelectedCategory}
                   />
                 ))}
               </SortableContext>
@@ -621,6 +632,15 @@ export default function CategoriesPage() {
           </DragOverlay>
         </DndContext>
       </main>
+      <CategorySheet 
+        open={!!selectedCategory} 
+        onOpenChange={(isOpen) => {
+            if (!isOpen) {
+                setSelectedCategory(null);
+            }
+        }}
+        category={selectedCategory}
+        />
     </>
   );
 }
