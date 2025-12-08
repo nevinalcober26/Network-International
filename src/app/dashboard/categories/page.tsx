@@ -48,6 +48,7 @@ import { cn } from '@/lib/utils';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
+import { useToast } from '@/hooks/use-toast';
 
 
 export type Item = {
@@ -577,6 +578,7 @@ export default function CategoriesPage() {
   const [newItemName, setNewItemName] = useState('');
   const [view, setView] = useState<'board' | 'list'>('board');
   const [isAddCategoryDialogOpen, setIsAddCategoryDialogOpen] = useState(false);
+  const { toast } = useToast();
 
   
   const columnIds = useMemo(() => board.map(col => col.id), [board]);
@@ -618,15 +620,20 @@ export default function CategoriesPage() {
   }
   
   const handleAddNewColumn = () => {
+    const newName = 'New Category';
     const newColumnId = `col-${Date.now()}`;
     setBoard(produce(board => {
         board.push({
             id: newColumnId,
-            name: 'New Category',
+            name: newName,
             items: [],
         });
     }));
     setEditingColumnId(newColumnId);
+    toast({
+      title: "Category Added",
+      description: `"${newName}" has been added.`,
+    });
   };
   
   const handleColumnNameChange = (columnId: UniqueIdentifier, newName: string) => {
@@ -675,6 +682,7 @@ export default function CategoriesPage() {
 
     setBoard(produce(draft => {
       if (parentId === 'none') {
+        // Create a new top-level category (column)
         const newColumnId = `col-${Date.now()}`;
         draft.push({
           id: newColumnId,
@@ -682,6 +690,7 @@ export default function CategoriesPage() {
           items: [],
         });
       } else {
+        // Find parent and add as sub-category
         const parentColumn = draft.find(col => col.id === parentId);
         if (parentColumn) {
           parentColumn.items.push(newCategory);
@@ -696,6 +705,10 @@ export default function CategoriesPage() {
         }
       }
     }));
+    toast({
+      title: "Category Added",
+      description: `"${name}" has been successfully added.`,
+    });
   };
 
   const handleAddNewItem = (columnId: UniqueIdentifier) => {
@@ -713,6 +726,10 @@ export default function CategoriesPage() {
       }));
       setNewItemName('');
       setAddingToColumnId(null);
+      toast({
+        title: "Category Item Added",
+        description: `"${newItemName}" has been added.`,
+      });
   }
   
   const handleToggleAddItem = (columnId: UniqueIdentifier) => {
@@ -864,7 +881,8 @@ export default function CategoriesPage() {
                       column={column} 
                       isEditing={editingColumnId === column.id}
                       onTitleClick={() => {
-                          setEditingColumnId(column.id);
+                        setEditingColumnId(column.id);
+                        setSelectedCategory(null);
                       }}
                       onTitleChange={(e) => handleColumnNameChange(column.id, e.target.value)}
                       onTitleBlur={() => setEditingColumnId(null)}
@@ -928,8 +946,8 @@ export default function CategoriesPage() {
           />
         )}
       </main>
-      <CategorySheet 
-        open={!!selectedCategory} 
+      <CategorySheet
+        open={!!selectedCategory}
         onOpenChange={(isOpen) => {
           if (!isOpen) {
             setSelectedCategory(null);
@@ -937,7 +955,7 @@ export default function CategoriesPage() {
         }}
         category={selectedCategory}
         board={board}
-        />
+      />
         <AddCategoryDialog
           open={isAddCategoryDialogOpen}
           onOpenChange={setIsAddCategoryDialogOpen}
