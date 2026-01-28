@@ -96,7 +96,7 @@ export function AppSidebar() {
   const pathname = usePathname();
   return (
     <Sidebar variant="sidebar" collapsible="icon" className="border-r">
-      <SidebarHeader className="p-4 justify-between">
+      <SidebarHeader className="p-4 flex-row items-center justify-between">
         {eMenuLogo}
         <SidebarTrigger />
       </SidebarHeader>
