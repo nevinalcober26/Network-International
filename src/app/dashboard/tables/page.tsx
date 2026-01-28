@@ -1,12 +1,43 @@
+
 'use client';
 
 import { useState, useMemo } from 'react';
-import { Card, CardContent, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+import {
+  Card,
+  CardContent,
+} from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 import { DashboardHeader } from '@/components/dashboard/header';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Button } from '@/components/ui/button';
+import {
+  Users,
+  Circle,
+  Hourglass,
+  CirclePercent,
+  CheckCircle,
+  Dot,
+} from 'lucide-react';
 
-const tables = [
+type Status =
+  | 'Vacant'
+  | 'Occupied - Unpaid'
+  | 'Occupied - Partially Paid'
+  | 'Occupied - Fully Paid';
+  
+type Table = {
+  id: string;
+  status: Status;
+  floor: string;
+};
+
+const tables: Table[] = [
   { id: 'T1', status: 'Vacant', floor: 'Ground Floor' },
   { id: 'T2', status: 'Occupied - Unpaid', floor: 'Ground Floor' },
   { id: 'T3', status: 'Vacant', floor: 'Ground Floor' },
@@ -33,27 +64,30 @@ const tables = [
   { id: 'T24', status: 'Vacant', floor: 'First Floor' },
 ];
 
-const getStatusColor = (status: string) => {
-  if (status.startsWith('Occupied')) {
-    if (status.includes('Unpaid')) return 'border-red-500 bg-red-50/80';
-    if (status.includes('Partially Paid'))
-      return 'border-yellow-500 bg-yellow-50/80';
-    if (status.includes('Fully Paid')) return 'border-blue-500 bg-blue-50/80';
-    return 'border-gray-500 bg-gray-50/80';
-  }
-  if (status === 'Vacant') return 'border-green-500 bg-green-50/80';
-  return 'border-gray-300 bg-gray-50';
-};
-
-const getStatusTextColor = (status: string) => {
-  if (status.startsWith('Occupied')) {
-    if (status.includes('Unpaid')) return 'text-red-700';
-    if (status.includes('Partially Paid')) return 'text-yellow-700';
-    if (status.includes('Fully Paid')) return 'text-blue-700';
-    return 'text-gray-700';
-  }
-  if (status === 'Vacant') return 'text-green-700';
-  return 'text-gray-700';
+const statusConfig: Record<
+  Status,
+  { label: string; icon: React.ElementType; colorClasses: string }
+> = {
+  'Vacant': {
+    label: 'Vacant',
+    icon: Circle,
+    colorClasses: 'border-green-500/50 bg-green-50 text-green-700',
+  },
+  'Occupied - Unpaid': {
+    label: 'Unpaid',
+    icon: Hourglass,
+    colorClasses: 'border-red-500/50 bg-red-50 text-red-700',
+  },
+  'Occupied - Partially Paid': {
+    label: 'Partial',
+    icon: CirclePercent,
+    colorClasses: 'border-yellow-500/50 bg-yellow-50 text-yellow-700',
+  },
+  'Occupied - Fully Paid': {
+    label: 'Paid',
+    icon: Users,
+    colorClasses: 'border-blue-500/50 bg-blue-50 text-blue-700',
+  },
 };
 
 const filterOptions = [
@@ -61,22 +95,76 @@ const filterOptions = [
   { name: 'Vacant', color: 'bg-green-500' },
   { name: 'Occupied', color: 'bg-orange-500' },
   { name: 'Unpaid', status: 'Occupied - Unpaid', color: 'bg-red-500' },
-  {
-    name: 'Partial',
-    status: 'Occupied - Partially Paid',
-    color: 'bg-yellow-500',
-  },
+  { name: 'Partial', status: 'Occupied - Partially Paid', color: 'bg-yellow-500' },
   { name: 'Paid', status: 'Occupied - Fully Paid', color: 'bg-blue-500' },
 ];
+
+const TableCard = ({ table }: { table: Table }) => {
+  const config = statusConfig[table.status];
+  const Icon = config.icon;
+
+  return (
+    <Card
+      className={cn(
+        'group cursor-pointer overflow-hidden transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5',
+        'border-2',
+        config.colorClasses.split(' ')[0]
+      )}
+    >
+      <CardContent className="p-4 flex flex-col items-center justify-center aspect-square text-center">
+        <div
+          className={cn(
+            'h-12 w-12 rounded-full flex items-center justify-center mb-3 transition-colors duration-200',
+            config.colorClasses.split(' ')[1] // bg color
+          )}
+        >
+          <Icon className={cn('h-6 w-6', config.colorClasses.split(' ')[2])} />
+        </div>
+        <p className="text-3xl font-bold tracking-tight text-foreground">
+          {table.id}
+        </p>
+        <p className={cn('text-sm font-semibold', config.colorClasses.split(' ')[2])}>
+          {config.label}
+        </p>
+        <p className="text-xs text-muted-foreground mt-1">{table.floor}</p>
+      </CardContent>
+    </Card>
+  );
+};
+
+const StatCard = ({ title, value, color, icon: Icon }: { title: string, value: number, color: string, icon: React.ElementType }) => (
+    <Card>
+      <CardContent className="p-4">
+        <div className="flex items-center gap-2">
+            <div className={cn("h-8 w-8 flex items-center justify-center rounded-lg", color.replace('text','bg').replace('-700', '-100'))}>
+                <Icon className={cn("h-5 w-5", color)} />
+            </div>
+            <div>
+                <p className="text-2xl font-bold">{value}</p>
+                <p className="text-xs text-muted-foreground">{title}</p>
+            </div>
+        </div>
+      </CardContent>
+    </Card>
+);
+
 
 export default function TablesPage() {
   const [activeFilter, setActiveFilter] = useState('All');
   const [activeFloor, setActiveFloor] = useState('All');
 
-  const floors = useMemo(
-    () => ['All', ...new Set(tables.map((table) => table.floor))],
-    []
-  );
+  const floors = useMemo(() => ['All', ...new Set(tables.map((t) => t.floor))], []);
+
+  const summaryStats = useMemo(() => {
+    return {
+      total: tables.length,
+      vacant: tables.filter(t => t.status === 'Vacant').length,
+      occupied: tables.filter(t => t.status.startsWith('Occupied')).length,
+      unpaid: tables.filter(t => t.status === 'Occupied - Unpaid').length,
+      partial: tables.filter(t => t.status === 'Occupied - Partially Paid').length,
+      paid: tables.filter(t => t.status === 'Occupied - Fully Paid').length,
+    };
+  }, []);
 
   const filteredTables = useMemo(() => {
     return tables.filter((table) => {
@@ -86,10 +174,7 @@ export default function TablesPage() {
       if (activeFilter === 'All') return true;
       if (activeFilter === 'Occupied') return table.status !== 'Vacant';
       const filterOption = filterOptions.find((f) => f.name === activeFilter);
-      if (filterOption && filterOption.status) {
-        return table.status === filterOption.status;
-      }
-      return table.status === activeFilter;
+      return filterOption?.status ? table.status === filterOption.status : table.status === activeFilter;
     });
   }, [activeFilter, activeFloor]);
 
@@ -97,78 +182,53 @@ export default function TablesPage() {
     <>
       <DashboardHeader />
       <main className="p-4 sm:p-6 lg:p-8">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
-          <h1 className="text-xl font-semibold">Table States</h1>
-          <div className="flex flex-col md:flex-row items-start md:items-center flex-wrap gap-x-6 gap-y-3">
-            <div className="flex items-center flex-wrap gap-2">
-              <span className="text-sm font-medium text-muted-foreground mr-2">
-                Floor:
-              </span>
-              {floors.map((floor) => (
-                <button
-                  key={floor}
-                  onClick={() => setActiveFloor(floor)}
-                  className={cn(
-                    'text-sm py-1.5 px-3 rounded-full transition-colors border',
-                    activeFloor === floor
-                      ? 'bg-primary text-primary-foreground border-primary'
-                      : 'hover:bg-muted/50 border-transparent'
-                  )}
-                >
-                  {floor}
-                </button>
-              ))}
-            </div>
-            <div className="flex items-center flex-wrap gap-2">
-              <span className="text-sm font-medium text-muted-foreground mr-2">
-                Status:
-              </span>
-              {filterOptions.map((option) => (
-                <button
-                  key={option.name}
-                  onClick={() => setActiveFilter(option.name)}
-                  className={cn(
-                    'flex items-center gap-2 text-sm py-1.5 px-3 rounded-full transition-colors border',
-                    activeFilter === option.name
-                      ? 'bg-primary text-primary-foreground border-primary'
-                      : 'hover:bg-muted/50 border-transparent'
-                  )}
-                >
-                  <div
-                    className={cn('h-2.5 w-2.5 rounded-full', option.color)}
-                  ></div>
-                  <span>{option.name}</span>
-                </button>
-              ))}
-            </div>
-          </div>
+        <div className="mb-6">
+            <h1 className="text-2xl font-bold text-gray-800">Live Table View</h1>
+            <p className="text-muted-foreground">Monitor the real-time status of all tables across your locations.</p>
         </div>
-        <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8 2xl:grid-cols-10 gap-4">
-          {filteredTables.map((table) => (
-            <Card
-              key={table.id}
-              className={cn(
-                'cursor-pointer hover:shadow-lg transition-shadow border-2',
-                getStatusColor(table.status)
-              )}
-            >
-              <CardContent className="p-4 flex flex-col items-center justify-center h-28">
-                <CardTitle className="text-2xl font-bold">
-                  {table.id}
-                </CardTitle>
-                <Badge
-                  variant="outline"
-                  className={cn(
-                    'mt-2 text-center text-xs whitespace-normal',
-                    getStatusColor(table.status),
-                    getStatusTextColor(table.status),
-                    'border-current'
-                  )}
+        
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-6">
+            <StatCard title="Total Tables" value={summaryStats.total} color="text-gray-700" icon={Users}/>
+            <StatCard title="Vacant" value={summaryStats.vacant} color="text-green-700" icon={Circle}/>
+            <StatCard title="Occupied" value={summaryStats.occupied} color="text-orange-700" icon={Users}/>
+            <StatCard title="Unpaid" value={summaryStats.unpaid} color="text-red-700" icon={Hourglass}/>
+            <StatCard title="Partial" value={summaryStats.partial} color="text-yellow-700" icon={CirclePercent}/>
+            <StatCard title="Paid" value={summaryStats.paid} color="text-blue-700" icon={CheckCircle}/>
+        </div>
+        
+        <Card className="p-4 mb-6 flex flex-wrap items-center justify-between gap-4">
+           <div className="flex items-center gap-4">
+              <span className="text-sm font-medium text-muted-foreground">Floor:</span>
+               <Select value={activeFloor} onValueChange={setActiveFloor}>
+                    <SelectTrigger className="w-[180px]">
+                        <SelectValue placeholder="Select a floor" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        {floors.map(floor => <SelectItem key={floor} value={floor}>{floor}</SelectItem>)}
+                    </SelectContent>
+                </Select>
+           </div>
+            <div className="flex items-center flex-wrap gap-1 bg-muted p-1 rounded-lg">
+              {filterOptions.map((option) => (
+                <Button
+                  key={option.name}
+                  size="sm"
+                  onClick={() => setActiveFilter(option.name)}
+                  variant={activeFilter === option.name ? "secondary" : "ghost"}
+                  className="gap-2 px-3"
                 >
-                  {table.status.replace('Occupied - ', '')}
-                </Badge>
-              </CardContent>
-            </Card>
+                  <Dot
+                    className={cn('h-6 w-6 -ml-2', option.color, activeFilter === option.name ? 'opacity-100' : 'opacity-50')}
+                  />
+                  <span>{option.name}</span>
+                </Button>
+              ))}
+            </div>
+        </Card>
+
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-7 xl:grid-cols-9 2xl:grid-cols-12 gap-4">
+          {filteredTables.map((table) => (
+            <TableCard key={table.id} table={table} />
           ))}
         </div>
       </main>
