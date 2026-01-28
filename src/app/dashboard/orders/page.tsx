@@ -46,10 +46,8 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-  DropdownMenuSub,
-  DropdownMenuSubTrigger,
-  DropdownMenuPortal,
-  DropdownMenuSubContent,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
 import {
   Sheet,
@@ -534,56 +532,47 @@ export default function OrdersPage() {
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
-                            <DropdownMenuSub>
-                              <DropdownMenuSubTrigger>
-                                Update Status
-                              </DropdownMenuSubTrigger>
-                              <DropdownMenuPortal>
-                                <DropdownMenuSubContent>
-                                  <DropdownMenuItem
-                                    onClick={() =>
-                                      handleStatusChange(order.orderId, 'Draft')
-                                    }
-                                  >
-                                    Draft
-                                  </DropdownMenuItem>
-                                  <DropdownMenuItem
-                                    onClick={() =>
-                                      handleStatusChange(order.orderId, 'Open')
-                                    }
-                                  >
-                                    Open
-                                  </DropdownMenuItem>
-                                  <DropdownMenuItem
-                                    onClick={() =>
-                                      handleStatusChange(order.orderId, 'Paid')
-                                    }
-                                  >
-                                    Paid
-                                  </DropdownMenuItem>
-                                  <DropdownMenuItem
-                                    onClick={() =>
-                                      handleStatusChange(
-                                        order.orderId,
-                                        'Cancelled'
-                                      )
-                                    }
-                                  >
-                                    Cancelled
-                                  </DropdownMenuItem>
-                                  <DropdownMenuItem
-                                    onClick={() =>
-                                      handleStatusChange(
-                                        order.orderId,
-                                        'Refunded'
-                                      )
-                                    }
-                                  >
-                                    Refunded
-                                  </DropdownMenuItem>
-                                </DropdownMenuSubContent>
-                              </DropdownMenuPortal>
-                            </DropdownMenuSub>
+                            <DropdownMenuItem
+                              onClick={() =>
+                                handleStatusChange(order.orderId, 'Draft')
+                              }
+                            >
+                              Draft
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={() =>
+                                handleStatusChange(order.orderId, 'Open')
+                              }
+                            >
+                              Open
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={() =>
+                                handleStatusChange(order.orderId, 'Paid')
+                              }
+                            >
+                              Paid
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={() =>
+                                handleStatusChange(
+                                  order.orderId,
+                                  'Cancelled'
+                                )
+                              }
+                            >
+                              Cancelled
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={() =>
+                                handleStatusChange(
+                                  order.orderId,
+                                  'Refunded'
+                                )
+                              }
+                            >
+                              Refunded
+                            </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
                       </div>
