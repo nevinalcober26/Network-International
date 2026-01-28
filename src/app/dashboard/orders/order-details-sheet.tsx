@@ -174,7 +174,7 @@ export function OrderDetailsSheet({
                       <Package className="h-5 w-5" />
                     )}
                     <span>
-                      Payment split <strong>{order.splitType === 'equally' ? 'equally' : 'by item'}</strong>.
+                      Payment split <strong>{order.splitType}</strong>.
                     </span>
                   </div>
                 ) : order.paymentState === 'Partial' ? (
@@ -201,7 +201,7 @@ export function OrderDetailsSheet({
                               <div className="min-w-0 flex-1 flex justify-between items-center">
                                 <div>
                                   <p className="font-medium text-sm">
-                                    Paid ${payment.amount} via {payment.method}
+                                    Paid ${payment.amount} via {payment.method === 'Credit Card' ? 'Credit Card (Network International)' : payment.method}
                                   </p>
                                   <p className="mt-0.5 text-sm text-muted-foreground">
                                     {payment.guestName} - {payment.date}

@@ -30,6 +30,7 @@ export const generateMockOrders = (count: number): Order[] => {
   const orders: Order[] = [];
   for (let i = 0; i < count; i++) {
     const orderStatus = statuses[i % statuses.length];
+    const orderType = i % 2 === 0 ? 'Post-Paid' : 'Prepaid';
 
     let paymentState = paymentStates[i % paymentStates.length];
     if (orderStatus === 'Paid') paymentState = 'Fully Paid';
@@ -64,7 +65,7 @@ export const generateMockOrders = (count: number): Order[] => {
     if (paymentState === 'Fully Paid') {
       paidAmount = totalAmount;
        payments.push({
-        method: 'Credit Card',
+        method: orderType === 'Post-Paid' ? 'Credit Card' : (i % 3 === 0 ? 'Cash' : 'Credit Card'),
         amount: paidAmount.toFixed(2),
         date: new Date(Date.now() - i * 3600000 + 120000).toLocaleString(),
         transactionId: `txn_${12345 + i}`,
@@ -88,9 +89,17 @@ export const generateMockOrders = (count: number): Order[] => {
         splitAmount = Math.max(0, splitAmount);
         remainingToDistribute -= splitAmount;
 
+        let methodForSplit: 'Credit Card' | 'Cash';
+        if (orderType === 'Post-Paid') {
+            methodForSplit = 'Credit Card';
+        } else {
+            methodForSplit = j % 2 === 0 ? 'Credit Card' : 'Cash';
+        }
+
+
         if (splitAmount > 0.01) {
           payments.push({
-            method: j % 2 === 0 ? 'Credit Card' : 'Cash',
+            method: methodForSplit,
             amount: splitAmount.toFixed(2),
             date: new Date(Date.now() - i * 3600000 + 120000 + j * 10000).toLocaleString(),
             transactionId: `txn_${12345 + i}_${j}`,
@@ -113,7 +122,7 @@ export const generateMockOrders = (count: number): Order[] => {
       orderId: `#${3210 + i}`,
       branch: branches[i % branches.length],
       table: `T${(i % 24) + 1}`,
-      orderType: i % 2 === 0 ? 'Post-Paid' : 'Prepaid',
+      orderType,
       orderStatus,
       paymentState,
       totalAmount,
