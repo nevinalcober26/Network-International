@@ -33,14 +33,13 @@ import {
   Printer,
   Calendar,
   CreditCard,
-  MapPin,
-  Hash,
   User,
   Info,
   DollarSign,
   ShoppingCart,
   TrendingUp,
   XCircle,
+  ArrowUpDown,
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -64,6 +63,7 @@ import { DashboardHeader } from '@/components/dashboard/header';
 import { Separator } from '@/components/ui/separator';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { StatCards, type StatCardData } from '@/components/dashboard/stat-cards';
+import { cn } from '@/lib/utils';
 
 type OrderItem = {
   id: string;
@@ -81,7 +81,7 @@ type Payment = {
 
 type Order = {
   orderId: string;
-  branch: string;
+  branch: 'Ras Al Khaimah' | 'Dubai Mall';
   table: string;
   orderType: 'Post-Paid' | 'Prepaid';
   orderStatus: 'Draft' | 'Open' | 'Paid' | 'Cancelled' | 'Refunded';
@@ -93,6 +93,7 @@ type Order = {
   customerEmail: string;
   customerAvatar: string;
   orderDate: string;
+  orderTimestamp: number;
   payments: Payment[];
 };
 
@@ -109,7 +110,7 @@ const generateMockOrders = (count: number): Order[] => {
     'Partial',
     'Unpaid',
   ];
-  const branches = ['Ras Al Khaimah', 'Dubai Mall'];
+  const branches: Order['branch'][] = ['Ras Al Khaimah', 'Dubai Mall'];
   const names = [
     'Liam Smith',
     'Olivia Johnson',
@@ -139,11 +140,9 @@ const generateMockOrders = (count: number): Order[] => {
     const orderStatus = statuses[i % statuses.length];
     
     let paymentState = paymentStates[i % paymentStates.length];
-    // Align payment state with order status
     if (orderStatus === 'Paid') paymentState = 'Fully Paid';
     if (orderStatus === 'Cancelled' || orderStatus === 'Draft' || orderStatus === 'Refunded') paymentState = 'Unpaid';
     if (orderStatus === 'Open' && paymentState === 'Fully Paid') paymentState = 'Partial';
-
 
     const orderItemsCount = Math.floor(Math.random() * 3) + 1;
     const currentItems = Array.from({ length: orderItemsCount }, (_, j) => {
@@ -170,6 +169,9 @@ const generateMockOrders = (count: number): Order[] => {
         paidAmount = totalAmount;
     }
 
+    const orderTimestamp = Date.now() - i * 3600000;
+    const orderDate = new Date(orderTimestamp);
+
     orders.push({
       orderId: `#${3210 + i}`,
       branch: branches[i % branches.length],
@@ -184,13 +186,14 @@ const generateMockOrders = (count: number): Order[] => {
       customerAvatar: `https://picsum.photos/seed/${customerName
         .split(' ')[0]
         .toLowerCase()}/100/100`,
-      orderDate: new Date(Date.now() - i * 3600000).toLocaleString('en-US', {
+      orderDate: orderDate.toLocaleString('en-US', {
         year: 'numeric',
         month: 'short',
         day: 'numeric',
         hour: '2-digit',
         minute: '2-digit',
       }),
+      orderTimestamp,
       items: currentItems,
       payments:
         paidAmount > 0
@@ -199,7 +202,7 @@ const generateMockOrders = (count: number): Order[] => {
                 method: i % 2 === 0 ? 'Credit Card' : 'Cash',
                 amount: paidAmount.toFixed(2),
                 date: new Date(
-                  Date.now() - i * 3600000 + 120000
+                  orderTimestamp + 120000
                 ).toLocaleString(),
                 transactionId: `txn_${12345 + i}`,
               },
@@ -235,17 +238,69 @@ export default function OrdersPage() {
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
+  
+  const [filters, setFilters] = useState({
+    search: '',
+    branch: 'all',
+    status: 'all',
+  });
+  
+  const [sortConfig, setSortConfig] = useState<{ key: keyof Order; direction: 'ascending' | 'descending' } | null>({ key: 'orderTimestamp', direction: 'descending' });
+
 
   useEffect(() => {
     setAllOrders(generateMockOrders(50));
   }, []);
+  
+  const handleFilterChange = (type: keyof typeof filters, value: string) => {
+    setFilters(prev => ({ ...prev, [type]: value }));
+    setCurrentPage(1); // Reset to first page on filter change
+  };
+  
+  const requestSort = (key: keyof Order) => {
+    let direction: 'ascending' | 'descending' = 'ascending';
+    if (sortConfig && sortConfig.key === key && sortConfig.direction === 'ascending') {
+      direction = 'descending';
+    }
+    setSortConfig({ key, direction });
+  };
+  
+  const filteredAndSortedOrders = useMemo(() => {
+    let filtered = allOrders.filter(order => {
+        const searchLower = filters.search.toLowerCase();
+        const matchesSearch = filters.search === '' ||
+            order.orderId.toLowerCase().includes(searchLower) ||
+            order.table.toLowerCase().includes(searchLower) ||
+            order.customerName.toLowerCase().includes(searchLower);
 
-  const totalPages = Math.ceil(allOrders.length / itemsPerPage);
+        const matchesBranch = filters.branch === 'all' || order.branch === filters.branch;
+        const matchesStatus = filters.status === 'all' || order.orderStatus === filters.status;
+
+        return matchesSearch && matchesBranch && matchesStatus;
+    });
+
+    if (sortConfig !== null) {
+      filtered.sort((a, b) => {
+        if (a[sortConfig.key] < b[sortConfig.key]) {
+          return sortConfig.direction === 'ascending' ? -1 : 1;
+        }
+        if (a[sortConfig.key] > b[sortConfig.key]) {
+          return sortConfig.direction === 'ascending' ? 1 : -1;
+        }
+        return 0;
+      });
+    }
+
+    return filtered;
+  }, [allOrders, filters, sortConfig]);
+
+
+  const totalPages = Math.ceil(filteredAndSortedOrders.length / itemsPerPage);
 
   const paginatedOrders = useMemo(() => {
     const startIndex = (currentPage - 1) * itemsPerPage;
-    return allOrders.slice(startIndex, startIndex + itemsPerPage);
-  }, [allOrders, currentPage]);
+    return filteredAndSortedOrders.slice(startIndex, startIndex + itemsPerPage);
+  }, [filteredAndSortedOrders, currentPage]);
 
   const kpiCards: StatCardData[] = useMemo(() => {
     const successfulOrders = allOrders.filter(
@@ -320,6 +375,13 @@ export default function OrdersPage() {
     setSelectedOrder(order);
     setIsSheetOpen(true);
   };
+  
+  const SortableHeader = ({ tKey, label }: { tKey: keyof Order; label: string; }) => (
+    <Button variant="ghost" onClick={() => requestSort(tKey)} className="px-2">
+      {label}
+      <ArrowUpDown className={cn("ml-2 h-4 w-4", sortConfig?.key !== tKey && "text-muted-foreground/50")} />
+    </Button>
+  );
 
   return (
     <>
@@ -336,30 +398,32 @@ export default function OrdersPage() {
             </CardDescription>
             <div className="mt-4 flex items-center gap-4">
               <Input
-                placeholder="Search by Order ID, Table..."
+                placeholder="Search by ID, customer, table..."
                 className="max-w-xs"
+                value={filters.search}
+                onChange={(e) => handleFilterChange('search', e.target.value)}
               />
-              <Select>
+              <Select value={filters.branch} onValueChange={(value) => handleFilterChange('branch', value)}>
                 <SelectTrigger className="w-[180px]">
                   <SelectValue placeholder="Filter by Branch" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Branches</SelectItem>
-                  <SelectItem value="rak">Ras Al Khaimah</SelectItem>
-                  <SelectItem value="dubai">Dubai Mall</SelectItem>
+                  <SelectItem value="Ras Al Khaimah">Ras Al Khaimah</SelectItem>
+                  <SelectItem value="Dubai Mall">Dubai Mall</SelectItem>
                 </SelectContent>
               </Select>
-              <Select>
+              <Select value={filters.status} onValueChange={(value) => handleFilterChange('status', value)}>
                 <SelectTrigger className="w-[180px]">
                   <SelectValue placeholder="Filter by Status" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Statuses</SelectItem>
-                  <SelectItem value="draft">Draft</SelectItem>
-                  <SelectItem value="open">Open</SelectItem>
-                  <SelectItem value="paid">Paid</SelectItem>
-                  <SelectItem value="cancelled">Cancelled</SelectItem>
-                  <SelectItem value="refunded">Refunded</SelectItem>
+                  <SelectItem value="Draft">Draft</SelectItem>
+                  <SelectItem value="Open">Open</SelectItem>
+                  <SelectItem value="Paid">Paid</SelectItem>
+                  <SelectItem value="Cancelled">Cancelled</SelectItem>
+                  <SelectItem value="Refunded">Refunded</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -368,15 +432,13 @@ export default function OrdersPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Order ID</TableHead>
+                  <TableHead><SortableHeader tKey="orderId" label="Order" /></TableHead>
+                  <TableHead>Customer</TableHead>
+                  <TableHead><SortableHeader tKey="orderTimestamp" label="Date" /></TableHead>
                   <TableHead>Branch</TableHead>
-                  <TableHead>Table</TableHead>
-                  <TableHead>Order Type</TableHead>
                   <TableHead>Order Status</TableHead>
                   <TableHead>Payment State</TableHead>
-                  <TableHead className="text-right">Total</TableHead>
-                  <TableHead className="text-right">Paid</TableHead>
-                  <TableHead className="text-right">Pending</TableHead>
+                  <TableHead className="text-right"><SortableHeader tKey="totalAmount" label="Total" /></TableHead>
                   <TableHead>
                     <span className="sr-only">Actions</span>
                   </TableHead>
@@ -384,19 +446,22 @@ export default function OrdersPage() {
               </TableHeader>
               <TableBody>
                 {paginatedOrders.map((order) => (
-                  <TableRow key={order.orderId}>
+                  <TableRow key={order.orderId} onClick={() => handleViewDetails(order)} className="cursor-pointer">
                     <TableCell className="font-medium">{order.orderId}</TableCell>
-                    <TableCell>{order.branch}</TableCell>
-                    <TableCell>{order.table}</TableCell>
                     <TableCell>
-                      <Badge
-                        variant={
-                          order.orderType === 'Prepaid' ? 'secondary' : 'outline'
-                        }
-                      >
-                        {order.orderType}
-                      </Badge>
+                      <div className="flex items-center gap-3">
+                          <Avatar className="h-9 w-9">
+                              <AvatarImage src={order.customerAvatar} alt={order.customerName} />
+                              <AvatarFallback>{order.customerName.charAt(0)}</AvatarFallback>
+                          </Avatar>
+                          <div className="grid gap-0.5">
+                              <span className="font-medium truncate">{order.customerName}</span>
+                              <span className="text-xs text-muted-foreground truncate">{order.customerEmail}</span>
+                          </div>
+                      </div>
                     </TableCell>
+                    <TableCell>{order.orderDate}</TableCell>
+                    <TableCell>{order.branch}</TableCell>
                     <TableCell>
                       <Badge variant={getStatusBadgeVariant(order.orderStatus)}>
                         {order.orderStatus}
@@ -410,13 +475,7 @@ export default function OrdersPage() {
                     <TableCell className="text-right">
                       ${order.totalAmount.toFixed(2)}
                     </TableCell>
-                    <TableCell className="text-right text-green-600">
-                      ${order.paidAmount.toFixed(2)}
-                    </TableCell>
-                    <TableCell className="text-right text-red-600">
-                      ${(order.totalAmount - order.paidAmount).toFixed(2)}
-                    </TableCell>
-                    <TableCell>
+                    <TableCell onClick={(e) => e.stopPropagation()}>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                           <Button
@@ -490,13 +549,13 @@ export default function OrdersPage() {
             <div className="text-sm text-muted-foreground">
               Showing{' '}
               <strong>
-                {Math.min((currentPage - 1) * itemsPerPage + 1, allOrders.length)}
+                {Math.min((currentPage - 1) * itemsPerPage + 1, filteredAndSortedOrders.length)}
               </strong>{' '}
               to{' '}
               <strong>
-                {Math.min(currentPage * itemsPerPage, allOrders.length)}
+                {Math.min(currentPage * itemsPerPage, filteredAndSortedOrders.length)}
               </strong>{' '}
-              of <strong>{allOrders.length}</strong> orders
+              of <strong>{filteredAndSortedOrders.length}</strong> orders
             </div>
             <div className="flex items-center space-x-2">
               <Button
@@ -665,6 +724,14 @@ export default function OrdersPage() {
                       <div className="flex justify-between font-bold text-base">
                         <span>Total</span>
                         <span>${selectedOrder.totalAmount.toFixed(2)}</span>
+                      </div>
+                       <div className="flex justify-between font-semibold text-green-600">
+                        <span>Paid</span>
+                        <span>${selectedOrder.paidAmount.toFixed(2)}</span>
+                      </div>
+                       <div className="flex justify-between font-semibold text-red-600">
+                        <span>Pending</span>
+                        <span>${(selectedOrder.totalAmount - selectedOrder.paidAmount).toFixed(2)}</span>
                       </div>
                     </div>
                     <Separator className="my-4" />
