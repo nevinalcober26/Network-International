@@ -66,9 +66,9 @@ export function OrderDetailsSheet({
                   <span className="text-muted-foreground">Branch</span>
                   <span>{order.branch}</span>
                 </div>
-                <div className="flex justify-between">
+                <div className="flex justify-between items-center">
                   <span className="text-muted-foreground">Table</span>
-                  <span>{order.table}</span>
+                  <Badge variant="secondary" className="text-base px-3 py-1">{order.table}</Badge>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Order Type</span>
