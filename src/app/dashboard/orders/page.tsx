@@ -41,6 +41,7 @@ import {
   TrendingUp,
   XCircle,
   ArrowUpDown,
+  ChevronDown,
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -49,6 +50,7 @@ import {
   DropdownMenuTrigger,
   DropdownMenuLabel,
   DropdownMenuSeparator,
+  DropdownMenuCheckboxItem,
 } from '@/components/ui/dropdown-menu';
 import {
   Sheet,
@@ -296,8 +298,8 @@ export default function OrdersPage() {
     search: '',
     branch: 'all',
     status: 'all',
-    table: 'all',
   });
+  const [selectedTables, setSelectedTables] = useState<string[]>([]);
 
   const [sortConfig, setSortConfig] = useState<{
     key: keyof Order;
@@ -343,7 +345,7 @@ export default function OrdersPage() {
       const matchesDate = date ? isSameDay(orderDate, date) : true;
 
       const matchesTable =
-        filters.table === 'all' || order.table === filters.table;
+        selectedTables.length === 0 || selectedTables.includes(order.table);
 
       return matchesSearch && matchesBranch && matchesStatus && matchesDate && matchesTable;
     });
@@ -361,7 +363,7 @@ export default function OrdersPage() {
     }
 
     return filtered;
-  }, [allOrders, filters, sortConfig, date]);
+  }, [allOrders, filters, sortConfig, date, selectedTables]);
 
   const totalPages = Math.ceil(filteredAndSortedOrders.length / itemsPerPage);
 
@@ -501,20 +503,49 @@ export default function OrdersPage() {
                   <SelectItem value="Dubai Mall">Dubai Mall</SelectItem>
                 </SelectContent>
               </Select>
-               <Select
-                value={filters.table}
-                onValueChange={(value) => handleFilterChange('table', value)}
-              >
-                <SelectTrigger className="w-[180px]">
-                  <SelectValue placeholder="Filter by Table" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Tables</SelectItem>
-                  {tableNumbers.map(table => (
-                    <SelectItem key={table} value={table}>{table}</SelectItem>
+               <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" className="w-[180px] justify-between">
+                    <span>
+                      Table
+                      {selectedTables.length > 0 && ` (${selectedTables.length})`}
+                    </span>
+                    <ChevronDown className="h-4 w-4 opacity-50" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="w-[180px]" align="start">
+                  <DropdownMenuLabel>Filter by table</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  {tableNumbers.map((table) => (
+                    <DropdownMenuCheckboxItem
+                      key={table}
+                      checked={selectedTables.includes(table)}
+                      onCheckedChange={(checked) => {
+                        if (checked) {
+                          setSelectedTables((prev) => [...prev, table]);
+                        } else {
+                          setSelectedTables((prev) =>
+                            prev.filter((t) => t !== table)
+                          );
+                        }
+                      }}
+                    >
+                      {table}
+                    </DropdownMenuCheckboxItem>
                   ))}
-                </SelectContent>
-              </Select>
+                  {selectedTables.length > 0 && (
+                    <>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem
+                        onSelect={() => setSelectedTables([])}
+                        className="justify-center text-center"
+                      >
+                        Clear filters
+                      </DropdownMenuItem>
+                    </>
+                  )}
+                </DropdownMenuContent>
+              </DropdownMenu>
               <Select
                 value={filters.status}
                 onValueChange={(value) => handleFilterChange('status', value)}
