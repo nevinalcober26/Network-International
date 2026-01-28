@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import Image from 'next/image';
 import {
   Card,
@@ -37,6 +37,10 @@ import {
   Hash,
   User,
   Info,
+  DollarSign,
+  ShoppingCart,
+  TrendingUp,
+  XCircle,
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -230,6 +234,33 @@ export default function OrdersPage() {
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
 
+  const kpiData = useMemo(() => {
+    const successfulOrders = orders.filter(
+      (order) =>
+        order.orderStatus !== 'Cancelled' && order.orderStatus !== 'Refunded'
+    );
+
+    const totalRevenue = successfulOrders.reduce(
+      (sum, order) => sum + order.totalAmount,
+      0
+    );
+
+    const averageOrderValue =
+      successfulOrders.length > 0 ? totalRevenue / successfulOrders.length : 0;
+    
+    const cancelledCount = orders.filter(
+      (order) => order.orderStatus === 'Cancelled' || order.orderStatus === 'Refunded'
+    ).length;
+
+    return {
+      totalRevenue,
+      totalOrders: orders.length,
+      averageOrderValue,
+      cancelledOrders: cancelledCount,
+      successfulOrdersCount: successfulOrders.length,
+    };
+  }, [orders]);
+
   const handleStatusChange = (
     orderId: string,
     newStatus: Order['orderStatus']
@@ -250,6 +281,66 @@ export default function OrdersPage() {
     <>
       <DashboardHeader />
       <main className="p-4 sm:p-6 lg:p-8">
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 mb-6">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">
+                Total Revenue
+              </CardTitle>
+              <DollarSign className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">
+                ${kpiData.totalRevenue.toFixed(2)}
+              </div>
+              <p className="text-xs text-muted-foreground">
+                from {kpiData.successfulOrdersCount} orders
+              </p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Total Orders</CardTitle>
+              <ShoppingCart className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">+{kpiData.totalOrders}</div>
+              <p className="text-xs text-muted-foreground">
+                in the last 30 days
+              </p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">
+                Avg. Order Value
+              </CardTitle>
+              <TrendingUp className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">
+                ${kpiData.averageOrderValue.toFixed(2)}
+              </div>
+              <p className="text-xs text-muted-foreground">
+                vs last month +5.2%
+              </p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">
+                Cancelled & Refunded
+              </CardTitle>
+              <XCircle className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{kpiData.cancelledOrders}</div>
+              <p className="text-xs text-muted-foreground">
+                2% of total orders
+              </p>
+            </CardContent>
+          </Card>
+        </div>
         <Card>
           <CardHeader>
             <CardTitle>Orders</CardTitle>
