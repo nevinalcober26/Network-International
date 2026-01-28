@@ -296,6 +296,7 @@ export default function OrdersPage() {
     search: '',
     branch: 'all',
     status: 'all',
+    table: 'all',
   });
 
   const [sortConfig, setSortConfig] = useState<{
@@ -341,7 +342,10 @@ export default function OrdersPage() {
       const orderDate = new Date(order.orderTimestamp);
       const matchesDate = date ? isSameDay(orderDate, date) : true;
 
-      return matchesSearch && matchesBranch && matchesStatus && matchesDate;
+      const matchesTable =
+        filters.table === 'all' || order.table === filters.table;
+
+      return matchesSearch && matchesBranch && matchesStatus && matchesDate && matchesTable;
     });
 
     if (sortConfig !== null) {
@@ -459,6 +463,11 @@ export default function OrdersPage() {
     </Button>
   );
 
+  const tableNumbers = useMemo(() => {
+    const uniqueTables = [...new Set(allOrders.map(order => order.table))];
+    return uniqueTables.sort((a,b) => parseInt(a.substring(1)) - parseInt(b.substring(1)));
+  }, [allOrders]);
+
   return (
     <>
       <DashboardHeader />
@@ -490,6 +499,20 @@ export default function OrdersPage() {
                   <SelectItem value="all">All Branches</SelectItem>
                   <SelectItem value="Ras Al Khaimah">Ras Al Khaimah</SelectItem>
                   <SelectItem value="Dubai Mall">Dubai Mall</SelectItem>
+                </SelectContent>
+              </Select>
+               <Select
+                value={filters.table}
+                onValueChange={(value) => handleFilterChange('table', value)}
+              >
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Filter by Table" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Tables</SelectItem>
+                  {tableNumbers.map(table => (
+                    <SelectItem key={table} value={table}>{table}</SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
               <Select
