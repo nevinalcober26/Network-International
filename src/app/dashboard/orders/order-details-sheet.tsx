@@ -26,6 +26,7 @@ import {
   Users,
   Package,
   User,
+  Hourglass,
 } from 'lucide-react';
 import type { Order } from './types';
 import { getStatusBadgeVariant } from './utils';
@@ -191,15 +192,15 @@ export function OrderDetailsSheet({
                     </p>
                 ) : null }
 
-                {order.payments.length > 0 ? (
+                { (order.payments.length > 0 || (order.totalAmount - order.paidAmount > 0.01)) ? (
                   <div className="flow-root">
                     <ul className="-mb-8">
                       {order.payments.map((payment, index) => (
-                        <li key={index}>
+                        <li key={`payment-${index}`}>
                           <div className="relative pb-8">
-                            {index !== order.payments.length - 1 ? (
+                            { (index < order.payments.length - 1 || (order.totalAmount - order.paidAmount > 0.01)) && (
                               <span className="absolute left-2.5 top-4 -ml-px h-full w-0.5 bg-border" aria-hidden="true" />
-                            ) : null}
+                            )}
                             <div className="relative flex items-start space-x-3">
                               <div>
                                 <span className="h-5 w-5 rounded-full bg-primary flex items-center justify-center ring-4 ring-background">
@@ -223,11 +224,38 @@ export function OrderDetailsSheet({
                           </div>
                         </li>
                       ))}
+
+                      { (order.totalAmount - order.paidAmount > 0.01) && (
+                          <li key="pending">
+                            <div className="relative">
+                              <div className="relative flex items-start space-x-3">
+                                <div>
+                                  <span className="h-5 w-5 rounded-full bg-red-100 flex items-center justify-center ring-4 ring-background">
+                                    <Hourglass className="h-3 w-3 text-red-500" />
+                                  </span>
+                                </div>
+                                <div className="min-w-0 flex-1 flex justify-between items-center">
+                                  <div>
+                                    <p className="font-medium text-sm text-red-600">
+                                      Pending Amount
+                                    </p>
+                                    <p className="mt-0.5 text-sm text-muted-foreground">
+                                      Awaiting payment
+                                    </p>
+                                  </div>
+                                  <span className="font-mono font-semibold text-red-600">
+                                    ${(order.totalAmount - order.paidAmount).toFixed(2)}
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+                          </li>
+                      )}
                     </ul>
                   </div>
                 ) : (
                   <p className="text-sm text-muted-foreground">
-                    No payments have been made for this order yet.
+                    This order is fully paid.
                   </p>
                 )}
               </CardContent>
