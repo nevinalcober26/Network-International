@@ -407,12 +407,10 @@ export default function OrdersPage() {
                 <SheetTitle className="text-2xl">
                   Order {selectedOrder.orderId}
                 </SheetTitle>
-                <SheetDescription>
-                  <div className="flex items-center gap-2 text-muted-foreground">
-                    <Calendar className="h-4 w-4" />
-                    <span>{selectedOrder.orderDate}</span>
-                  </div>
-                </SheetDescription>
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <Calendar className="h-4 w-4" />
+                  <span>{selectedOrder.orderDate}</span>
+                </div>
               </SheetHeader>
               <div className="flex-grow overflow-y-auto p-6 space-y-6">
                 <Card>
