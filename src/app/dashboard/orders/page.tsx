@@ -63,6 +63,8 @@ import {
 import { DashboardHeader } from '@/components/dashboard/header';
 import { Separator } from '@/components/ui/separator';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { StatCards, type StatCardData } from '@/components/dashboard/stat-cards';
+
 
 type OrderItem = {
   id: string;
@@ -234,7 +236,7 @@ export default function OrdersPage() {
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
 
-  const kpiData = useMemo(() => {
+  const kpiCards: StatCardData[] = useMemo(() => {
     const successfulOrders = orders.filter(
       (order) =>
         order.orderStatus !== 'Cancelled' && order.orderStatus !== 'Refunded'
@@ -245,6 +247,8 @@ export default function OrdersPage() {
       0
     );
 
+    const totalOrders = orders.length;
+
     const averageOrderValue =
       successfulOrders.length > 0 ? totalRevenue / successfulOrders.length : 0;
     
@@ -252,13 +256,42 @@ export default function OrdersPage() {
       (order) => order.orderStatus === 'Cancelled' || order.orderStatus === 'Refunded'
     ).length;
 
-    return {
-      totalRevenue,
-      totalOrders: orders.length,
-      averageOrderValue,
-      cancelledOrders: cancelledCount,
-      successfulOrdersCount: successfulOrders.length,
-    };
+    const successfulOrdersCount = successfulOrders.length;
+    
+    const cancelledPercentage = totalOrders > 0 ? (cancelledCount / totalOrders) * 100 : 0;
+
+
+    return [
+        {
+            title: 'Total Revenue',
+            value: `$${totalRevenue.toFixed(2)}`,
+            changeDescription: `from ${successfulOrdersCount} orders`,
+            icon: DollarSign,
+            color: 'teal',
+        },
+        {
+            title: 'Total Orders',
+            value: `+${totalOrders}`,
+            changeDescription: 'in the last 30 days',
+            icon: ShoppingCart,
+            color: 'orange',
+        },
+        {
+            title: 'Avg. Order Value',
+            value: `$${averageOrderValue.toFixed(2)}`,
+            change: '+5.2%',
+            changeDescription: 'vs last month',
+            icon: TrendingUp,
+            color: 'pink',
+        },
+        {
+            title: 'Cancelled & Refunded',
+            value: `${cancelledCount}`,
+            changeDescription: `${cancelledPercentage.toFixed(0)}% of total orders`,
+            icon: XCircle,
+            color: 'green',
+        },
+    ];
   }, [orders]);
 
   const handleStatusChange = (
@@ -281,65 +314,8 @@ export default function OrdersPage() {
     <>
       <DashboardHeader />
       <main className="p-4 sm:p-6 lg:p-8">
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 mb-6">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">
-                Total Revenue
-              </CardTitle>
-              <DollarSign className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">
-                ${kpiData.totalRevenue.toFixed(2)}
-              </div>
-              <p className="text-xs text-muted-foreground">
-                from {kpiData.successfulOrdersCount} orders
-              </p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Orders</CardTitle>
-              <ShoppingCart className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">+{kpiData.totalOrders}</div>
-              <p className="text-xs text-muted-foreground">
-                in the last 30 days
-              </p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">
-                Avg. Order Value
-              </CardTitle>
-              <TrendingUp className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">
-                ${kpiData.averageOrderValue.toFixed(2)}
-              </div>
-              <p className="text-xs text-muted-foreground">
-                vs last month +5.2%
-              </p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">
-                Cancelled & Refunded
-              </CardTitle>
-              <XCircle className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{kpiData.cancelledOrders}</div>
-              <p className="text-xs text-muted-foreground">
-                2% of total orders
-              </p>
-            </CardContent>
-          </Card>
+        <div className="mb-6">
+          <StatCards cards={kpiCards} />
         </div>
         <Card>
           <CardHeader>
