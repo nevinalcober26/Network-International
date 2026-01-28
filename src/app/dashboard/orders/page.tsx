@@ -82,6 +82,7 @@ type Payment = {
   amount: string;
   date: string;
   transactionId: string;
+  guestName: string;
 };
 
 type Order = {
@@ -168,13 +169,50 @@ const generateMockOrders = (count: number): Order[] => {
       (sum, item) => sum + item.price * item.quantity,
       0
     );
+    
     let paidAmount = 0;
+    const payments: Payment[] = [];
+
     if (paymentState === 'Fully Paid') {
       paidAmount = totalAmount;
+       payments.push({
+        method: 'Credit Card',
+        amount: paidAmount.toFixed(2),
+        date: new Date(Date.now() - i * 3600000 + 120000).toLocaleString(),
+        transactionId: `txn_${12345 + i}`,
+        guestName: 'Guest 1',
+      });
     } else if (paymentState === 'Partial') {
-      paidAmount = totalAmount * (Math.random() * 0.5 + 0.2); // Pay 20% to 70%
-    }
+      const numSplits = Math.floor(Math.random() * 2) + 2; // 2 or 3 splits
+      let totalPaid = totalAmount * (Math.random() * 0.5 + 0.2); // Pay 20% to 70%
+      paidAmount = totalPaid;
+      let remainingToDistribute = totalPaid;
 
+      for (let j = 0; j < numSplits; j++) {
+        let splitAmount: number;
+        if (j === numSplits - 1) {
+          splitAmount = remainingToDistribute;
+        } else {
+          splitAmount = remainingToDistribute / (numSplits - j) * (Math.random() * 0.5 + 0.5);
+        }
+        
+        splitAmount = Math.max(0, splitAmount);
+        remainingToDistribute -= splitAmount;
+
+        if (splitAmount > 0.01) {
+          payments.push({
+            method: j % 2 === 0 ? 'Credit Card' : 'Cash',
+            amount: splitAmount.toFixed(2),
+            date: new Date(Date.now() - i * 3600000 + 120000 + j * 10000).toLocaleString(),
+            transactionId: `txn_${12345 + i}_${j}`,
+            guestName: `Guest ${j + 1}`,
+          });
+        }
+      }
+      // Due to floating point math, ensure paidAmount is the sum of actual splits
+      paidAmount = payments.reduce((sum, p) => sum + parseFloat(p.amount), 0);
+    }
+    
     if (orderStatus === 'Refunded') {
       paidAmount = totalAmount;
     }
@@ -221,17 +259,7 @@ const generateMockOrders = (count: number): Order[] => {
       }),
       orderTimestamp,
       items: currentItems,
-      payments:
-        paidAmount > 0
-          ? [
-              {
-                method: i % 2 === 0 ? 'Credit Card' : 'Cash',
-                amount: paidAmount.toFixed(2),
-                date: new Date(orderTimestamp + 120000).toLocaleString(),
-                transactionId: `txn_${12345 + i}`,
-              },
-            ]
-          : [],
+      payments,
     });
   }
   return orders;
@@ -843,6 +871,11 @@ export default function OrdersPage() {
                     </div>
                     <Separator className="my-4" />
                     <h4 className="font-semibold mb-3">Payment History</h4>
+                    {selectedOrder.paymentState === 'Partial' && selectedOrder.payments.length > 1 && (
+                        <p className="text-sm text-muted-foreground mb-3">
+                            Payment has been split by {selectedOrder.payments.length} guests.
+                        </p>
+                    )}
                     <div className="space-y-4">
                       {selectedOrder.payments.length > 0 ? (
                         selectedOrder.payments.map((payment, index) => (
@@ -852,7 +885,7 @@ export default function OrdersPage() {
                                 Paid ${payment.amount} via {payment.method}
                               </p>
                               <p className="text-sm text-muted-foreground">
-                                {payment.date}
+                                {payment.guestName} - {payment.date}
                               </p>
                             </div>
                             <Badge variant="default">Success</Badge>
