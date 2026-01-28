@@ -16,12 +16,10 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import {
   Calendar as CalendarIcon,
   CreditCard,
-  User,
   Info,
   Printer,
 } from 'lucide-react';
@@ -53,49 +51,6 @@ export function OrderDetailsSheet({
             </div>
           </SheetHeader>
           <div className="flex-grow overflow-y-auto p-6 space-y-6">
-            {order.customerName !== 'Guest' ? (
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg flex items-center gap-2">
-                    <User className="h-5 w-5" />
-                    Customer Details
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="flex items-center gap-4">
-                  <Avatar className="h-14 w-14">
-                    <AvatarImage
-                      src={order.customerAvatar}
-                      alt={order.customerName}
-                      data-ai-hint="person face"
-                    />
-                    <AvatarFallback>
-                      {order.customerName.charAt(0)}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div>
-                    <p className="font-semibold">{order.customerName}</p>
-                    <p className="text-sm text-muted-foreground">
-                      {order.customerEmail}
-                    </p>
-                  </div>
-                </CardContent>
-              </Card>
-            ) : (
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg flex items-center gap-2">
-                    <User className="h-5 w-5" />
-                    Customer Details
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-sm text-muted-foreground pt-4">
-                    No customer details provided for this order.
-                  </p>
-                </CardContent>
-              </Card>
-            )}
-
             <Card>
               <CardHeader>
                 <CardTitle className="text-lg flex items-center gap-2">

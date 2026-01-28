@@ -109,8 +109,7 @@ export default function OrdersPage() {
       const matchesSearch =
         filters.search === '' ||
         order.orderId.toLowerCase().includes(searchLower) ||
-        order.table.toLowerCase().includes(searchLower) ||
-        order.customerName.toLowerCase().includes(searchLower);
+        order.table.toLowerCase().includes(searchLower);
 
       const matchesBranch =
         filters.branch === 'all' || order.branch === filters.branch;
@@ -261,7 +260,7 @@ export default function OrdersPage() {
             </CardDescription>
             <div className="mt-4 flex flex-wrap items-center gap-4">
               <Input
-                placeholder="Search by ID, customer, table..."
+                placeholder="Search by ID, table..."
                 className="max-w-xs"
                 value={filters.search}
                 onChange={(e) => handleFilterChange('search', e.target.value)}

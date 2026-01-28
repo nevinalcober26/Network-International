@@ -23,9 +23,6 @@ export type Order = {
   totalAmount: number;
   paidAmount: number;
   items: OrderItem[];
-  customerName: string;
-  customerEmail: string;
-  customerAvatar: string;
   orderDate: string;
   orderTimestamp: number;
   payments: Payment[];

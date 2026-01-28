@@ -16,18 +16,6 @@ export const generateMockOrders = (count: number): Order[] => {
     'Unpaid',
   ];
   const branches: Order['branch'][] = ['Ras Al Khaimah', 'Dubai Mall'];
-  const names = [
-    'Liam Smith',
-    'Olivia Johnson',
-    'Noah Williams',
-    'Emma Brown',
-    'Oliver Jones',
-    'Ava Garcia',
-    'Elijah Miller',
-    'Charlotte Davis',
-    'William Rodriguez',
-    'Sophia Martinez',
-  ];
   const menuItems = [
     { id: '1', name: 'Classic Pancakes', price: 12.5 },
     { id: '2', name: 'Orange Juice', price: 5.0 },
@@ -119,24 +107,6 @@ export const generateMockOrders = (count: number): Order[] => {
     const orderTimestamp = Date.now() - i * 3600000;
     const orderDate = new Date(orderTimestamp);
 
-    let customerName = 'Guest';
-    let customerEmail = '—';
-    let customerAvatar = '';
-
-    // Majority of orders will be from Guests
-    if (i % 5 !== 0) {
-      // Guest order
-    } else {
-      const assignedName = names[Math.floor(i / 5) % names.length];
-      customerName = assignedName;
-      customerEmail = `${assignedName
-        .toLowerCase()
-        .replace(' ', '.')}@example.com`;
-      customerAvatar = `https://picsum.photos/seed/${assignedName
-        .split(' ')[0]
-        .toLowerCase()}/100/100`;
-    }
-
     orders.push({
       orderId: `#${3210 + i}`,
       branch: branches[i % branches.length],
@@ -146,9 +116,6 @@ export const generateMockOrders = (count: number): Order[] => {
       paymentState,
       totalAmount,
       paidAmount,
-      customerName,
-      customerEmail,
-      customerAvatar,
       orderDate: orderDate.toLocaleString('en-US', {
         year: 'numeric',
         month: 'short',
