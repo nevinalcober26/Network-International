@@ -1,10 +1,7 @@
 'use client';
 
-import { useState, useMemo } from 'react';
-import {
-  Card,
-  CardContent,
-} from '@/components/ui/card';
+import { useState, useMemo, useEffect } from 'react';
+import { Card, CardContent } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 import { DashboardHeader } from '@/components/dashboard/header';
 import {
@@ -15,51 +12,23 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
-import {
-  Users,
-  Circle,
-  Hourglass,
-  CirclePercent,
-} from 'lucide-react';
+import { Users, Circle, Hourglass, CirclePercent } from 'lucide-react';
+import { OrderDetailsSheet } from '@/app/dashboard/orders/order-details-sheet';
+import { generateMockOrders } from '@/app/dashboard/orders/mock';
+import type { Order } from '@/app/dashboard/orders/types';
 
 type Status =
   | 'Vacant'
   | 'Occupied - Unpaid'
   | 'Occupied - Partially Paid'
   | 'Occupied - Fully Paid';
-  
+
 type Table = {
   id: string;
   status: Status;
   floor: string;
+  order?: Order;
 };
-
-const tables: Table[] = [
-  { id: 'T1', status: 'Vacant', floor: 'Ground Floor' },
-  { id: 'T2', status: 'Occupied - Unpaid', floor: 'Ground Floor' },
-  { id: 'T3', status: 'Vacant', floor: 'Ground Floor' },
-  { id: 'T4', status: 'Occupied - Partially Paid', floor: 'Ground Floor' },
-  { id: 'T5', status: 'Occupied - Fully Paid', floor: 'Ground Floor' },
-  { id: 'T6', status: 'Vacant', floor: 'Ground Floor' },
-  { id: 'T7', status: 'Occupied - Unpaid', floor: 'Ground Floor' },
-  { id: 'T8', status: 'Vacant', floor: 'Ground Floor' },
-  { id: 'T9', status: 'Vacant', floor: 'Ground Floor' },
-  { id: 'T10', status: 'Occupied - Partially Paid', floor: 'Ground Floor' },
-  { id: 'T11', status: 'Vacant', floor: 'Ground Floor' },
-  { id: 'T12', status: 'Occupied - Unpaid', floor: 'Ground Floor' },
-  { id: 'T13', status: 'Vacant', floor: 'First Floor' },
-  { id: 'T14', status: 'Occupied - Unpaid', floor: 'First Floor' },
-  { id: 'T15', status: 'Vacant', floor: 'First Floor' },
-  { id: 'T16', status: 'Occupied - Partially Paid', floor: 'First Floor' },
-  { id: 'T17', status: 'Occupied - Fully Paid', floor: 'First Floor' },
-  { id: 'T18', status: 'Vacant', floor: 'First Floor' },
-  { id: 'T19', status: 'Occupied - Unpaid', floor: 'First Floor' },
-  { id: 'T20', status: 'Vacant', floor: 'First Floor' },
-  { id: 'T21', status: 'Occupied - Fully Paid', floor: 'First Floor' },
-  { id: 'T22', status: 'Vacant', floor: 'First Floor' },
-  { id: 'T23', status: 'Occupied - Unpaid', floor: 'First Floor' },
-  { id: 'T24', status: 'Vacant', floor: 'First Floor' },
-];
 
 const statusConfig: Record<
   Status,
@@ -87,25 +56,31 @@ const statusConfig: Record<
   },
 };
 
-const filterOptions: {name: string, status?: Status, color: string}[] = [
+const filterOptions: { name: string; status?: Status; color: string }[] = [
   { name: 'All', color: 'bg-muted' },
-  { name: 'Vacant', color: 'bg-green-500' },
+  { name: 'Vacant', status: 'Vacant', color: 'bg-green-500' },
   { name: 'Occupied', color: 'bg-chart-5' },
   { name: 'Unpaid', status: 'Occupied - Unpaid', color: 'bg-red-500' },
-  { name: 'Partial', status: 'Occupied - Partially Paid', color: 'bg-yellow-500' },
+  {
+    name: 'Partial',
+    status: 'Occupied - Partially Paid',
+    color: 'bg-yellow-500',
+  },
   { name: 'Paid', status: 'Occupied - Fully Paid', color: 'bg-blue-500' },
 ];
 
-const TableCard = ({ table }: { table: Table }) => {
+const TableCard = ({ table, onClick }: { table: Table; onClick: () => void }) => {
   const config = statusConfig[table.status];
   const Icon = config.icon;
 
   return (
     <Card
+      onClick={onClick}
       className={cn(
-        'group cursor-pointer overflow-hidden transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5',
+        'group overflow-hidden transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5',
         'border-2',
-        config.colorClasses.split(' ')[0]
+        config.colorClasses.split(' ')[0],
+        table.status !== 'Vacant' ? 'cursor-pointer' : 'cursor-default'
       )}
     >
       <CardContent className="p-4 flex flex-col items-center justify-center aspect-square text-center">
@@ -120,7 +95,9 @@ const TableCard = ({ table }: { table: Table }) => {
         <p className="text-3xl font-bold tracking-tight text-foreground">
           {table.id}
         </p>
-        <p className={cn('text-sm font-semibold', config.colorClasses.split(' ')[2])}>
+        <p
+          className={cn('text-sm font-semibold', config.colorClasses.split(' ')[2])}
+        >
           {config.label}
         </p>
         <p className="text-xs text-muted-foreground mt-1">{table.floor}</p>
@@ -132,6 +109,73 @@ const TableCard = ({ table }: { table: Table }) => {
 export default function TablesPage() {
   const [activeFilter, setActiveFilter] = useState('All');
   const [activeFloor, setActiveFloor] = useState('All');
+  const [tables, setTables] = useState<Table[]>([]);
+  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const [isSheetOpen, setIsSheetOpen] = useState(false);
+
+  useEffect(() => {
+    const allOrders = generateMockOrders(50);
+    const uniqueTableIds = [
+      ...new Set(allOrders.map((order) => order.table)),
+    ].sort((a, b) => parseInt(a.substring(1)) - parseInt(b.substring(1)));
+
+    const tableData: Table[] = uniqueTableIds.map((tableId) => {
+      const ordersForTable = allOrders
+        .filter((o) => o.table === tableId)
+        .sort((a, b) => b.orderTimestamp - a.orderTimestamp);
+
+      const latestActiveOrder = ordersForTable.find(
+        (o) => o.orderStatus === 'Open' || o.orderStatus === 'Paid'
+      );
+
+      let status: Status = 'Vacant';
+      let floor =
+        parseInt(tableId.substring(1)) > 12 ? 'First Floor' : 'Ground Floor';
+      if (latestActiveOrder) {
+        if (latestActiveOrder.paymentState === 'Fully Paid') {
+          status = 'Occupied - Fully Paid';
+        } else if (latestActiveOrder.paymentState === 'Partial') {
+          status = 'Occupied - Partially Paid';
+        } else {
+          status = 'Occupied - Unpaid';
+        }
+      }
+
+      return {
+        id: tableId,
+        status: status,
+        floor: floor,
+        order: latestActiveOrder,
+      };
+    });
+
+    const allPossibleTableIds = [...Array(24)].map((_, i) => `T${i + 1}`);
+    for (const tableId of allPossibleTableIds) {
+      if (!tableData.find((t) => t.id === tableId)) {
+        tableData.push({
+          id: tableId,
+          status: 'Vacant',
+          floor:
+            parseInt(tableId.substring(1)) > 12
+              ? 'First Floor'
+              : 'Ground Floor',
+        });
+      }
+    }
+
+    tableData.sort(
+      (a, b) => parseInt(a.id.substring(1)) - parseInt(b.id.substring(1))
+    );
+
+    setTables(tableData);
+  }, []);
+
+  const handleTableClick = (table: Table) => {
+    if (table.order) {
+      setSelectedOrder(table.order);
+      setIsSheetOpen(true);
+    }
+  };
 
   const floors = useMemo(() => ['All', ...new Set(tables.map((t) => t.floor))], []);
 
@@ -143,53 +187,72 @@ export default function TablesPage() {
       if (activeFilter === 'All') return true;
       if (activeFilter === 'Occupied') return table.status !== 'Vacant';
       const filterOption = filterOptions.find((f) => f.name === activeFilter);
-      return filterOption?.status ? table.status === filterOption.status : table.status === activeFilter;
+      return filterOption?.status
+        ? table.status === filterOption.status
+        : table.status === activeFilter;
     });
-  }, [activeFilter, activeFloor]);
+  }, [activeFilter, activeFloor, tables]);
 
   return (
     <>
       <DashboardHeader />
       <main className="p-4 sm:p-6 lg:p-8">
         <div className="mb-6">
-            <h1 className="text-2xl font-bold text-gray-800">Live Table View</h1>
-            <p className="text-muted-foreground">Monitor the real-time status of all tables across your locations.</p>
+          <h1 className="text-2xl font-bold text-gray-800">Live Table View</h1>
+          <p className="text-muted-foreground">
+            Monitor the real-time status of all tables across your locations.
+          </p>
         </div>
-        
+
         <Card className="p-4 mb-6 flex flex-wrap items-center justify-between gap-4">
-           <div className="flex items-center gap-4">
-              <span className="text-sm font-medium text-muted-foreground">Floor:</span>
-               <Select value={activeFloor} onValueChange={setActiveFloor}>
-                    <SelectTrigger className="w-[180px]">
-                        <SelectValue placeholder="Select a floor" />
-                    </SelectTrigger>
-                    <SelectContent>
-                        {floors.map(floor => <SelectItem key={floor} value={floor}>{floor}</SelectItem>)}
-                    </SelectContent>
-                </Select>
-           </div>
-            <div className="flex items-center flex-wrap gap-1 bg-muted p-1 rounded-lg">
-              {filterOptions.map((option) => (
-                <Button
-                  key={option.name}
-                  size="sm"
-                  onClick={() => setActiveFilter(option.name)}
-                  variant={activeFilter === option.name ? "secondary" : "ghost"}
-                  className="gap-2 px-3"
-                >
-                  <div className={cn('h-3 w-3 rounded-full', option.color)} />
-                  <span>{option.name}</span>
-                </Button>
-              ))}
-            </div>
+          <div className="flex items-center gap-4">
+            <span className="text-sm font-medium text-muted-foreground">
+              Floor:
+            </span>
+            <Select value={activeFloor} onValueChange={setActiveFloor}>
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="Select a floor" />
+              </SelectTrigger>
+              <SelectContent>
+                {floors.map((floor) => (
+                  <SelectItem key={floor} value={floor}>
+                    {floor}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="flex items-center flex-wrap gap-1 bg-muted p-1 rounded-lg">
+            {filterOptions.map((option) => (
+              <Button
+                key={option.name}
+                size="sm"
+                onClick={() => setActiveFilter(option.name)}
+                variant={activeFilter === option.name ? 'secondary' : 'ghost'}
+                className="gap-2 px-3"
+              >
+                <div className={cn('h-3 w-3 rounded-full', option.color)} />
+                <span>{option.name}</span>
+              </Button>
+            ))}
+          </div>
         </Card>
 
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-5 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
           {filteredTables.map((table) => (
-            <TableCard key={table.id} table={table} />
+            <TableCard
+              key={table.id}
+              table={table}
+              onClick={() => handleTableClick(table)}
+            />
           ))}
         </div>
       </main>
+      <OrderDetailsSheet
+        order={selectedOrder}
+        open={isSheetOpen}
+        onOpenChange={setIsSheetOpen}
+      />
     </>
   );
 }
