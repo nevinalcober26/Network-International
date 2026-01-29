@@ -27,7 +27,6 @@ export default function RootLayout({
       <body
         className={cn('font-body antialiased', 'min-h-screen bg-background font-sans')}
         suppressHydrationWarning
-        style={{ overflowX: 'hidden' }}
       >
         <FirebaseClientProvider>
           {children}
