@@ -89,8 +89,6 @@ const SortableProductRow = ({
   const style: React.CSSProperties = {
     transform: CSS.Transform.toString(transform),
     transition: transition || undefined,
-    opacity: isDragging ? 0.8 : 1,
-    zIndex: isDragging ? 1 : 0,
     position: 'relative',
   };
 
@@ -100,22 +98,22 @@ const SortableProductRow = ({
       style={style}
       data-state={isSelected ? 'selected' : undefined}
       onClick={() => onRowClick(product)}
-      className="cursor-pointer"
+      className={cn(
+        "cursor-pointer bg-card transition-shadow",
+        isDragging && "z-10 opacity-60 shadow-lg"
+      )}
     >
       <TableCell
         className="w-12 px-2"
         onClick={(e) => e.stopPropagation()}
       >
-        <Button
-          variant="ghost"
-          size="icon"
-          className="cursor-grab"
+        <div
+          className="cursor-grab touch-none p-2"
           {...attributes}
           {...listeners}
         >
           <GripVertical className="h-5 w-5 text-muted-foreground" />
-          <span className="sr-only">Drag to reorder</span>
-        </Button>
+        </div>
       </TableCell>
       <TableCell onClick={(e) => e.stopPropagation()} className="px-4">
         <Checkbox
