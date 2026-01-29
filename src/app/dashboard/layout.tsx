@@ -24,15 +24,15 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   return (
-    <ProtectedRoute>
-      <SidebarProvider>
+    <SidebarProvider>
+      <ProtectedRoute>
         <AppSidebar />
         <SidebarInset>
           <React.Suspense fallback={<div>Loading...</div>}>
             <OnboardingWrapper>{children}</OnboardingWrapper>
           </React.Suspense>
         </SidebarInset>
-      </SidebarProvider>
-    </ProtectedRoute>
+      </ProtectedRoute>
+    </SidebarProvider>
   );
 }
