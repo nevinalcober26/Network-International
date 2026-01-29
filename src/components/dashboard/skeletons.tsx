@@ -423,12 +423,10 @@ export function OrdersPageSkeleton({
     <>
       <DashboardHeader />
       <main className="p-4 sm:p-6 lg:p-8 space-y-6">
-        <div className="flex items-start gap-4 rounded-lg bg-gradient-to-r from-blue-50 to-indigo-100 p-4 text-sm border border-blue-200/50 shadow-sm">
-          <Skeleton className="h-5 w-5 flex-shrink-0 rounded-full bg-blue-200 mt-0.5" />
-          <div className="flex-grow space-y-2">
-            <Skeleton className="h-4 w-40 bg-blue-200" />
-            <Skeleton className="h-3 w-20 bg-blue-200" />
-          </div>
+        <div className="flex items-center gap-4 rounded-lg bg-gradient-to-r from-blue-50 to-indigo-100 p-4 text-sm border border-blue-200/50 shadow-sm">
+          <Skeleton className="h-5 w-5 flex-shrink-0 rounded-full bg-blue-200" />
+          <Skeleton className="h-4 flex-grow bg-blue-200" />
+          <Skeleton className="h-9 w-36 bg-blue-200" />
         </div>
         <StatCardsSkeleton />
         {view === 'list' ? <OrdersTableSkeleton /> : <OrdersGallerySkeleton />}
@@ -544,12 +542,10 @@ export function TablesPageSkeleton() {
     <>
       <DashboardHeader />
       <main className="p-4 sm:p-6 lg:p-8 space-y-6">
-      <div className="flex items-start gap-4 rounded-lg bg-gradient-to-r from-blue-50 to-indigo-100 p-4 text-sm border border-blue-200/50 shadow-sm">
-          <Skeleton className="h-5 w-5 flex-shrink-0 rounded-full bg-blue-200 mt-0.5" />
-          <div className="flex-grow space-y-2">
-              <Skeleton className="h-4 w-40 bg-blue-200" />
-              <Skeleton className="h-3 w-20 bg-blue-200" />
-          </div>
+      <div className="flex items-center gap-4 rounded-lg bg-gradient-to-r from-blue-50 to-indigo-100 p-4 text-sm border border-blue-200/50 shadow-sm">
+          <Skeleton className="h-5 w-5 flex-shrink-0 rounded-full bg-blue-200" />
+          <Skeleton className="h-4 flex-grow bg-blue-200" />
+          <Skeleton className="h-9 w-36 bg-blue-200" />
         </div>
         <div>
           <div className="mb-6">
