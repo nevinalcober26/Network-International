@@ -17,7 +17,6 @@ export type Product = {
   smallDescription: string;
   description: string;
   discountedPrice?: number;
-  sortOrder?: number;
   recommend?: boolean;
   displayFullwidth?: boolean;
   hiddenTitle?: boolean;

@@ -70,7 +70,6 @@ const productSchema = z.object({
   smallDescription: z.string().optional(),
   description: z.string().optional(),
   discountedPrice: z.coerce.number().optional(),
-  sortOrder: z.coerce.number().optional(),
   recommend: z.boolean().default(false),
   displayFullwidth: z.boolean().default(false),
   hiddenTitle: z.boolean().default(false),
@@ -129,7 +128,6 @@ export function ProductSheet({
       smallDescription: product?.smallDescription || '',
       description: product?.description || '',
       discountedPrice: product?.discountedPrice,
-      sortOrder: product?.sortOrder,
       recommend: product?.recommend || false,
       displayFullwidth: product?.displayFullwidth || false,
       hiddenTitle: product?.hiddenTitle || false,
@@ -193,7 +191,7 @@ export function ProductSheet({
 
   const onInvalid = () => {
     const errorKeys = Object.keys(errors) as Array<keyof ProductFormValues>;
-    const tabMap: Record<keyof ProductFormValues, string> = {
+    const tabMap: Record<string, string> = {
       name: 'basic-info',
       category: 'basic-info',
       price: 'pricing',
@@ -424,25 +422,6 @@ export function ProductSheet({
                                   onCheckedChange={field.onChange}
                                 />
                               </FormControl>
-                            </FormItem>
-                          )}
-                        />
-                        <FormField
-                          control={form.control}
-                          name="sortOrder"
-                          render={({ field }) => (
-                            <FormItem className="max-w-xs">
-                              <FormLabel>Sort Order</FormLabel>
-                              <FormControl>
-                                <Input
-                                  type="number"
-                                  placeholder="e.g., 1"
-                                  {...field}
-                                />
-                              </FormControl>
-                              <FormDescription>
-                                A smaller number will appear first.
-                              </FormDescription>
                             </FormItem>
                           )}
                         />

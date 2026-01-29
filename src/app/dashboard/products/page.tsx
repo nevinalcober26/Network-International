@@ -1,6 +1,23 @@
 'use client';
 import { useState, useMemo, useEffect, useCallback } from 'react';
 import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
+import {
   Card,
   CardContent,
   CardHeader,
@@ -19,9 +36,9 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
+  GripVertical,
   MoreHorizontal,
   PlusCircle,
-  ArrowUpDown,
   ListFilter,
   FileDown,
 } from 'lucide-react';
@@ -55,16 +72,83 @@ const getStatusBadgeVariant = (status: Product['status']) => {
   }
 };
 
+const SortableProductRow = ({
+  product,
+  onEdit,
+}: {
+  product: Product;
+  onEdit: (product: Product) => void;
+}) => {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: product.id });
+
+  const style: React.CSSProperties = {
+    transform: CSS.Transform.toString(transform),
+    transition: transition || undefined,
+    opacity: isDragging ? 0.8 : 1,
+    zIndex: isDragging ? 1 : 0,
+    position: 'relative',
+  };
+
+  return (
+    <TableRow ref={setNodeRef} style={style}>
+      <TableCell className="w-12 px-2">
+        <Button
+          variant="ghost"
+          size="icon"
+          className="cursor-grab"
+          {...attributes}
+          {...listeners}
+        >
+          <GripVertical className="h-5 w-5 text-muted-foreground" />
+          <span className="sr-only">Drag to reorder</span>
+        </Button>
+      </TableCell>
+      <TableCell className="font-medium">{product.name}</TableCell>
+      <TableCell>{product.category}</TableCell>
+      <TableCell>${product.price.toFixed(2)}</TableCell>
+      <TableCell>{product.stock}</TableCell>
+      <TableCell>
+        <Badge variant={getStatusBadgeVariant(product.status)}>
+          {product.status}
+        </Badge>
+      </TableCell>
+      <TableCell className="text-right">
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button aria-haspopup="true" size="icon" variant="ghost">
+              <MoreHorizontal className="h-4 w-4" />
+              <span className="sr-only">Toggle menu</span>
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuLabel>Actions</DropdownMenuLabel>
+            <DropdownMenuItem onClick={() => onEdit(product)}>
+              Edit
+            </DropdownMenuItem>
+            <DropdownMenuItem>Duplicate</DropdownMenuItem>
+            <DropdownMenuItem className="text-destructive">
+              Delete
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </TableCell>
+    </TableRow>
+  );
+};
+
 export default function ProductsPage() {
   const [allProducts, setAllProducts] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [search, setSearch] = useState('');
-  const [sortConfig, setSortConfig] = useState<{
-    key: keyof Product;
-    direction: 'ascending' | 'descending';
-  } | null>({ key: 'name', direction: 'ascending' });
 
   useEffect(() => {
     // Simulate fetching data
@@ -74,8 +158,27 @@ export default function ProductsPage() {
     }, 1000);
   }, []);
 
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (over && active.id !== over.id) {
+      setAllProducts((items) => {
+        const oldIndex = items.findIndex((item) => item.id === active.id);
+        const newIndex = items.findIndex((item) => item.id === over.id);
+        if (oldIndex === -1 || newIndex === -1) return items;
+        return arrayMove(items, oldIndex, newIndex);
+      });
+    }
+  };
+
   const handleAddProduct = () => {
-    setSelectedProduct(null); // No product selected means "Add" mode
+    setSelectedProduct(null);
     setIsSheetOpen(true);
   };
 
@@ -99,65 +202,11 @@ export default function ProductsPage() {
     }
   };
 
-  const requestSort = (key: keyof Product) => {
-    let direction: 'ascending' | 'descending' = 'ascending';
-    if (
-      sortConfig &&
-      sortConfig.key === key &&
-      sortConfig.direction === 'ascending'
-    ) {
-      direction = 'descending';
-    }
-    setSortConfig({ key, direction });
-  };
-
-  const filteredAndSortedProducts = useMemo(() => {
-    let filtered = allProducts.filter((product) =>
+  const filteredProducts = useMemo(() => {
+    return allProducts.filter((product) =>
       product.name.toLowerCase().includes(search.toLowerCase())
     );
-
-    if (sortConfig !== null) {
-      filtered.sort((a, b) => {
-        const aVal = a[sortConfig.key];
-        const bVal = b[sortConfig.key];
-        if (typeof aVal === 'string' && typeof bVal === 'string') {
-          return sortConfig.direction === 'ascending'
-            ? aVal.localeCompare(bVal)
-            : bVal.localeCompare(aVal);
-        }
-        if (typeof aVal === 'number' && typeof bVal === 'number') {
-          return sortConfig.direction === 'ascending' ? aVal - bVal : bVal - aVal;
-        }
-        return 0;
-      });
-    }
-
-    return filtered;
-  }, [allProducts, search, sortConfig]);
-
-  const SortableHeader = ({
-    tKey,
-    label,
-    className,
-  }: {
-    tKey: keyof Product;
-    label: string;
-    className?: string;
-  }) => (
-    <Button
-      variant="ghost"
-      onClick={() => requestSort(tKey)}
-      className={cn('px-2', className)}
-    >
-      {label}
-      <ArrowUpDown
-        className={cn(
-          'ml-2 h-4 w-4',
-          sortConfig?.key !== tKey && 'text-muted-foreground/50'
-        )}
-      />
-    </Button>
-  );
+  }, [allProducts, search]);
 
   return (
     <>
@@ -198,100 +247,70 @@ export default function ProductsPage() {
           </CardHeader>
           <CardContent>
             <div className="relative w-full overflow-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>
-                      <SortableHeader tKey="name" label="Product" />
-                    </TableHead>
-                    <TableHead>
-                      <SortableHeader tKey="category" label="Category" />
-                    </TableHead>
-                    <TableHead>
-                      <SortableHeader tKey="price" label="Price" />
-                    </TableHead>
-                    <TableHead>
-                      <SortableHeader tKey="stock" label="Stock" />
-                    </TableHead>
-                    <TableHead>
-                      <SortableHeader tKey="status" label="Status" />
-                    </TableHead>
-                    <TableHead>
-                      <span className="sr-only">Actions</span>
-                    </TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {isLoading ? (
-                    [...Array(5)].map((_, i) => (
-                      <TableRow key={i}>
-                        {[...Array(6)].map((_, j) => (
-                          <TableCell key={j}>
-                            <div className="h-4 bg-muted rounded animate-pulse"></div>
-                          </TableCell>
-                        ))}
-                      </TableRow>
-                    ))
-                  ) : filteredAndSortedProducts.length > 0 ? (
-                    filteredAndSortedProducts.map((product) => (
-                      <TableRow key={product.id}>
-                        <TableCell className="font-medium">
-                          {product.name}
-                        </TableCell>
-                        <TableCell>{product.category}</TableCell>
-                        <TableCell>${product.price.toFixed(2)}</TableCell>
-                        <TableCell>{product.stock}</TableCell>
-                        <TableCell>
-                          <Badge variant={getStatusBadgeVariant(product.status)}>
-                            {product.status}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button
-                                aria-haspopup="true"
-                                size="icon"
-                                variant="ghost"
-                              >
-                                <MoreHorizontal className="h-4 w-4" />
-                                <span className="sr-only">Toggle menu</span>
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                              <DropdownMenuItem
-                                onClick={() => handleEditProduct(product)}
-                              >
-                                Edit
-                              </DropdownMenuItem>
-                              <DropdownMenuItem>Duplicate</DropdownMenuItem>
-                              <DropdownMenuItem className="text-destructive">
-                                Delete
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </TableCell>
-                      </TableRow>
-                    ))
-                  ) : (
+              <DndContext
+                sensors={sensors}
+                collisionDetection={closestCenter}
+                onDragEnd={handleDragEnd}
+              >
+                <Table>
+                  <TableHeader>
                     <TableRow>
-                      <TableCell
-                        colSpan={6}
-                        className="h-24 text-center text-muted-foreground"
-                      >
-                        No products found.
-                      </TableCell>
+                      <TableHead className="w-12 px-2">
+                        <span className="sr-only">Drag Handle</span>
+                      </TableHead>
+                      <TableHead>Product</TableHead>
+                      <TableHead>Category</TableHead>
+                      <TableHead>Price</TableHead>
+                      <TableHead>Stock</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>
+                        <span className="sr-only">Actions</span>
+                      </TableHead>
                     </TableRow>
-                  )}
-                </TableBody>
-              </Table>
+                  </TableHeader>
+                  <SortableContext
+                    items={filteredProducts.map((p) => p.id)}
+                    strategy={verticalListSortingStrategy}
+                  >
+                    <TableBody>
+                      {isLoading ? (
+                        [...Array(5)].map((_, i) => (
+                          <TableRow key={i}>
+                            {[...Array(7)].map((_, j) => (
+                              <TableCell key={j}>
+                                <div className="h-4 bg-muted rounded animate-pulse"></div>
+                              </TableCell>
+                            ))}
+                          </TableRow>
+                        ))
+                      ) : filteredProducts.length > 0 ? (
+                        filteredProducts.map((product) => (
+                          <SortableProductRow
+                            key={product.id}
+                            product={product}
+                            onEdit={handleEditProduct}
+                          />
+                        ))
+                      ) : (
+                        <TableRow>
+                          <TableCell
+                            colSpan={7}
+                            className="h-24 text-center text-muted-foreground"
+                          >
+                            No products found.
+                          </TableCell>
+                        </TableRow>
+                      )}
+                    </TableBody>
+                  </SortableContext>
+                </Table>
+              </DndContext>
             </div>
           </CardContent>
           <CardFooter>
             <div className="text-xs text-muted-foreground">
               Showing <strong>1-10</strong> of{' '}
-              <strong>{filteredAndSortedProducts.length}</strong> products
+              <strong>{filteredProducts.length}</strong> products
             </div>
           </CardFooter>
         </Card>
