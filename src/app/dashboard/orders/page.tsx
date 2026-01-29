@@ -44,6 +44,7 @@ import {
   File as FileIcon, // Aliased to avoid conflict
   FileText,
   Sheet as SheetIcon, // Aliased to avoid conflict
+  BellRing,
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -211,6 +212,7 @@ export default function OrdersPage() {
   const [date, setDate] = useState<Date | undefined>(new Date());
   const [isExportDialogOpen, setIsExportDialogOpen] = useState(false);
   const { toast } = useToast();
+  const [permission, setPermission] = useState('default');
 
   const [filters, setFilters] = useState({
     search: '',
@@ -231,6 +233,62 @@ export default function OrdersPage() {
     }, 1500);
     return () => clearTimeout(timer);
   }, []);
+
+  useEffect(() => {
+    if ('Notification' in window) {
+      setPermission(Notification.permission);
+    }
+  }, []);
+
+  const handleNotificationClick = () => {
+    if (!('Notification' in window)) {
+      toast({
+        variant: 'destructive',
+        title: 'Notifications not supported',
+        description: 'Your browser does not support desktop notifications.',
+      });
+      return;
+    }
+
+    if (Notification.permission === 'granted') {
+      toast({
+        title: 'Notifications are already enabled',
+      });
+      new Notification('eMenu Digital Hub', {
+        body: 'You are all set for future updates!',
+      });
+      return;
+    }
+
+    if (Notification.permission === 'denied') {
+      toast({
+        variant: 'destructive',
+        title: 'Notifications blocked',
+        description:
+          'Please enable notifications in your browser settings to receive updates.',
+      });
+      return;
+    }
+
+    Notification.requestPermission().then((result) => {
+      setPermission(result);
+      if (result === 'granted') {
+        toast({
+          title: 'Notifications Enabled!',
+          description: 'You will now receive important updates.',
+        });
+        new Notification('eMenu Digital Hub', {
+          body: 'You are all set for future updates!',
+        });
+      } else {
+        toast({
+          variant: 'destructive',
+          title: 'Notifications Blocked',
+          description: 'You have denied notification permissions.',
+        });
+      }
+    });
+  };
 
   const handleFilterChange = (type: keyof typeof filters, value: string) => {
     setFilters((prev) => ({ ...prev, [type]: value }));
@@ -411,10 +469,25 @@ export default function OrdersPage() {
       <main className="p-4 sm:p-6 lg:p-8 space-y-6">
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-bold">Orders</h1>
-          <Button variant="outline" onClick={() => setIsExportDialogOpen(true)}>
-            <Download className="mr-2 h-4 w-4" />
-            Export
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button variant="outline" onClick={() => setIsExportDialogOpen(true)}>
+              <Download className="mr-2 h-4 w-4" />
+              Export
+            </Button>
+            {permission !== 'granted' && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleNotificationClick}
+                disabled={permission === 'denied'}
+              >
+                <BellRing className="mr-2 h-4 w-4" />
+                {permission === 'denied'
+                  ? 'Notifications Blocked'
+                  : 'Enable Notifications'}
+              </Button>
+            )}
+          </div>
         </div>
         <AiSummary data={filteredAndSortedOrders} context="daily restaurant orders" />
         <StatCards cards={kpiCards} />
