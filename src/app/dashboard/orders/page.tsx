@@ -443,19 +443,19 @@ export default function OrdersPage() {
               <div className="flex items-center gap-1 rounded-md bg-muted p-1">
                 <Button
                   variant={view === 'gallery' ? 'secondary' : 'ghost'}
-                  size="sm"
+                  size="icon"
                   onClick={() => setView('gallery')}
                 >
                   <LayoutGrid className="h-4 w-4" />
-                  <span className="ml-2 hidden sm:inline">Gallery</span>
+                  <span className="sr-only">Gallery</span>
                 </Button>
                 <Button
                   variant={view === 'list' ? 'secondary' : 'ghost'}
-                  size="sm"
+                  size="icon"
                   onClick={() => setView('list')}
                 >
                   <List className="h-4 w-4" />
-                  <span className="ml-2 hidden sm:inline">List</span>
+                  <span className="sr-only">List</span>
                 </Button>
               </div>
             </div>
