@@ -722,7 +722,7 @@ export default function OrdersPage() {
           </CardHeader>
           <CardContent>
             {view === 'list' ? (
-              <div className="relative w-full overflow-auto max-h-[60vh]">
+              <div className="relative overflow-auto" style={{ maxHeight: '60vh' }}>
                 <Table className="min-w-[1800px]">
                   <TableHeader className="sticky top-0 z-10 bg-card">
                     <TableRow>
