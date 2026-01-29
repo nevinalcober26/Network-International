@@ -58,6 +58,7 @@ import {
   PlusCircle,
   Trash,
   Video,
+  HelpCircle,
 } from 'lucide-react';
 import type { Product, Variation } from './types';
 import Image from 'next/image';
@@ -87,7 +88,7 @@ const productSchema = z.object({
       z.object({
         value: z.string().min(1, 'Variation value is required'),
         matrix: z.string().optional(),
-        price: z.coerce.number().min(0),
+        price: z.coerce.number().min(0, "Price can't be negative"),
         visible: z.boolean().default(true),
         hidden: z.boolean().default(false),
       })
@@ -196,7 +197,7 @@ export function ProductSheet({
       category: 'basic-info',
       price: 'pricing',
       discountedPrice: 'pricing',
-      // ... map other fields to their tabs if needed
+      variations: 'variations',
     };
 
     for (const key of errorKeys) {
@@ -213,18 +214,19 @@ export function ProductSheet({
   };
 
   // Tab validation status
-  const isBasicInfoComplete = !errors.name && !errors.category && form.getValues('name') && form.getValues('category');
+  const isBasicInfoComplete =
+    !errors.name && !errors.category && form.getValues('name') && form.getValues('category');
   const isPricingComplete = !errors.price && form.getValues('price') > 0;
-  
+  const areVariationsComplete = !errors.variations;
+
   const discount = useMemo(() => {
     const price = form.watch('price');
     const discountedPrice = form.watch('discountedPrice');
-    if (price && discountedPrice && discountedPrice < price) {
+    if (price && discountedPrice && discountedPrice < price && price > 0) {
       return (((price - discountedPrice) / price) * 100).toFixed(0);
     }
     return '0';
   }, [form.watch('price'), form.watch('discountedPrice')]);
-
 
   const TabIndicator = ({ isComplete }: { isComplete: boolean }) =>
     isComplete ? (
@@ -237,333 +239,440 @@ export function ProductSheet({
     <>
       <Sheet open={open} onOpenChange={handleAttemptClose}>
         <SheetContent className="sm:max-w-4xl w-full p-0">
-          <Form {...form}>
-            <form
-              onSubmit={form.handleSubmit(onSubmit, onInvalid)}
-              className="flex flex-col h-full"
-            >
-              <SheetHeader className="p-6 border-b">
-                <SheetTitle className="text-xl">
-                  {product ? 'Edit Product' : 'Add Product'}
-                </SheetTitle>
-                <SheetDescription>
-                  Fill in the details for your product across the tabs.
-                </SheetDescription>
-              </SheetHeader>
-              <div className="flex-grow overflow-y-auto">
-                <Tabs
-                  value={activeTab}
-                  onValueChange={setActiveTab}
-                  className="h-full flex flex-col"
-                >
-                  <TabsList className="w-full justify-start rounded-none border-b px-6 sticky top-0 bg-background z-10">
-                    <TabsTrigger value="basic-info" className="gap-2">
-                      <TabIndicator isComplete={isBasicInfoComplete} /> Basic
-                      Info
-                    </TabsTrigger>
-                    <TabsTrigger value="pricing" className="gap-2">
-                      <TabIndicator isComplete={isPricingComplete} /> Pricing
-                    </TabsTrigger>
-                    <TabsTrigger value="display">Display & Options</TabsTrigger>
-                    <TabsTrigger value="media">Media</TabsTrigger>
-                    <TabsTrigger value="variations">Variations</TabsTrigger>
-                  </TabsList>
-                  <div className="p-6 space-y-6 flex-grow">
-                    <TabsContent value="basic-info">
-                      <div className="space-y-4">
-                        <FormField
-                          control={form.control}
-                          name="name"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Product Name*</FormLabel>
-                              <FormControl>
-                                <Input
-                                  placeholder="e.g., Classic Cheeseburger"
-                                  {...field}
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        <FormField
-                          control={form.control}
-                          name="smallDescription"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Small Description</FormLabel>
-                              <FormControl>
-                                <Textarea
-                                  placeholder="A short, catchy line for your product."
-                                  rows={2}
-                                  {...field}
-                                />
-                              </FormControl>
-                            </FormItem>
-                          )}
-                        />
-                        <FormField
-                          control={form.control}
-                          name="description"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Description</FormLabel>
-                              <FormControl>
-                                <Textarea
-                                  placeholder="Detailed description including ingredients, allergens, etc."
-                                  rows={5}
-                                  {...field}
-                                />
-                              </FormControl>
-                            </FormItem>
-                          )}
-                        />
-                        <FormField
-                          control={form.control}
-                          name="category"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Category*</FormLabel>
-                              <Select
-                                onValueChange={field.onChange}
-                                defaultValue={field.value}
-                              >
-                                <FormControl>
-                                  <SelectTrigger>
-                                    <SelectValue placeholder="Select a category" />
-                                  </SelectTrigger>
-                                </FormControl>
-                                <SelectContent>
-                                  {mockCategories.map((cat) => (
-                                    <SelectItem key={cat} value={cat}>
-                                      {cat}
-                                    </SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      </div>
-                    </TabsContent>
-                    <TabsContent value="pricing">
-                      <div className="space-y-6 max-w-md">
-                        <FormField
-                          control={form.control}
-                          name="price"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Price (AED)*</FormLabel>
-                              <FormControl>
-                                <Input type="number" {...field} />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        <FormField
-                          control={form.control}
-                          name="discountedPrice"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Discounted Price</FormLabel>
-                              <FormControl>
-                                <Input type="number" {...field} />
-                              </FormControl>
-                            </FormItem>
-                          )}
-                        />
-                        <FormItem>
-                          <FormLabel>Discount %</FormLabel>
-                          <Input value={discount} readOnly />
-                          <FormDescription>
-                            This is calculated automatically based on price and
-                            discounted price.
-                          </FormDescription>
-                        </FormItem>
-                      </div>
-                    </TabsContent>
-                    <TabsContent value="display">
-                      <div className="space-y-4">
-                        <FormField
-                          control={form.control}
-                          name="recommend"
-                          render={({ field }) => (
-                            <FormItem className="flex items-center justify-between rounded-lg border p-4">
-                              <div className="space-y-0.5">
-                                <FormLabel>Recommend</FormLabel>
-                                <FormDescription>
-                                  Feature this item as a recommendation.
-                                </FormDescription>
-                              </div>
-                              <FormControl>
-                                <Switch
-                                  checked={field.value}
-                                  onCheckedChange={field.onChange}
-                                />
-                              </FormControl>
-                            </FormItem>
-                          )}
-                        />
-                        {/* Add other switches similarly */}
-                        <FormField
-                          control={form.control}
-                          name="outOfStock"
-                          render={({ field }) => (
-                            <FormItem className="flex items-center justify-between rounded-lg border p-4">
-                              <div className="space-y-0.5">
-                                <FormLabel>Mark as Out of Stock</FormLabel>
-                              </div>
-                              <FormControl>
-                                <Switch
-                                  checked={field.value}
-                                  onCheckedChange={field.onChange}
-                                />
-                              </FormControl>
-                            </FormItem>
-                          )}
-                        />
-                      </div>
-                    </TabsContent>
-                    <TabsContent value="media">
-                      <div className="space-y-6">
-                        <div>
-                          <Label>Main Image</Label>
-                          <div className="mt-2 flex items-center gap-6">
-                            <div className="w-40 h-24 rounded-md border border-dashed flex items-center justify-center bg-muted">
-                              <Image
-                                src="https://picsum.photos/seed/product/160/96"
-                                width={160}
-                                height={96}
-                                alt="Product image"
-                                className="rounded-md object-cover"
-                              />
-                            </div>
-                            <div className="flex flex-col gap-2">
-                              <Button variant="outline" asChild>
-                                <label
-                                  htmlFor="image-upload"
-                                  className="cursor-pointer"
-                                >
-                                  <Upload className="mr-2 h-4 w-4" />
-                                  Upload Image
-                                  <Input
-                                    id="image-upload"
-                                    type="file"
-                                    className="sr-only"
-                                  />
-                                </label>
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                className="text-destructive hover:text-destructive"
-                              >
-                                Clear
-                              </Button>
-                            </div>
-                          </div>
-                        </div>
-                        <div>
-                          <Label>Additional Images</Label>
-                           <div className="mt-2 p-4 border rounded-lg">
-                            <p className="text-center text-sm text-muted-foreground">Additional images feature coming soon.</p>
-                          </div>
-                        </div>
-                        <FormField
-                          control={form.control}
-                          name="videoUrl"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel className="flex items-center gap-2">
-                                <Video /> Video URL (Optional)
-                              </FormLabel>
-                              <FormControl>
-                                <Input
-                                  placeholder="https://www.youtube.com/watch?v=..."
-                                  {...field}
-                                />
-                              </FormControl>
-                               <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      </div>
-                    </TabsContent>
-                     <TabsContent value="variations">
+          <TooltipProvider>
+            <Form {...form}>
+              <form
+                onSubmit={form.handleSubmit(onSubmit, onInvalid)}
+                className="flex flex-col h-full"
+              >
+                <SheetHeader className="p-6 border-b">
+                  <SheetTitle className="text-xl">
+                    {product ? 'Edit Product' : 'Add Product'}
+                  </SheetTitle>
+                  <SheetDescription>
+                    Fill in the details for your product across the tabs.
+                  </SheetDescription>
+                </SheetHeader>
+                <div className="flex-grow overflow-y-auto">
+                  <Tabs
+                    value={activeTab}
+                    onValueChange={setActiveTab}
+                    className="h-full flex flex-col"
+                  >
+                    <TabsList className="w-full justify-start rounded-none border-b px-6 sticky top-0 bg-background z-10">
+                      <TabsTrigger value="basic-info" className="gap-2">
+                        <TabIndicator isComplete={isBasicInfoComplete} /> Basic
+                        Info
+                      </TabsTrigger>
+                      <TabsTrigger value="pricing" className="gap-2">
+                        <TabIndicator isComplete={isPricingComplete} /> Pricing
+                      </TabsTrigger>
+                      <TabsTrigger value="display">
+                        Display & Options
+                      </TabsTrigger>
+                      <TabsTrigger value="media">Media</TabsTrigger>
+                      <TabsTrigger value="variations" className="gap-2">
+                        <TabIndicator isComplete={areVariationsComplete} />
+                        Variations
+                      </TabsTrigger>
+                    </TabsList>
+                    <div className="p-6 space-y-6 flex-grow">
+                      <TabsContent value="basic-info">
                         <div className="space-y-4">
-                            <Label>Product Variations</Label>
-                            <div className="p-4 border rounded-lg space-y-4">
-                                {variationFields.map((field, index) => (
-                                    <div key={field.id} className="grid grid-cols-[1fr,1fr,100px,auto,auto] gap-2 items-center">
-                                        <FormField
-                                            control={form.control}
-                                            name={`variations.${index}.value`}
-                                            render={({ field }) => (
-                                                <FormItem>
-                                                    <FormControl><Input placeholder="Value (e.g. Large)" {...field} /></FormControl>
-                                                </FormItem>
-                                            )}
-                                        />
-                                        <FormField
-                                            control={form.control}
-                                            name={`variations.${index}.matrix`}
-                                            render={({ field }) => (
-                                                <FormItem>
-                                                    <FormControl><Input placeholder="Matrix ID" {...field} /></FormControl>
-                                                </FormItem>
-                                            )}
-                                        />
-                                        <FormField
-                                            control={form.control}
-                                            name={`variations.${index}.price`}
-                                            render={({ field }) => (
-                                                <FormItem>
-                                                    <FormControl><Input type="number" placeholder="Price" {...field} /></FormControl>
-                                                </FormItem>
-                                            )}
-                                        />
-                                        <FormField
-                                            control={form.control}
-                                            name={`variations.${index}.visible`}
-                                            render={({ field }) => (
-                                                <FormItem className="flex flex-col items-center">
-                                                    <FormControl><Switch checked={field.value} onCheckedChange={field.onChange} /></FormControl>
-                                                </FormItem>
-                                            )}
-                                        />
-                                        <Button variant="ghost" size="icon" onClick={() => removeVariation(index)}>
-                                            <Trash className="h-4 w-4 text-destructive" />
-                                        </Button>
-                                    </div>
-                                ))}
-                            </div>
-                            <Button type="button" variant="outline" size="sm" onClick={() => appendVariation({ value: '', matrix: '', price: 0, visible: true, hidden: false })}>
-                                <PlusCircle className="mr-2 h-4 w-4" />
-                                Add Variation
-                            </Button>
+                          <FormField
+                            control={form.control}
+                            name="name"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Product Name*</FormLabel>
+                                <FormControl>
+                                  <Input
+                                    placeholder="e.g., Classic Cheeseburger"
+                                    {...field}
+                                  />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          <FormField
+                            control={form.control}
+                            name="smallDescription"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel className="flex items-center gap-1.5">
+                                  Small Description
+                                  <Tooltip delayDuration={100}>
+                                    <TooltipTrigger asChild>
+                                      <button type="button" onClick={(e) => e.preventDefault()}>
+                                        <HelpCircle className="h-4 w-4 text-muted-foreground cursor-help" />
+                                      </button>
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                      <p>A short, catchy description for product cards and list views.</p>
+                                    </TooltipContent>
+                                  </Tooltip>
+                                </FormLabel>
+                                <FormControl>
+                                  <Textarea
+                                    placeholder="A short, catchy line for your product."
+                                    rows={2}
+                                    {...field}
+                                  />
+                                </FormControl>
+                              </FormItem>
+                            )}
+                          />
+                          <FormField
+                            control={form.control}
+                            name="description"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Description</FormLabel>
+                                <FormControl>
+                                  <Textarea
+                                    placeholder="Detailed description including ingredients, allergens, etc."
+                                    rows={5}
+                                    {...field}
+                                  />
+                                </FormControl>
+                              </FormItem>
+                            )}
+                          />
+                          <FormField
+                            control={form.control}
+                            name="category"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Category*</FormLabel>
+                                <Select
+                                  onValueChange={field.onChange}
+                                  defaultValue={field.value}
+                                >
+                                  <FormControl>
+                                    <SelectTrigger>
+                                      <SelectValue placeholder="Select a category" />
+                                    </SelectTrigger>
+                                  </FormControl>
+                                  <SelectContent>
+                                    {mockCategories.map((cat) => (
+                                      <SelectItem key={cat} value={cat}>
+                                        {cat}
+                                      </SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
                         </div>
-                    </TabsContent>
-                  </div>
-                </Tabs>
-              </div>
-              <SheetFooter className="p-6 border-t bg-background flex-row justify-between w-full">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={handleAttemptClose}
-                >
-                  Cancel
-                </Button>
-                <TooltipProvider>
+                      </TabsContent>
+                      <TabsContent value="pricing">
+                        <div className="space-y-6 max-w-md">
+                          <FormField
+                            control={form.control}
+                            name="price"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Price (AED)*</FormLabel>
+                                <FormControl>
+                                  <Input type="number" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          <FormField
+                            control={form.control}
+                            name="discountedPrice"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Discounted Price</FormLabel>
+                                <FormControl>
+                                  <Input type="number" {...field} />
+                                </FormControl>
+                              </FormItem>
+                            )}
+                          />
+                          <FormItem>
+                            <FormLabel className="flex items-center gap-1.5">
+                              Discount %
+                              <Tooltip delayDuration={100}>
+                                <TooltipTrigger asChild>
+                                  <button type="button" onClick={(e) => e.preventDefault()}>
+                                    <HelpCircle className="h-4 w-4 text-muted-foreground cursor-help" />
+                                  </button>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                  <p>Calculated automatically from the Price and Discounted Price.</p>
+                                </TooltipContent>
+                              </Tooltip>
+                            </FormLabel>
+                            <Input value={discount} readOnly />
+                          </FormItem>
+                        </div>
+                      </TabsContent>
+                      <TabsContent value="display">
+                        <div className="space-y-4">
+                          <FormField
+                            control={form.control}
+                            name="recommend"
+                            render={({ field }) => (
+                              <FormItem className="flex items-center justify-between rounded-lg border p-4">
+                                <div className="space-y-0.5">
+                                  <FormLabel className="flex items-center gap-1.5">
+                                    Recommend
+                                     <Tooltip delayDuration={100}>
+                                      <TooltipTrigger asChild>
+                                        <button type="button" onClick={(e) => e.preventDefault()}>
+                                          <HelpCircle className="h-4 w-4 text-muted-foreground cursor-help" />
+                                        </button>
+                                      </TooltipTrigger>
+                                      <TooltipContent>
+                                        <p>Feature this item as a "Recommended" product on your menu.</p>
+                                      </TooltipContent>
+                                    </Tooltip>
+                                  </FormLabel>
+                                </div>
+                                <FormControl>
+                                  <Switch
+                                    checked={field.value}
+                                    onCheckedChange={field.onChange}
+                                  />
+                                </FormControl>
+                              </FormItem>
+                            )}
+                          />
+                          {/* Add other switches similarly */}
+                          <FormField
+                            control={form.control}
+                            name="outOfStock"
+                            render={({ field }) => (
+                              <FormItem className="flex items-center justify-between rounded-lg border p-4">
+                                <div className="space-y-0.5">
+                                  <FormLabel>Mark as Out of Stock</FormLabel>
+                                </div>
+                                <FormControl>
+                                  <Switch
+                                    checked={field.value}
+                                    onCheckedChange={field.onChange}
+                                  />
+                                </FormControl>
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+                      </TabsContent>
+                      <TabsContent value="media">
+                        <div className="space-y-6">
+                          <div>
+                            <Label>Main Image</Label>
+                            <div className="mt-2 flex items-center gap-6">
+                              <div className="w-40 h-24 rounded-md border border-dashed flex items-center justify-center bg-muted">
+                                <Image
+                                  src="https://picsum.photos/seed/product/160/96"
+                                  width={160}
+                                  height={96}
+                                  alt="Product image"
+                                  className="rounded-md object-cover"
+                                />
+                              </div>
+                              <div className="flex flex-col gap-2">
+                                <Button variant="outline" asChild>
+                                  <label
+                                    htmlFor="image-upload"
+                                    className="cursor-pointer"
+                                  >
+                                    <Upload className="mr-2 h-4 w-4" />
+                                    Upload Image
+                                    <Input
+                                      id="image-upload"
+                                      type="file"
+                                      className="sr-only"
+                                    />
+                                  </label>
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  className="text-destructive hover:text-destructive"
+                                >
+                                  Clear
+                                </Button>
+                              </div>
+                            </div>
+                          </div>
+                          <div>
+                            <Label>Additional Images</Label>
+                            <div className="mt-2 p-4 border rounded-lg">
+                              <p className="text-center text-sm text-muted-foreground">
+                                Additional images feature coming soon.
+                              </p>
+                            </div>
+                          </div>
+                          <FormField
+                            control={form.control}
+                            name="videoUrl"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel className="flex items-center gap-2">
+                                  <Video /> Video URL (Optional)
+                                </FormLabel>
+                                <FormControl>
+                                  <Input
+                                    placeholder="https://www.youtube.com/watch?v=..."
+                                    {...field}
+                                  />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+                      </TabsContent>
+                      <TabsContent value="variations">
+                        <div className="space-y-4">
+                          <Label>Product Variations</Label>
+                          <div className="p-4 border rounded-lg space-y-4">
+                            <div className="grid grid-cols-[1fr,1fr,100px,auto,auto] gap-2 items-center text-sm font-medium text-muted-foreground px-1">
+                                <Label>Value*</Label>
+                                <Label className="flex items-center gap-1.5">
+                                    Matrix ID
+                                    <Tooltip delayDuration={100}>
+                                        <TooltipTrigger asChild>
+                                            <button type="button" onClick={(e) => e.preventDefault()}><HelpCircle className="h-4 w-4 cursor-help" /></button>
+                                        </TooltipTrigger>
+                                        <TooltipContent>
+                                            <p>Optional identifier for your Point of Sale (POS) system integration.</p>
+                                        </TooltipContent>
+                                    </Tooltip>
+                                </Label>
+                                <Label className="flex items-center gap-1.5">
+                                    Price*
+                                     <Tooltip delayDuration={100}>
+                                        <TooltipTrigger asChild>
+                                            <button type="button" onClick={(e) => e.preventDefault()}><HelpCircle className="h-4 w-4 cursor-help" /></button>
+                                        </TooltipTrigger>
+                                        <TooltipContent>
+                                            <p>This price will override the product's base price for this variation.</p>
+                                        </TooltipContent>
+                                    </Tooltip>
+                                </Label>
+                                <Label className="text-center">Visible</Label>
+                                <div><span className="sr-only">Actions</span></div>
+                            </div>
+                            {variationFields.map((field, index) => (
+                              <div
+                                key={field.id}
+                                className="grid grid-cols-[1fr,1fr,100px,auto,auto] gap-2 items-start"
+                              >
+                                <FormField
+                                  control={form.control}
+                                  name={`variations.${index}.value`}
+                                  render={({ field }) => (
+                                    <FormItem>
+                                      <FormControl>
+                                        <Input
+                                          placeholder="Value (e.g. Large)"
+                                          {...field}
+                                        />
+                                      </FormControl>
+                                      <FormMessage />
+                                    </FormItem>
+                                  )}
+                                />
+                                <FormField
+                                  control={form.control}
+                                  name={`variations.${index}.matrix`}
+                                  render={({ field }) => (
+                                    <FormItem>
+                                      <FormControl>
+                                        <Input
+                                          placeholder="Matrix ID"
+                                          {...field}
+                                        />
+                                      </FormControl>
+                                      <FormMessage />
+                                    </FormItem>
+                                  )}
+                                />
+                                <FormField
+                                  control={form.control}
+                                  name={`variations.${index}.price`}
+                                  render={({ field }) => (
+                                    <FormItem>
+                                      <FormControl>
+                                        <Input
+                                          type="number"
+                                          placeholder="Price"
+                                          {...field}
+                                        />
+                                      </FormControl>
+                                      <FormMessage />
+                                    </FormItem>
+                                  )}
+                                />
+                                <FormField
+                                  control={form.control}
+                                  name={`variations.${index}.visible`}
+                                  render={({ field }) => (
+                                    <FormItem className="flex flex-col items-center h-10 justify-center">
+                                      <FormControl>
+                                        <Switch
+                                          checked={field.value}
+                                          onCheckedChange={field.onChange}
+                                        />
+                                      </FormControl>
+                                    </FormItem>
+                                  )}
+                                />
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={() => removeVariation(index)}
+                                >
+                                  <Trash className="h-4 w-4 text-destructive" />
+                                </Button>
+                              </div>
+                            ))}
+                          </div>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() =>
+                              appendVariation({
+                                value: '',
+                                matrix: '',
+                                price: 0,
+                                visible: true,
+                                hidden: false,
+                              })
+                            }
+                          >
+                            <PlusCircle className="mr-2 h-4 w-4" />
+                            Add Variation
+                          </Button>
+                        </div>
+                      </TabsContent>
+                    </div>
+                  </Tabs>
+                </div>
+                <SheetFooter className="p-6 border-t bg-background flex-row justify-between w-full">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={handleAttemptClose}
+                  >
+                    Cancel
+                  </Button>
                   <Tooltip
                     delayDuration={100}
                     open={!isValid ? undefined : false}
                   >
                     <TooltipTrigger asChild>
                       {/* This div is necessary to make the tooltip work on a disabled button */}
-                      <div tabIndex={0}> 
+                      <div tabIndex={0}>
                         <Button type="submit" disabled={!isValid}>
                           {product ? 'Update Product' : 'Save Product'}
                         </Button>
@@ -575,10 +684,10 @@ export function ProductSheet({
                       </p>
                     </TooltipContent>
                   </Tooltip>
-                </TooltipProvider>
-              </SheetFooter>
-            </form>
-          </Form>
+                </SheetFooter>
+              </form>
+            </Form>
+          </TooltipProvider>
         </SheetContent>
       </Sheet>
 
