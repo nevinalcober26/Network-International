@@ -725,7 +725,7 @@ export default function OrdersPage() {
               <div className="relative w-full overflow-auto max-h-[60vh]">
                 <Table>
                   <TableHeader>
-                    <TableRow>
+                    <TableRow className="sticky top-0 z-10 border-b bg-card hover:bg-card">
                       <TableHead><SortableHeader tKey="orderId" label="Order ID" /></TableHead>
                       <TableHead><SortableHeader tKey="branch" label="Branch" /></TableHead>
                       <TableHead><SortableHeader tKey="table" label="Table" /></TableHead>
