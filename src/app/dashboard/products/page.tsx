@@ -182,6 +182,8 @@ export default function ProductsPage() {
   const [search, setSearch] = useState('');
   const [selectedRows, setSelectedRows] = useState<string[]>([]);
   const { toast } = useToast();
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
   useEffect(() => {
     // Simulate fetching data
@@ -203,6 +205,12 @@ export default function ProductsPage() {
       product.name.toLowerCase().includes(search.toLowerCase())
     );
   }, [allProducts, search]);
+
+  const totalPages = Math.ceil(filteredProducts.length / itemsPerPage);
+  const paginatedProducts = useMemo(() => {
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    return filteredProducts.slice(startIndex, startIndex + itemsPerPage);
+  }, [filteredProducts, currentPage]);
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
@@ -342,7 +350,10 @@ export default function ProductsPage() {
               <Input
                 placeholder="Search products..."
                 value={search}
-                onChange={(e) => setSearch(e.target.value)}
+                onChange={(e) => {
+                  setSearch(e.target.value);
+                  setCurrentPage(1);
+                }}
                 className="max-w-sm"
               />
               <Button variant="outline" size="sm">
@@ -385,7 +396,7 @@ export default function ProductsPage() {
                     </TableRow>
                   </TableHeader>
                   <SortableContext
-                    items={filteredProducts.map((p) => p.id)}
+                    items={paginatedProducts.map((p) => p.id)}
                     strategy={verticalListSortingStrategy}
                   >
                     <TableBody>
@@ -399,8 +410,8 @@ export default function ProductsPage() {
                             ))}
                           </TableRow>
                         ))
-                      ) : filteredProducts.length > 0 ? (
-                        filteredProducts.map((product) => (
+                      ) : paginatedProducts.length > 0 ? (
+                        paginatedProducts.map((product) => (
                           <SortableProductRow
                             key={product.id}
                             product={product}
@@ -425,10 +436,40 @@ export default function ProductsPage() {
               </DndContext>
             </div>
           </CardContent>
-          <CardFooter>
+          <CardFooter className="flex items-center justify-between">
             <div className="text-xs text-muted-foreground">
-              Showing <strong>1-10</strong> of{' '}
-              <strong>{filteredProducts.length}</strong> products
+              Showing{' '}
+              <strong>
+                {filteredProducts.length === 0 ? 0 : (currentPage - 1) * itemsPerPage + 1}
+              </strong>{' '}
+              to{' '}
+              <strong>
+                {Math.min(
+                  currentPage * itemsPerPage,
+                  filteredProducts.length
+                )}
+              </strong>{' '}
+              of <strong>{filteredProducts.length}</strong> products
+            </div>
+             <div className="flex items-center space-x-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
+                disabled={currentPage === 1}
+              >
+                Previous
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() =>
+                  setCurrentPage((p) => Math.min(p + 1, totalPages))
+                }
+                disabled={currentPage === totalPages}
+              >
+                Next
+              </Button>
             </div>
           </CardFooter>
         </Card>
