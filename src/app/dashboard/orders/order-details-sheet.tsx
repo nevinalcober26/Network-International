@@ -98,7 +98,7 @@ export function OrderDetailsSheet({
               <CardHeader>
                 <CardTitle className="text-lg flex items-center gap-2">
                   <User className="h-5 w-5" />
-                  Customer Details
+                  {order.customer ? 'Customer Details' : 'Guest Details'}
                 </CardTitle>
               </CardHeader>
               <CardContent className="pt-6 text-sm space-y-4">
