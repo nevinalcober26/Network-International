@@ -1140,4 +1140,5 @@ export default function PaymentsReportPage() {
         </div>
       </main>
     </>
-  
+  );
+}
