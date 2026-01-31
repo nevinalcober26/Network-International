@@ -88,6 +88,9 @@ type Transaction = {
   splitMethod?: 'Equal' | 'Item-based' | 'Custom';
   lastPaymentAttempt: number;
   closeType: 'Auto' | 'Manual';
+  staffName: string;
+  tipAmount?: number;
+  tipType?: 'Preset' | 'Custom';
 };
 
 const generateMockTransactions = (count: number): Transaction[] => {
@@ -104,7 +107,7 @@ const generateMockTransactions = (count: number): Transaction[] => {
     'Dubai Mall',
   ];
   const closeTypes: Transaction['closeType'][] = ['Auto', 'Manual'];
-
+  const staffNames = ['Alex', 'Maria', 'John', 'Sarah', 'David'];
 
   for (let i = 0; i < count; i++) {
     const totalAmount = parseFloat((Math.random() * 200 + 10).toFixed(2));
@@ -123,11 +126,27 @@ const generateMockTransactions = (count: number): Transaction[] => {
     const payers = Math.floor(Math.random() * 4) + 1;
     let splitMethod: Transaction['splitMethod'] | undefined = undefined;
     if (payers > 1 || status === 'Partial') {
-        const splitMethods: Transaction['splitMethod'][] = ['Equal', 'Item-based', 'Custom'];
-        splitMethod = splitMethods[i % splitMethods.length];
+      const splitMethods: Transaction['splitMethod'][] = [
+        'Equal',
+        'Item-based',
+        'Custom',
+      ];
+      splitMethod = splitMethods[i % splitMethods.length];
     }
     const timestamp = Date.now() - i * 3600000 * 3;
+    const staffName = staffNames[i % staffNames.length];
+    let tipAmount: number | undefined = undefined;
+    let tipType: Transaction['tipType'] | undefined = undefined;
 
+    if ((status === 'Paid' || status === 'Partial') && paidAmount > 0) {
+      if (Math.random() > 0.3) {
+        // 70% chance of tip
+        tipAmount = parseFloat(
+          (paidAmount * (Math.random() * 0.1 + 0.1)).toFixed(2)
+        ); // 10-20% tip
+        tipType = Math.random() > 0.5 ? 'Preset' : 'Custom';
+      }
+    }
 
     transactions.push({
       id: `txn_${12345 + i}`,
@@ -144,6 +163,9 @@ const generateMockTransactions = (count: number): Transaction[] => {
       splitMethod,
       lastPaymentAttempt: timestamp + Math.random() * 3600000,
       closeType: closeTypes[i % closeTypes.length],
+      staffName,
+      tipAmount,
+      tipType,
     });
   }
   return transactions;
@@ -163,15 +185,6 @@ const getStatusBadgeVariant = (status: Transaction['paymentStatus']) => {
       return 'outline';
   }
 };
-
-const kpiCards = [
-  { title: 'Total Sales', value: '$128,430.20', change: '+2.5%' },
-  { title: 'Total Collected', value: '$125,120.90', change: '+2.8%' },
-  { title: 'Outstanding Balance', value: '$3,309.30', change: '-5.1%' },
-  { title: 'Average Bill Value', value: '$45.80', change: '+0.5%' },
-  { title: 'Average Time to Pay', value: '8m 15s', change: '-2.0%' },
-  { title: 'Total Tips Collected', value: '$9,870.50', change: '+4.2%' },
-];
 
 const chartConfig = {
   sales: {
@@ -207,6 +220,84 @@ export default function PaymentsReportPage() {
     }, 1000);
     return () => clearTimeout(timer);
   }, []);
+
+  const {
+    totalSales,
+    totalCollected,
+    outstandingBalance,
+    avgBillValue,
+    totalTips,
+  } = useMemo(() => {
+    const totalSales = transactions.reduce((acc, t) => acc + t.totalAmount, 0);
+    const totalCollected = transactions.reduce(
+      (acc, t) => acc + t.paidAmount,
+      0
+    );
+    const outstandingBalance = transactions.reduce(
+      (acc, t) => acc + t.outstandingAmount,
+      0
+    );
+    const paidTransactions = transactions.filter(
+      (t) => t.paymentStatus === 'Paid' || t.paymentStatus === 'Partial'
+    );
+    const avgBillValue =
+      paidTransactions.length > 0 ? totalSales / paidTransactions.length : 0;
+    const totalTips = transactions.reduce(
+      (acc, t) => acc + (t.tipAmount || 0),
+      0
+    );
+    return {
+      totalSales,
+      totalCollected,
+      outstandingBalance,
+      avgBillValue,
+      totalTips,
+    };
+  }, [transactions]);
+
+  const kpiCards = useMemo(
+    () => [
+      {
+        title: 'Total Sales',
+        value: `$${totalSales.toLocaleString('en-US', {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        })}`,
+        change: '+2.5%',
+      },
+      {
+        title: 'Total Collected',
+        value: `$${totalCollected.toLocaleString('en-US', {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        })}`,
+        change: '+2.8%',
+      },
+      {
+        title: 'Outstanding Balance',
+        value: `$${outstandingBalance.toLocaleString('en-US', {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        })}`,
+        change: '-5.1%',
+      },
+      {
+        title: 'Average Bill Value',
+        value: `$${avgBillValue.toFixed(2)}`,
+        change: '+0.5%',
+      },
+      { title: 'Average Time to Pay', value: '8m 15s', change: '-2.0%' },
+      {
+        title: 'Total Tips Collected',
+        value: `$${totalTips.toLocaleString('en-US', {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        })}`,
+        change: '+4.2%',
+      },
+    ],
+    [totalSales, totalCollected, outstandingBalance, avgBillValue, totalTips]
+  );
 
   const handleFilterChange = (filterName: string, value: string) => {
     setFilters((prev) => ({ ...prev, [filterName]: value }));
@@ -278,17 +369,39 @@ export default function PaymentsReportPage() {
       }))
       .reverse(); // To show chronologically
   }, [transactions]);
-  
-  const splitTransactions = useMemo(() => filteredAndSortedTransactions.filter(t => t.payers > 1 || t.splitMethod), [filteredAndSortedTransactions]);
-  const splitAdoptionRate = transactions.length > 0 ? (transactions.filter(t => t.payers > 1).length / transactions.length) * 100 : 0;
-  const avgPayers = splitTransactions.length > 0 ? splitTransactions.reduce((acc, t) => acc + t.payers, 0) / splitTransactions.length : 1;
-  
+
+  const splitTransactions = useMemo(
+    () =>
+      filteredAndSortedTransactions.filter((t) => t.payers > 1 || t.splitMethod),
+    [filteredAndSortedTransactions]
+  );
+  const splitAdoptionRate =
+    transactions.length > 0
+      ? (transactions.filter((t) => t.payers > 1).length /
+          transactions.length) *
+        100
+      : 0;
+  const avgPayers =
+    splitTransactions.length > 0
+      ? splitTransactions.reduce((acc, t) => acc + t.payers, 0) /
+        splitTransactions.length
+      : 1;
+
   const outstandingTransactions = useMemo(() => {
     return filteredAndSortedTransactions.filter(
-        (t) => t.paymentStatus === 'Partial' || t.paymentStatus === 'Unpaid'
+      (t) => t.paymentStatus === 'Partial' || t.paymentStatus === 'Unpaid'
+    );
+  }, [filteredAndSortedTransactions]);
+  
+  const tipTransactions = useMemo(() => {
+    return filteredAndSortedTransactions.filter(
+      (t) => t.tipAmount && t.tipAmount > 0
     );
   }, [filteredAndSortedTransactions]);
 
+  const totalGrossTips = useMemo(() => {
+    return tipTransactions.reduce((acc, t) => acc + (t.tipAmount || 0), 0);
+  }, [tipTransactions]);
 
   const requestSort = (key: keyof Transaction) => {
     let direction: 'ascending' | 'descending' = 'ascending';
@@ -382,7 +495,11 @@ export default function PaymentsReportPage() {
               >
                 <CalendarIcon className="mr-2 h-4 w-4" />
                 {date ? (
-                  isSameDay(date, new Date()) ? 'Today' : format(date, 'PPP')
+                  isSameDay(date, new Date()) ? (
+                    'Today'
+                  ) : (
+                    format(date, 'PPP')
+                  )
                 ) : (
                   <span>Pick a date</span>
                 )}
@@ -762,139 +879,265 @@ export default function PaymentsReportPage() {
 
         {/* Placeholder Sections */}
         <div className="grid grid-cols-1 gap-8">
-            <Card className="lg:col-span-2">
-                <CardHeader>
-                    <CardTitle>Split Bill Analytics</CardTitle>
-                    <CardDescription>
-                    Analysis of orders with split payments.
-                    </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
-                    <Card>
-                        <CardHeader className="p-4">
-                        <CardDescription>Split Adoption Rate</CardDescription>
-                        <CardTitle className="text-3xl">{splitAdoptionRate.toFixed(1)}%</CardTitle>
-                        </CardHeader>
-                    </Card>
-                    <Card>
-                        <CardHeader className="p-4">
-                        <CardDescription>Avg. Payers per Split</CardDescription>
-                        <CardTitle className="text-3xl">{avgPayers.toFixed(1)}</CardTitle>
-                        </CardHeader>
-                    </Card>
-                    <Card>
-                        <CardHeader className="p-4">
-                        <CardDescription>Abandoned Splits</CardDescription>
-                        <CardTitle className="text-3xl text-red-500">
-                            {splitTransactions.filter(t => t.paymentStatus === 'Unpaid' || t.paymentStatus === 'Partial').length}
-                        </CardTitle>
-                        </CardHeader>
-                    </Card>
-                    <Card>
-                        <CardHeader className="p-4">
-                        <CardDescription>Total Outstanding</CardDescription>
-                        <CardTitle className="text-3xl">
-                            ${splitTransactions.reduce((acc, t) => acc + t.outstandingAmount, 0).toFixed(2)}
-                        </CardTitle>
-                        </CardHeader>
-                    </Card>
-                    </div>
-                    
-                    <div className="relative w-full overflow-auto">
-                    <Table>
-                        <TableHeader>
-                        <TableRow>
-                            <TableHead>Order ID</TableHead>
-                            <TableHead>Total Bill</TableHead>
-                            <TableHead className="text-center"># of Payers</TableHead>
-                            <TableHead>Split Method</TableHead>
-                            <TableHead>Time to Settle</TableHead>
-                            <TableHead>Status</TableHead>
-                        </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                        {splitTransactions.slice(0, 5).map((t) => (
-                            <TableRow key={t.id}>
-                            <TableCell className="font-medium">{t.orderId}</TableCell>
-                            <TableCell className="font-mono">${t.totalAmount.toFixed(2)}</TableCell>
-                            <TableCell className="text-center">{t.payers}</TableCell>
-                            <TableCell>{t.splitMethod || 'N/A'}</TableCell>
-                            <TableCell>8m 15s</TableCell> {/* Placeholder */}
-                            <TableCell>
-                                <Badge variant={getStatusBadgeVariant(t.paymentStatus)}>
-                                {t.paymentStatus}
-                                </Badge>
-                            </TableCell>
-                            </TableRow>
-                        ))}
-                        </TableBody>
-                    </Table>
-                    {splitTransactions.length === 0 && (
-                        <p className="text-center text-muted-foreground py-8">No split bill transactions match the current filters.</p>
-                    )}
-                    </div>
-                </CardContent>
-            </Card>
+          <Card className="lg:col-span-2">
+            <CardHeader>
+              <CardTitle>Split Bill Analytics</CardTitle>
+              <CardDescription>
+                Analysis of orders with split payments.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+                <Card>
+                  <CardHeader className="p-4">
+                    <CardDescription>Split Adoption Rate</CardDescription>
+                    <CardTitle className="text-3xl">
+                      {splitAdoptionRate.toFixed(1)}%
+                    </CardTitle>
+                  </CardHeader>
+                </Card>
+                <Card>
+                  <CardHeader className="p-4">
+                    <CardDescription>Avg. Payers per Split</CardDescription>
+                    <CardTitle className="text-3xl">
+                      {avgPayers.toFixed(1)}
+                    </CardTitle>
+                  </CardHeader>
+                </Card>
+                <Card>
+                  <CardHeader className="p-4">
+                    <CardDescription>Abandoned Splits</CardDescription>
+                    <CardTitle className="text-3xl text-red-500">
+                      {
+                        splitTransactions.filter(
+                          (t) =>
+                            t.paymentStatus === 'Unpaid' ||
+                            t.paymentStatus === 'Partial'
+                        ).length
+                      }
+                    </CardTitle>
+                  </CardHeader>
+                </Card>
+                <Card>
+                  <CardHeader className="p-4">
+                    <CardDescription>Total Outstanding</CardDescription>
+                    <CardTitle className="text-3xl">
+                      $
+                      {splitTransactions
+                        .reduce((acc, t) => acc + t.outstandingAmount, 0)
+                        .toFixed(2)}
+                    </CardTitle>
+                  </CardHeader>
+                </Card>
+              </div>
+
+              <div className="relative w-full overflow-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Order ID</TableHead>
+                      <TableHead>Total Bill</TableHead>
+                      <TableHead className="text-center"># of Payers</TableHead>
+                      <TableHead>Split Method</TableHead>
+                      <TableHead>Time to Settle</TableHead>
+                      <TableHead>Status</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {splitTransactions.slice(0, 5).map((t) => (
+                      <TableRow key={t.id}>
+                        <TableCell className="font-medium">{t.orderId}</TableCell>
+                        <TableCell className="font-mono">
+                          ${t.totalAmount.toFixed(2)}
+                        </TableCell>
+                        <TableCell className="text-center">{t.payers}</TableCell>
+                        <TableCell>{t.splitMethod || 'N/A'}</TableCell>
+                        <TableCell>8m 15s</TableCell> {/* Placeholder */}
+                        <TableCell>
+                          <Badge
+                            variant={getStatusBadgeVariant(t.paymentStatus)}
+                          >
+                            {t.paymentStatus}
+                          </Badge>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+                {splitTransactions.length === 0 && (
+                  <p className="text-center text-muted-foreground py-8">
+                    No split bill transactions match the current filters.
+                  </p>
+                )}
+              </div>
+            </CardContent>
+          </Card>
         </div>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            <Card>
-                <CardHeader>
-                    <CardTitle>Outstanding / Partial Payments</CardTitle>
-                    <CardDescription>
-                        Monitor orders with pending payments to manage risk and collections.
-                    </CardDescription>
-                </CardHeader>
-                <CardContent>
-                    <Table>
-                        <TableHeader>
-                            <TableRow>
-                                <TableHead>Order ID</TableHead>
-                                <TableHead>Total</TableHead>
-                                <TableHead>Paid</TableHead>
-                                <TableHead>Remaining</TableHead>
-                                <TableHead>Days Open</TableHead>
-                                <TableHead>Last Attempt</TableHead>
-                                <TableHead>Close Type</TableHead>
-                                <TableHead><span className="sr-only">Warning</span></TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {outstandingTransactions.slice(0, 5).map((t) => {
-                                const daysOutstanding = differenceInDays(new Date(), new Date(t.timestamp));
-                                const isHighRisk = t.outstandingAmount > 50;
-                                return (
-                                    <TableRow key={t.id} className={cn(isHighRisk && 'bg-red-50/50 border-l-4 border-red-500')}>
-                                        <TableCell className="font-medium">{t.orderId}</TableCell>
-                                        <TableCell>${t.totalAmount.toFixed(2)}</TableCell>
-                                        <TableCell className="text-green-600">${t.paidAmount.toFixed(2)}</TableCell>
-                                        <TableCell className="font-semibold text-red-600">${t.outstandingAmount.toFixed(2)}</TableCell>
-                                        <TableCell>{daysOutstanding} day(s)</TableCell>
-                                        <TableCell>{new Date(t.lastPaymentAttempt).toLocaleDateString()}</TableCell>
-                                        <TableCell>{t.closeType}</TableCell>
-                                        <TableCell className="text-right">
-                                            {isHighRisk && <AlertTriangle className="h-5 w-5 text-red-500" />}
-                                        </TableCell>
-                                    </TableRow>
-                                )
-                            })}
-                        </TableBody>
-                    </Table>
-                     {outstandingTransactions.length === 0 && (
-                        <p className="text-center text-muted-foreground py-8">No outstanding payments match the current filters.</p>
-                    )}
-                </CardContent>
-            </Card>
-            <Card>
+          <Card>
             <CardHeader>
-                <CardTitle>Tips & Service Charges</CardTitle>
+              <CardTitle>Outstanding / Partial Payments</CardTitle>
+              <CardDescription>
+                Monitor orders with pending payments to manage risk and
+                collections.
+              </CardDescription>
             </CardHeader>
             <CardContent>
-                <p className="text-muted-foreground">Content coming soon...</p>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Order ID</TableHead>
+                    <TableHead>Total</TableHead>
+                    <TableHead>Paid</TableHead>
+                    <TableHead>Remaining</TableHead>
+                    <TableHead>Days Open</TableHead>
+                    <TableHead>Last Attempt</TableHead>
+                    <TableHead>Close Type</TableHead>
+                    <TableHead>
+                      <span className="sr-only">Warning</span>
+                    </TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {outstandingTransactions.slice(0, 5).map((t) => {
+                    const daysOutstanding = differenceInDays(
+                      new Date(),
+                      new Date(t.timestamp)
+                    );
+                    const isHighRisk = t.outstandingAmount > 50;
+                    return (
+                      <TableRow
+                        key={t.id}
+                        className={cn(
+                          isHighRisk &&
+                            'bg-red-50/50 border-l-4 border-red-500'
+                        )}
+                      >
+                        <TableCell className="font-medium">{t.orderId}</TableCell>
+                        <TableCell>${t.totalAmount.toFixed(2)}</TableCell>
+                        <TableCell className="text-green-600">
+                          ${t.paidAmount.toFixed(2)}
+                        </TableCell>
+                        <TableCell className="font-semibold text-red-600">
+                          ${t.outstandingAmount.toFixed(2)}
+                        </TableCell>
+                        <TableCell>{daysOutstanding} day(s)</TableCell>
+                        <TableCell>
+                          {new Date(t.lastPaymentAttempt).toLocaleDateString()}
+                        </TableCell>
+                        <TableCell>{t.closeType}</TableCell>
+                        <TableCell className="text-right">
+                          {isHighRisk && (
+                            <AlertTriangle className="h-5 w-5 text-red-500" />
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+              {outstandingTransactions.length === 0 && (
+                <p className="text-center text-muted-foreground py-8">
+                  No outstanding payments match the current filters.
+                </p>
+              )}
             </CardContent>
-            </Card>
+          </Card>
+          <Card>
+            <CardHeader>
+              <CardTitle>Tips &amp; Service Charges</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Tabs defaultValue="tips">
+                <TabsList>
+                  <TabsTrigger value="tips">Tips Report</TabsTrigger>
+                  <TabsTrigger value="service-charges">
+                    Service Charge Report
+                  </TabsTrigger>
+                </TabsList>
+                <TabsContent value="tips" className="mt-4">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Order ID</TableHead>
+                        <TableHead>Waiter</TableHead>
+                        <TableHead>Tip Amount</TableHead>
+                        <TableHead>Tip %</TableHead>
+                        <TableHead>Method</TableHead>
+                        <TableHead>Type</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {tipTransactions.slice(0, 5).map((t) => (
+                        <TableRow key={t.id}>
+                          <TableCell className="font-medium">
+                            {t.orderId}
+                          </TableCell>
+                          <TableCell>{t.staffName}</TableCell>
+                          <TableCell className="font-mono">
+                            ${t.tipAmount?.toFixed(2)}
+                          </TableCell>
+                          <TableCell className="font-mono">
+                            {t.paidAmount > 0
+                              ? `${(
+                                  (t.tipAmount! / t.paidAmount) *
+                                  100
+                                ).toFixed(1)}%`
+                              : 'N/A'}
+                          </TableCell>
+                          <TableCell>{t.paymentMethod}</TableCell>
+                          <TableCell>
+                            <Badge variant="outline">{t.tipType}</Badge>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                    <TableFooter>
+                      <TableRow>
+                        <TableCell
+                          colSpan={4}
+                          className="font-semibold text-right"
+                        >
+                          Gross Tips Collected
+                        </TableCell>
+                        <TableCell
+                          colSpan={2}
+                          className="text-right font-bold text-lg"
+                        >
+                          ${totalGrossTips.toFixed(2)}
+                        </TableCell>
+                      </TableRow>
+                      <TableRow>
+                        <TableCell
+                          colSpan={4}
+                          className="font-semibold text-right text-muted-foreground"
+                        >
+                          Net Tips (after 5% fee)
+                        </TableCell>
+                        <TableCell
+                          colSpan={2}
+                          className="text-right font-bold text-lg text-muted-foreground"
+                        >
+                          ${(totalGrossTips * 0.95).toFixed(2)}
+                        </TableCell>
+                      </TableRow>
+                    </TableFooter>
+                  </Table>
+                  {tipTransactions.length === 0 && (
+                    <p className="text-center text-muted-foreground py-8">
+                      No transactions with tips match the current filters.
+                    </p>
+                  )}
+                </TabsContent>
+                <TabsContent value="service-charges" className="mt-4">
+                  <p className="text-muted-foreground text-center py-8">
+                    Service Charge reporting is coming soon.
+                  </p>
+                </TabsContent>
+              </Tabs>
+            </CardContent>
+          </Card>
         </div>
       </main>
     </>
-  );
-}
+  
