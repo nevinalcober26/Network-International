@@ -405,7 +405,7 @@ export default function CategoriesPage() {
           </div>
         </div>
 
-        <div className="flex-grow p-4 sm:p-6 lg:p-8 overflow-x-auto" style={{width: "100vw"}}>
+        <div className="flex-grow p-4 sm:p-6 lg:p-8 overflow-x-auto">
           <DndContext
             sensors={sensors}
             collisionDetection={closestCenter}
