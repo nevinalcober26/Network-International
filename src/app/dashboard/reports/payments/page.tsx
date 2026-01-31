@@ -29,21 +29,15 @@ import { Badge } from '@/components/ui/badge';
 import {
   MoreHorizontal,
   Calendar as CalendarIcon,
-  DollarSign,
-  TrendingUp,
   ArrowUpDown,
   Download,
-  Wallet,
-  AlertTriangle,
-  Receipt,
+  TrendingUp,
 } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
 import { DashboardHeader } from '@/components/dashboard/header';
 import { cn } from '@/lib/utils';
@@ -55,6 +49,26 @@ import {
 import { Calendar } from '@/components/ui/calendar';
 import { Checkbox } from '@/components/ui/checkbox';
 import { OrdersPageSkeleton } from '@/components/dashboard/skeletons';
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from '@/components/ui/tabs';
+import {
+  Bar,
+  BarChart,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from 'recharts';
+import {
+  ChartContainer,
+  ChartTooltip,
+  ChartTooltipContent,
+} from '@/components/ui/chart';
+import { format } from 'date-fns';
 
 type Transaction = {
   id: string;
@@ -85,7 +99,9 @@ const generateMockTransactions = (count: number): Transaction[] => {
     if (status === 'Paid') {
       paidAmount = totalAmount;
     } else if (status === 'Partial') {
-      paidAmount = parseFloat((totalAmount * (Math.random() * 0.7 + 0.2)).toFixed(2));
+      paidAmount = parseFloat(
+        (totalAmount * (Math.random() * 0.7 + 0.2)).toFixed(2)
+      );
     } else if (status === 'Refunded') {
       paidAmount = totalAmount;
     }
@@ -121,20 +137,30 @@ const getStatusBadgeVariant = (status: Transaction['paymentStatus']) => {
 };
 
 const kpiCards = [
-    { title: 'Total Sales', value: '$128,430.20', change: '+2.5%' },
-    { title: 'Total Collected', value: '$125,120.90', change: '+2.8%' },
-    { title: 'Outstanding Balance', value: '$3,309.30', change: '-5.1%' },
-    { title: 'Average Bill Value', value: '$45.80', change: '+0.5%' },
-    { title: 'Average Time to Pay', value: '8m 15s', change: '-2.0%' },
-    { title: 'Total Tips Collected', value: '$9,870.50', change: '+4.2%' },
+  { title: 'Total Sales', value: '$128,430.20', change: '+2.5%' },
+  { title: 'Total Collected', value: '$125,120.90', change: '+2.8%' },
+  { title: 'Outstanding Balance', value: '$3,309.30', change: '-5.1%' },
+  { title: 'Average Bill Value', value: '$45.80', change: '+0.5%' },
+  { title: 'Average Time to Pay', value: '8m 15s', change: '-2.0%' },
+  { title: 'Total Tips Collected', value: '$9,870.50', change: '+4.2%' },
 ];
+
+const chartConfig = {
+  sales: {
+    label: 'Sales',
+    color: 'hsl(var(--chart-1))',
+  },
+};
 
 export default function PaymentsReportPage() {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [date, setDate] = useState<Date | undefined>();
   const [selectedRows, setSelectedRows] = useState<string[]>([]);
-  
+  const [view, setView] = useState<'table' | 'chart'>('table');
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 20;
+
   const [sortConfig, setSortConfig] = useState<{
     key: keyof Transaction;
     direction: 'ascending' | 'descending';
@@ -164,6 +190,29 @@ export default function PaymentsReportPage() {
     return sortableItems;
   }, [transactions, sortConfig]);
 
+  const totalPages = Math.ceil(sortedTransactions.length / itemsPerPage);
+  const paginatedTransactions = useMemo(() => {
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    return sortedTransactions.slice(startIndex, startIndex + itemsPerPage);
+  }, [sortedTransactions, currentPage]);
+
+  const chartData = useMemo(() => {
+    const salesByDay: { [key: string]: number } = {};
+    transactions.forEach((t) => {
+      const day = format(new Date(t.timestamp), 'MMM d');
+      if (!salesByDay[day]) {
+        salesByDay[day] = 0;
+      }
+      salesByDay[day] += t.totalAmount;
+    });
+    return Object.keys(salesByDay)
+      .map((day) => ({
+        date: day,
+        sales: salesByDay[day],
+      }))
+      .reverse(); // To show chronologically
+  }, [transactions]);
+
   const requestSort = (key: keyof Transaction) => {
     let direction: 'ascending' | 'descending' = 'ascending';
     if (
@@ -175,10 +224,10 @@ export default function PaymentsReportPage() {
     }
     setSortConfig({ key, direction });
   };
-  
+
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
-      setSelectedRows(transactions.map((t) => t.id));
+      setSelectedRows(paginatedTransactions.map((t) => t.id));
     } else {
       setSelectedRows([]);
     }
@@ -191,9 +240,21 @@ export default function PaymentsReportPage() {
         : [...prev, rowId]
     );
   };
-  
-  const SortableHeader = ({ tKey, label, className }: { tKey: keyof Transaction; label: string; className?: string }) => (
-    <Button variant="ghost" onClick={() => requestSort(tKey)} className={cn('px-2', className)}>
+
+  const SortableHeader = ({
+    tKey,
+    label,
+    className,
+  }: {
+    tKey: keyof Transaction;
+    label: string;
+    className?: string;
+  }) => (
+    <Button
+      variant="ghost"
+      onClick={() => requestSort(tKey)}
+      className={cn('px-2', className)}
+    >
       {label}
       <ArrowUpDown
         className={cn(
@@ -215,130 +276,351 @@ export default function PaymentsReportPage() {
         <div>
           <h1 className="text-2xl font-bold">Payments Reports</h1>
           <p className="text-muted-foreground">
-            Track and analyze orders, payments, split bills, tips, and outstanding balances.
+            Track and analyze orders, payments, split bills, tips, and
+            outstanding balances.
           </p>
         </div>
 
         {/* Filters */}
         <div className="flex flex-wrap items-center gap-2">
-            <Popover>
-                <PopoverTrigger asChild>
-                <Button
-                    variant={'outline'}
-                    className={cn('w-[280px] justify-start text-left font-normal', !date && 'text-muted-foreground')}
-                >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {date ? new Date(date).toLocaleDateString() : <span>Pick a date range</span>}
-                </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0">
-                <Calendar mode="single" selected={date} onSelect={setDate} initialFocus />
-                </PopoverContent>
-            </Popover>
-            <Select><SelectTrigger className="w-[180px]"><SelectValue placeholder="Payment Status" /></SelectTrigger><SelectContent><SelectItem value="all">All Statuses</SelectItem></SelectContent></Select>
-            <Select><SelectTrigger className="w-[180px]"><SelectValue placeholder="Payment Method" /></SelectTrigger><SelectContent><SelectItem value="all">All Methods</SelectItem></SelectContent></Select>
-            <Select><SelectTrigger className="w-[180px]"><SelectValue placeholder="Table Number" /></SelectTrigger><SelectContent><SelectItem value="all">All Tables</SelectItem></SelectContent></Select>
-            <Select><SelectTrigger className="w-[180px]"><SelectValue placeholder="Branch/Venue" /></SelectTrigger><SelectContent><SelectItem value="all">All Branches</SelectItem></SelectContent></Select>
-        </div>
-        
-        {/* KPI Cards */}
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-            {kpiCards.map(card => (
-                <Card key={card.title}>
-                    <CardHeader className="pb-2">
-                        <CardDescription>{card.title}</CardDescription>
-                        <CardTitle className="text-2xl font-bold">{card.value}</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <div className="text-xs text-muted-foreground flex items-center">
-                        <TrendingUp className={cn("mr-1 h-4 w-4", card.change.startsWith('+') ? "text-green-500" : "text-red-500")} />
-                        <span className={cn(card.change.startsWith('+') ? "text-green-500" : "text-red-500", "font-semibold")}>{card.change}</span>
-                        </div>
-                    </CardContent>
-                </Card>
-            ))}
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                variant={'outline'}
+                className={cn(
+                  'w-[280px] justify-start text-left font-normal',
+                  !date && 'text-muted-foreground'
+                )}
+              >
+                <CalendarIcon className="mr-2 h-4 w-4" />
+                {date ? (
+                  new Date(date).toLocaleDateString()
+                ) : (
+                  <span>Pick a date range</span>
+                )}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0">
+              <Calendar
+                mode="single"
+                selected={date}
+                onSelect={setDate}
+                initialFocus
+              />
+            </PopoverContent>
+          </Popover>
+          <Select>
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="Payment Status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Statuses</SelectItem>
+            </SelectContent>
+          </Select>
+          <Select>
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="Payment Method" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Methods</SelectItem>
+            </SelectContent>
+          </Select>
+          <Select>
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="Table Number" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Tables</SelectItem>
+            </SelectContent>
+          </Select>
+          <Select>
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="Branch/Venue" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Branches</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
 
-        {/* Transaction Summary Table */}
-        <Card>
-            <CardHeader>
-                <div className="flex justify-between items-center">
-                    <div>
-                        <CardTitle>Transaction Summary</CardTitle>
-                        <CardDescription>A complete list of all transactions in the selected period.</CardDescription>
-                    </div>
-                    <Button variant="outline"><Download className="mr-2 h-4 w-4" />Export to CSV</Button>
+        {/* KPI Cards */}
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+          {kpiCards.map((card) => (
+            <Card key={card.title}>
+              <CardHeader className="pb-2">
+                <CardDescription>{card.title}</CardDescription>
+                <CardTitle className="text-2xl font-bold">
+                  {card.value}
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-xs text-muted-foreground flex items-center">
+                  <TrendingUp
+                    className={cn(
+                      'mr-1 h-4 w-4',
+                      card.change.startsWith('+')
+                        ? 'text-green-500'
+                        : 'text-red-500'
+                    )}
+                  />
+                  <span
+                    className={cn(
+                      card.change.startsWith('+')
+                        ? 'text-green-500'
+                        : 'text-red-500',
+                      'font-semibold'
+                    )}
+                  >
+                    {card.change}
+                  </span>
                 </div>
-            </CardHeader>
-            <CardContent>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+
+        <Tabs
+          value={view}
+          onValueChange={(v) => setView(v as 'table' | 'chart')}
+        >
+          <div className="flex justify-between items-center mb-4">
+            <TabsList>
+              <TabsTrigger value="table">Table View</TabsTrigger>
+              <TabsTrigger value="chart">Chart View</TabsTrigger>
+            </TabsList>
+            <Button variant="outline">
+              <Download className="mr-2 h-4 w-4" />
+              Export to CSV
+            </Button>
+          </div>
+          <TabsContent value="table">
+            <Card>
+              <CardHeader>
+                <CardTitle>Transaction Summary</CardTitle>
+                <CardDescription>
+                  A complete list of all transactions in the selected period.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
                 <div className="relative w-full overflow-auto">
-                    <Table>
+                  <Table>
                     <TableHeader className="sticky top-0 bg-background z-10">
-                        <TableRow>
-                            <TableHead className="w-12 px-4"><Checkbox onCheckedChange={handleSelectAll} /></TableHead>
-                            <TableHead><SortableHeader tKey="id" label="Transaction ID" /></TableHead>
-                            <TableHead><SortableHeader tKey="orderId" label="Table/Order ID" /></TableHead>
-                            <TableHead><SortableHeader tKey="timestamp" label="Timestamp" /></TableHead>
-                            <TableHead className="text-right"><SortableHeader tKey="totalAmount" label="Total Amount" /></TableHead>
-                            <TableHead className="text-right"><SortableHeader tKey="paidAmount" label="Paid Amount" /></TableHead>
-                            <TableHead className="text-right"><SortableHeader tKey="outstandingAmount" label="Outstanding" /></TableHead>
-                            <TableHead><SortableHeader tKey="paymentStatus" label="Payment Status" /></TableHead>
-                            <TableHead><SortableHeader tKey="paymentMethod" label="Payment Method" /></TableHead>
-                            <TableHead className="text-right"><SortableHeader tKey="payers" label="# of Payers" /></TableHead>
-                            <TableHead><span className="sr-only">Actions</span></TableHead>
-                        </TableRow>
+                      <TableRow>
+                        <TableHead className="w-12 px-4">
+                          <Checkbox
+                            checked={
+                              paginatedTransactions.length > 0 &&
+                              selectedRows.length ===
+                                paginatedTransactions.length
+                            }
+                            onCheckedChange={handleSelectAll}
+                          />
+                        </TableHead>
+                        <TableHead>
+                          <SortableHeader tKey="id" label="Transaction ID" />
+                        </TableHead>
+                        <TableHead>
+                          <SortableHeader tKey="orderId" label="Table/Order ID" />
+                        </TableHead>
+                        <TableHead>
+                          <SortableHeader tKey="timestamp" label="Timestamp" />
+                        </TableHead>
+                        <TableHead className="text-right">
+                          <SortableHeader
+                            tKey="totalAmount"
+                            label="Total Amount"
+                          />
+                        </TableHead>
+                        <TableHead className="text-right">
+                          <SortableHeader
+                            tKey="paidAmount"
+                            label="Paid Amount"
+                          />
+                        </TableHead>
+                        <TableHead className="text-right">
+                          <SortableHeader
+                            tKey="outstandingAmount"
+                            label="Outstanding"
+                          />
+                        </TableHead>
+                        <TableHead>
+                          <SortableHeader
+                            tKey="paymentStatus"
+                            label="Payment Status"
+                          />
+                        </TableHead>
+                        <TableHead>
+                          <SortableHeader
+                            tKey="paymentMethod"
+                            label="Payment Method"
+                          />
+                        </TableHead>
+                        <TableHead className="text-right">
+                          <SortableHeader tKey="payers" label="# of Payers" />
+                        </TableHead>
+                        <TableHead>
+                          <span className="sr-only">Actions</span>
+                        </TableHead>
+                      </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {sortedTransactions.map(t => (
-                            <TableRow key={t.id} data-state={selectedRows.includes(t.id) ? 'selected' : undefined}>
-                                <TableCell className="px-4"><Checkbox checked={selectedRows.includes(t.id)} onCheckedChange={() => handleRowSelect(t.id)}/></TableCell>
-                                <TableCell className="font-medium">{t.id}</TableCell>
-                                <TableCell>{t.orderId}</TableCell>
-                                <TableCell>{new Date(t.timestamp).toLocaleString()}</TableCell>
-                                <TableCell className="text-right font-mono">${t.totalAmount.toFixed(2)}</TableCell>
-                                <TableCell className="text-right font-mono text-green-600">${t.paidAmount.toFixed(2)}</TableCell>
-                                <TableCell className="text-right font-mono text-red-600">${t.outstandingAmount.toFixed(2)}</TableCell>
-                                <TableCell><Badge variant={getStatusBadgeVariant(t.paymentStatus)}>{t.paymentStatus}</Badge></TableCell>
-                                <TableCell>{t.paymentMethod}</TableCell>
-                                <TableCell className="text-right">{t.payers}</TableCell>
-                                <TableCell className="text-right">
-                                <DropdownMenu>
-                                    <DropdownMenuTrigger asChild>
-                                    <Button size="icon" variant="ghost"><MoreHorizontal /></Button>
-                                    </DropdownMenuTrigger>
-                                    <DropdownMenuContent>
-                                    <DropdownMenuItem>View Order</DropdownMenuItem>
-                                    <DropdownMenuItem>View Receipt</DropdownMenuItem>
-                                    </DropdownMenuContent>
-                                </DropdownMenu>
-                                </TableCell>
-                            </TableRow>
-                        ))}
+                      {paginatedTransactions.map((t) => (
+                        <TableRow
+                          key={t.id}
+                          data-state={
+                            selectedRows.includes(t.id) ? 'selected' : undefined
+                          }
+                        >
+                          <TableCell className="px-4">
+                            <Checkbox
+                              checked={selectedRows.includes(t.id)}
+                              onCheckedChange={() => handleRowSelect(t.id)}
+                            />
+                          </TableCell>
+                          <TableCell className="font-medium">{t.id}</TableCell>
+                          <TableCell>{t.orderId}</TableCell>
+                          <TableCell>
+                            {new Date(t.timestamp).toLocaleString()}
+                          </TableCell>
+                          <TableCell className="text-right font-mono">
+                            ${t.totalAmount.toFixed(2)}
+                          </TableCell>
+                          <TableCell className="text-right font-mono text-green-600">
+                            ${t.paidAmount.toFixed(2)}
+                          </TableCell>
+                          <TableCell className="text-right font-mono text-red-600">
+                            ${t.outstandingAmount.toFixed(2)}
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant={getStatusBadgeVariant(t.paymentStatus)}>
+                              {t.paymentStatus}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>{t.paymentMethod}</TableCell>
+                          <TableCell className="text-right">{t.payers}</TableCell>
+                          <TableCell className="text-right">
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button size="icon" variant="ghost">
+                                  <MoreHorizontal />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent>
+                                <DropdownMenuItem>View Order</DropdownMenuItem>
+                                <DropdownMenuItem>View Receipt</DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </TableCell>
+                        </TableRow>
+                      ))}
                     </TableBody>
-                    </Table>
+                  </Table>
                 </div>
-            </CardContent>
-            <CardFooter>
-                 <div className="text-xs text-muted-foreground">
-                    Showing <strong>1</strong> to <strong>10</strong> of <strong>{transactions.length}</strong> transactions
+              </CardContent>
+              <CardFooter className="flex items-center justify-between">
+                <div className="text-xs text-muted-foreground">
+                  Showing{' '}
+                  <strong>
+                    {(currentPage - 1) * itemsPerPage + 1}
+                  </strong>{' '}
+                  to{' '}
+                  <strong>
+                    {Math.min(
+                      currentPage * itemsPerPage,
+                      transactions.length
+                    )}
+                  </strong>{' '}
+                  of <strong>{transactions.length}</strong> transactions
                 </div>
-            </CardFooter>
-        </Card>
-        
+                <div className="flex items-center space-x-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
+                    disabled={currentPage === 1}
+                  >
+                    Previous
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() =>
+                      setCurrentPage((p) => Math.min(p + 1, totalPages))
+                    }
+                    disabled={currentPage === totalPages}
+                  >
+                    Next
+                  </Button>
+                </div>
+              </CardFooter>
+            </Card>
+          </TabsContent>
+          <TabsContent value="chart">
+            <Card>
+              <CardHeader>
+                <CardTitle>Sales Over Time</CardTitle>
+                <CardDescription>
+                  Total sales amount per day for the selected period.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ChartContainer config={chartConfig} className="h-[400px] w-full">
+                  <BarChart data={chartData}>
+                    <XAxis
+                      dataKey="date"
+                      tickLine={false}
+                      axisLine={false}
+                      tickMargin={8}
+                      fontSize={12}
+                    />
+                    <YAxis
+                      tickFormatter={(value) => `$${value}`}
+                      tickLine={false}
+                      axisLine={false}
+                      fontSize={12}
+                    />
+                    <Tooltip
+                      cursor={false}
+                      content={<ChartTooltipContent indicator="dot" />}
+                    />
+                    <Bar
+                      dataKey="sales"
+                      fill="var(--color-sales)"
+                      radius={4}
+                    />
+                  </BarChart>
+                </ChartContainer>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
+
         {/* Placeholder Sections */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            <Card>
-                <CardHeader><CardTitle>Split Bill Analytics</CardTitle></CardHeader>
-                <CardContent><p className="text-muted-foreground">Content coming soon...</p></CardContent>
-            </Card>
-            <Card>
-                <CardHeader><CardTitle>Outstanding / Partial Payments</CardTitle></CardHeader>
-                <CardContent><p className="text-muted-foreground">Content coming soon...</p></CardContent>
-            </Card>
+          <Card>
+            <CardHeader>
+              <CardTitle>Split Bill Analytics</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-muted-foreground">Content coming soon...</p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader>
+              <CardTitle>Outstanding / Partial Payments</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-muted-foreground">Content coming soon...</p>
+            </CardContent>
+          </Card>
         </div>
         <Card>
-            <CardHeader><CardTitle>Tips & Service Charges</CardTitle></CardHeader>
-            <CardContent><p className="text-muted-foreground">Content coming soon...</p></CardContent>
+          <CardHeader>
+            <CardTitle>Tips & Service Charges</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-muted-foreground">Content coming soon...</p>
+          </CardContent>
         </Card>
       </main>
     </>
