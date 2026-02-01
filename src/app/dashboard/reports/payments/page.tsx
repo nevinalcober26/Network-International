@@ -35,6 +35,8 @@ import {
   TrendingUp,
   Users,
   AlertTriangle,
+  LayoutGrid,
+  List,
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -207,6 +209,7 @@ export default function PaymentsReportPage() {
     table: 'all',
     branch: 'all',
   });
+  const [view, setView] = useState<'chart' | 'list'>('chart');
 
   const [sortConfig, setSortConfig] = useState<{
     key: keyof Transaction;
@@ -482,399 +485,420 @@ export default function PaymentsReportPage() {
           </p>
         </div>
 
-        {/* Filters */}
-        <div className="flex flex-wrap items-center gap-2">
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button
-                variant={'outline'}
-                className={cn(
-                  'w-[280px] justify-start text-left font-normal',
-                  !date && 'text-muted-foreground'
-                )}
-              >
-                <CalendarIcon className="mr-2 h-4 w-4" />
-                {date ? (
-                  isSameDay(date, new Date()) ? (
-                    'Today'
-                  ) : (
-                    format(date, 'PPP')
-                  )
-                ) : (
-                  <span>Pick a date</span>
-                )}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0">
-              <Calendar
-                mode="single"
-                selected={date}
-                onSelect={setDate}
-                initialFocus
-              />
-            </PopoverContent>
-          </Popover>
-          <Select
-            value={filters.paymentStatus}
-            onValueChange={(value) => handleFilterChange('paymentStatus', value)}
-          >
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Payment Status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Statuses</SelectItem>
-              <SelectItem value="Paid">Paid</SelectItem>
-              <SelectItem value="Partial">Partial</SelectItem>
-              <SelectItem value="Unpaid">Unpaid</SelectItem>
-              <SelectItem value="Refunded">Refunded</SelectItem>
-            </SelectContent>
-          </Select>
-          <Select
-            value={filters.paymentMethod}
-            onValueChange={(value) => handleFilterChange('paymentMethod', value)}
-          >
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Payment Method" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Methods</SelectItem>
-              <SelectItem value="Credit Card">Credit Card</SelectItem>
-              <SelectItem value="Cash">Cash</SelectItem>
-              <SelectItem value="Online">Online</SelectItem>
-            </SelectContent>
-          </Select>
-          <Select
-            value={filters.table}
-            onValueChange={(value) => handleFilterChange('table', value)}
-          >
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Table Number" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Tables</SelectItem>
-              {tableNumbers.map((table) => (
-                <SelectItem key={table} value={table}>
-                  {table}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Select
-            value={filters.branch}
-            onValueChange={(value) => handleFilterChange('branch', value)}
-          >
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Branch/Venue" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Branches</SelectItem>
-              {branches.map((branch) => (
-                <SelectItem key={branch} value={branch}>
-                  {branch}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-
-        {/* KPI Cards */}
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-          {kpiCards.map((card) => (
-            <Card key={card.title}>
-              <CardHeader className="pb-2">
-                <CardDescription>{card.title}</CardDescription>
-                <CardTitle className="text-2xl font-bold">
-                  {card.value}
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-xs text-muted-foreground flex items-center">
-                  <TrendingUp
+        <Tabs defaultValue="summary" className="space-y-4">
+          <TabsList className="grid w-full grid-cols-5">
+            <TabsTrigger value="summary">Summary</TabsTrigger>
+            <TabsTrigger value="split-bills">Split Bills</TabsTrigger>
+            <TabsTrigger value="outstanding">Outstanding</TabsTrigger>
+            <TabsTrigger value="tips">Tips & Charges</TabsTrigger>
+          </TabsList>
+          <TabsContent value="summary" className="space-y-4">
+            {/* Filters */}
+            <div className="flex flex-wrap items-center gap-2">
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant={'outline'}
                     className={cn(
-                      'mr-1 h-4 w-4',
-                      card.change.startsWith('+')
-                        ? 'text-green-500'
-                        : 'text-red-500'
+                      'w-[280px] justify-start text-left font-normal',
+                      !date && 'text-muted-foreground'
                     )}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {date ? (
+                      isSameDay(date, new Date()) ? (
+                        'Today'
+                      ) : (
+                        format(date, 'PPP')
+                      )
+                    ) : (
+                      <span>Pick a date</span>
+                    )}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0">
+                  <Calendar
+                    mode="single"
+                    selected={date}
+                    onSelect={setDate}
+                    initialFocus
                   />
-                  <span
-                    className={cn(
-                      card.change.startsWith('+')
-                        ? 'text-green-500'
-                        : 'text-red-500',
-                      'font-semibold'
-                    )}
-                  >
-                    {card.change}
-                  </span>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+                </PopoverContent>
+              </Popover>
+              <Select
+                value={filters.paymentStatus}
+                onValueChange={(value) =>
+                  handleFilterChange('paymentStatus', value)
+                }
+              >
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Payment Status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Statuses</SelectItem>
+                  <SelectItem value="Paid">Paid</SelectItem>
+                  <SelectItem value="Partial">Partial</SelectItem>
+                  <SelectItem value="Unpaid">Unpaid</SelectItem>
+                  <SelectItem value="Refunded">Refunded</SelectItem>
+                </SelectContent>
+              </Select>
+              <Select
+                value={filters.paymentMethod}
+                onValueChange={(value) =>
+                  handleFilterChange('paymentMethod', value)
+                }
+              >
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Payment Method" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Methods</SelectItem>
+                  <SelectItem value="Credit Card">Credit Card</SelectItem>
+                  <SelectItem value="Cash">Cash</SelectItem>
+                  <SelectItem value="Online">Online</SelectItem>
+                </SelectContent>
+              </Select>
+              <Select
+                value={filters.table}
+                onValueChange={(value) => handleFilterChange('table', value)}
+              >
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Table Number" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Tables</SelectItem>
+                  {tableNumbers.map((table) => (
+                    <SelectItem key={table} value={table}>
+                      {table}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Select
+                value={filters.branch}
+                onValueChange={(value) => handleFilterChange('branch', value)}
+              >
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Branch/Venue" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Branches</SelectItem>
+                  {branches.map((branch) => (
+                    <SelectItem key={branch} value={branch}>
+                      {branch}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
 
-        <Tabs defaultValue="sales-chart">
-          <div className="flex justify-between items-center mb-4">
-            <TabsList>
-              <TabsTrigger value="sales-chart">Sales Chart</TabsTrigger>
-              <TabsTrigger value="summary">Summary</TabsTrigger>
-              <TabsTrigger value="split-bills">Split Bills</TabsTrigger>
-              <TabsTrigger value="outstanding">Outstanding</TabsTrigger>
-              <TabsTrigger value="tips">Tips & Charges</TabsTrigger>
-            </TabsList>
-            <Button variant="outline">
-              <Download className="mr-2 h-4 w-4" />
-              Export to CSV
-            </Button>
-          </div>
-          <TabsContent value="summary">
-            <Card>
-              <CardHeader>
-                <CardTitle>Transaction Summary</CardTitle>
-                <CardDescription>
-                  A complete list of all transactions in the selected period.
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="relative w-full overflow-auto">
-                  <Table>
-                    <TableHeader className="sticky top-0 bg-background z-10">
-                      <TableRow>
-                        <TableHead className="w-12 px-4">
-                          <Checkbox
-                            checked={
-                              paginatedTransactions.length > 0 &&
-                              selectedRows.length ===
-                                paginatedTransactions.length
-                            }
-                            onCheckedChange={handleSelectAll}
-                          />
-                        </TableHead>
-                        <TableHead>
-                          <SortableHeader tKey="id" label="Transaction ID" />
-                        </TableHead>
-                        <TableHead>
-                          <SortableHeader
-                            tKey="orderId"
-                            label="Table/Order ID"
-                          />
-                        </TableHead>
-                        <TableHead>
-                          <SortableHeader tKey="timestamp" label="Timestamp" />
-                        </TableHead>
-                        <TableHead className="text-right">
-                          <SortableHeader
-                            tKey="totalAmount"
-                            label="Total Amount"
-                          />
-                        </TableHead>
-                        <TableHead className="text-right">
-                          <SortableHeader
-                            tKey="paidAmount"
-                            label="Paid Amount"
-                          />
-                        </TableHead>
-                        <TableHead className="text-right">
-                          <SortableHeader
-                            tKey="outstandingAmount"
-                            label="Outstanding"
-                          />
-                        </TableHead>
-                        <TableHead>
-                          <SortableHeader
-                            tKey="paymentStatus"
-                            label="Payment Status"
-                          />
-                        </TableHead>
-                        <TableHead>
-                          <SortableHeader
-                            tKey="paymentMethod"
-                            label="Payment Method"
-                          />
-                        </TableHead>
-                        <TableHead className="text-right">
-                          <SortableHeader tKey="payers" label="# of Payers" />
-                        </TableHead>
-                        <TableHead>
-                          <span className="sr-only">Actions</span>
-                        </TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {paginatedTransactions.map((t) => (
-                        <TableRow
-                          key={t.id}
-                          data-state={
-                            selectedRows.includes(t.id) ? 'selected' : undefined
-                          }
-                        >
-                          <TableCell className="px-4">
-                            <Checkbox
-                              checked={selectedRows.includes(t.id)}
-                              onCheckedChange={() => handleRowSelect(t.id)}
-                            />
-                          </TableCell>
-                          <TableCell className="font-medium">{t.id}</TableCell>
-                          <TableCell>{t.orderId}</TableCell>
-                          <TableCell>
-                            {new Date(t.timestamp).toLocaleString()}
-                          </TableCell>
-                          <TableCell className="text-right font-mono">
-                            ${t.totalAmount.toFixed(2)}
-                          </TableCell>
-                          <TableCell className="text-right font-mono text-green-600">
-                            ${t.paidAmount.toFixed(2)}
-                          </TableCell>
-                          <TableCell className="text-right font-mono text-red-600">
-                            ${t.outstandingAmount.toFixed(2)}
-                          </TableCell>
-                          <TableCell>
-                            <Badge
-                              variant={getStatusBadgeVariant(t.paymentStatus)}
-                            >
-                              {t.paymentStatus}
-                            </Badge>
-                          </TableCell>
-                          <TableCell>{t.paymentMethod}</TableCell>
-                          <TableCell className="text-right">
-                            {t.payers}
-                          </TableCell>
-                          <TableCell className="text-right">
-                            <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
-                                <Button size="icon" variant="ghost">
-                                  <MoreHorizontal />
-                                </Button>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent>
-                                <DropdownMenuItem>View Order</DropdownMenuItem>
-                                <DropdownMenuItem>
-                                  View Receipt
-                                </DropdownMenuItem>
-                              </DropdownMenuContent>
-                            </DropdownMenu>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </div>
-              </CardContent>
-              <CardFooter className="flex items-center justify-between">
-                <div className="text-xs text-muted-foreground">
-                  Showing{' '}
-                  <strong>
-                    {filteredAndSortedTransactions.length > 0
-                      ? (currentPage - 1) * itemsPerPage + 1
-                      : 0}
-                  </strong>{' '}
-                  to{' '}
-                  <strong>
-                    {Math.min(
-                      currentPage * itemsPerPage,
-                      filteredAndSortedTransactions.length
-                    )}
-                  </strong>{' '}
-                  of <strong>{filteredAndSortedTransactions.length}</strong>{' '}
-                  transactions
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
-                    disabled={currentPage === 1}
-                  >
-                    Previous
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() =>
-                      setCurrentPage((p) => Math.min(p + 1, totalPages))
-                    }
-                    disabled={currentPage >= totalPages}
-                  >
-                    Next
-                  </Button>
-                </div>
-              </CardFooter>
-            </Card>
-          </TabsContent>
-          <TabsContent value="sales-chart">
-            <Card>
-              <CardHeader>
-                <CardTitle>Sales Over Time</CardTitle>
-                <CardDescription>
-                  Total sales amount per day for the selected period.
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <ChartContainer
-                  config={chartConfig}
-                  className="h-[400px] w-full"
-                >
-                  <AreaChart
-                    data={chartData}
-                    margin={{
-                      top: 10,
-                      right: 30,
-                      left: 0,
-                      bottom: 0,
-                    }}
-                  >
-                    <defs>
-                      <linearGradient
-                        id="colorSales"
-                        x1="0"
-                        y1="0"
-                        x2="0"
-                        y2="1"
+            {/* KPI Cards */}
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+              {kpiCards.map((card) => (
+                <Card key={card.title}>
+                  <CardHeader className="pb-2">
+                    <CardDescription>{card.title}</CardDescription>
+                    <CardTitle className="text-2xl font-bold">
+                      {card.value}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-xs text-muted-foreground flex items-center">
+                      <TrendingUp
+                        className={cn(
+                          'mr-1 h-4 w-4',
+                          card.change.startsWith('+')
+                            ? 'text-green-500'
+                            : 'text-red-500'
+                        )}
+                      />
+                      <span
+                        className={cn(
+                          card.change.startsWith('+')
+                            ? 'text-green-500'
+                            : 'text-red-500',
+                          'font-semibold'
+                        )}
                       >
-                        <stop
-                          offset="5%"
-                          stopColor="var(--color-sales)"
-                          stopOpacity={0.8}
-                        />
-                        <stop
-                          offset="95%"
-                          stopColor="var(--color-sales)"
-                          stopOpacity={0}
-                        />
-                      </linearGradient>
-                    </defs>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                    <XAxis
-                      dataKey="date"
-                      tickLine={false}
-                      axisLine={false}
-                      tickMargin={8}
-                      fontSize={12}
-                    />
-                    <YAxis
-                      tickFormatter={(value) => `$${Number(value) / 1000}k`}
-                      tickLine={false}
-                      axisLine={false}
-                      fontSize={12}
-                      domain={[0, 'dataMax + 1000']}
-                    />
-                    <Tooltip
-                      cursor={{ strokeDasharray: '3 3' }}
-                      content={<ChartTooltipContent indicator="dot" />}
-                    />
-                    <Area
-                      type="monotone"
-                      dataKey="sales"
-                      stroke="var(--color-sales)"
-                      fillOpacity={1}
-                      fill="url(#colorSales)"
-                      strokeWidth={2}
-                    />
-                  </AreaChart>
-                </ChartContainer>
+                        {card.change}
+                      </span>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+
+            <Card>
+              <CardHeader>
+                <div className="flex justify-between items-center">
+                  <div>
+                    <CardTitle>Sales Overview</CardTitle>
+                    <CardDescription>
+                      A summary of your sales performance.
+                    </CardDescription>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-1 rounded-md bg-muted p-1">
+                      <Button
+                        variant={view === 'chart' ? 'secondary' : 'ghost'}
+                        size="icon"
+                        onClick={() => setView('chart')}
+                        aria-label="Chart View"
+                      >
+                        <LayoutGrid className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant={view === 'list' ? 'secondary' : 'ghost'}
+                        size="icon"
+                        onClick={() => setView('list')}
+                        aria-label="List View"
+                      >
+                        <List className="h-4 w-4" />
+                      </Button>
+                    </div>
+                     <Button variant="outline">
+                        <Download className="mr-2 h-4 w-4" />
+                        Export to CSV
+                    </Button>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent>
+                {view === 'chart' ? (
+                  <ChartContainer
+                    config={chartConfig}
+                    className="h-[400px] w-full"
+                  >
+                    <AreaChart
+                      data={chartData}
+                      margin={{
+                        top: 10,
+                        right: 30,
+                        left: 0,
+                        bottom: 0,
+                      }}
+                    >
+                      <defs>
+                        <linearGradient
+                          id="colorSales"
+                          x1="0"
+                          y1="0"
+                          x2="0"
+                          y2="1"
+                        >
+                          <stop
+                            offset="5%"
+                            stopColor="var(--color-sales)"
+                            stopOpacity={0.8}
+                          />
+                          <stop
+                            offset="95%"
+                            stopColor="var(--color-sales)"
+                            stopOpacity={0}
+                          />
+                        </linearGradient>
+                      </defs>
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                      <XAxis
+                        dataKey="date"
+                        tickLine={false}
+                        axisLine={false}
+                        tickMargin={8}
+                        fontSize={12}
+                      />
+                      <YAxis
+                        tickFormatter={(value) => `$${Number(value) / 1000}k`}
+                        tickLine={false}
+                        axisLine={false}
+                        fontSize={12}
+                        domain={[0, 'dataMax + 1000']}
+                      />
+                      <Tooltip
+                        cursor={{ strokeDasharray: '3 3' }}
+                        content={<ChartTooltipContent indicator="dot" />}
+                      />
+                      <Area
+                        type="monotone"
+                        dataKey="sales"
+                        stroke="var(--color-sales)"
+                        fillOpacity={1}
+                        fill="url(#colorSales)"
+                        strokeWidth={2}
+                      />
+                    </AreaChart>
+                  </ChartContainer>
+                ) : (
+                  <div className="relative w-full overflow-auto">
+                    <Table>
+                      <TableHeader className="sticky top-0 bg-background z-10">
+                        <TableRow>
+                          <TableHead className="w-12 px-4">
+                            <Checkbox
+                              checked={
+                                paginatedTransactions.length > 0 &&
+                                selectedRows.length ===
+                                  paginatedTransactions.length
+                              }
+                              onCheckedChange={handleSelectAll}
+                            />
+                          </TableHead>
+                          <TableHead>
+                            <SortableHeader tKey="id" label="Transaction ID" />
+                          </TableHead>
+                          <TableHead>
+                            <SortableHeader
+                              tKey="orderId"
+                              label="Table/Order ID"
+                            />
+                          </TableHead>
+                          <TableHead>
+                            <SortableHeader tKey="timestamp" label="Timestamp" />
+                          </TableHead>
+                          <TableHead className="text-right">
+                            <SortableHeader
+                              tKey="totalAmount"
+                              label="Total Amount"
+                            />
+                          </TableHead>
+                          <TableHead className="text-right">
+                            <SortableHeader
+                              tKey="paidAmount"
+                              label="Paid Amount"
+                            />
+                          </TableHead>
+                          <TableHead className="text-right">
+                            <SortableHeader
+                              tKey="outstandingAmount"
+                              label="Outstanding"
+                            />
+                          </TableHead>
+                          <TableHead>
+                            <SortableHeader
+                              tKey="paymentStatus"
+                              label="Payment Status"
+                            />
+                          </TableHead>
+                          <TableHead>
+                            <SortableHeader
+                              tKey="paymentMethod"
+                              label="Payment Method"
+                            />
+                          </TableHead>
+                          <TableHead className="text-right">
+                            <SortableHeader tKey="payers" label="# of Payers" />
+                          </TableHead>
+                          <TableHead>
+                            <span className="sr-only">Actions</span>
+                          </TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {paginatedTransactions.map((t) => (
+                          <TableRow
+                            key={t.id}
+                            data-state={
+                              selectedRows.includes(t.id)
+                                ? 'selected'
+                                : undefined
+                            }
+                          >
+                            <TableCell className="px-4">
+                              <Checkbox
+                                checked={selectedRows.includes(t.id)}
+                                onCheckedChange={() => handleRowSelect(t.id)}
+                              />
+                            </TableCell>
+                            <TableCell className="font-medium">{t.id}</TableCell>
+                            <TableCell>{t.orderId}</TableCell>
+                            <TableCell>
+                              {new Date(t.timestamp).toLocaleString()}
+                            </TableCell>
+                            <TableCell className="text-right font-mono">
+                              ${t.totalAmount.toFixed(2)}
+                            </TableCell>
+                            <TableCell className="text-right font-mono text-green-600">
+                              ${t.paidAmount.toFixed(2)}
+                            </TableCell>
+                            <TableCell className="text-right font-mono text-red-600">
+                              ${t.outstandingAmount.toFixed(2)}
+                            </TableCell>
+                            <TableCell>
+                              <Badge
+                                variant={getStatusBadgeVariant(t.paymentStatus)}
+                              >
+                                {t.paymentStatus}
+                              </Badge>
+                            </TableCell>
+                            <TableCell>{t.paymentMethod}</TableCell>
+                            <TableCell className="text-right">
+                              {t.payers}
+                            </TableCell>
+                            <TableCell className="text-right">
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <Button size="icon" variant="ghost">
+                                    <MoreHorizontal />
+                                  </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent>
+                                  <DropdownMenuItem>View Order</DropdownMenuItem>
+                                  <DropdownMenuItem>
+                                    View Receipt
+                                  </DropdownMenuItem>
+                                </DropdownMenuContent>
+                              </DropdownMenu>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                )}
               </CardContent>
+              {view === 'list' && (
+                <CardFooter className="flex items-center justify-between">
+                  <div className="text-xs text-muted-foreground">
+                    Showing{' '}
+                    <strong>
+                      {filteredAndSortedTransactions.length > 0
+                        ? (currentPage - 1) * itemsPerPage + 1
+                        : 0}
+                    </strong>{' '}
+                    to{' '}
+                    <strong>
+                      {Math.min(
+                        currentPage * itemsPerPage,
+                        filteredAndSortedTransactions.length
+                      )}
+                    </strong>{' '}
+                    of <strong>{filteredAndSortedTransactions.length}</strong>{' '}
+                    transactions
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
+                      disabled={currentPage === 1}
+                    >
+                      Previous
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() =>
+                        setCurrentPage((p) => Math.min(p + 1, totalPages))
+                      }
+                      disabled={currentPage >= totalPages}
+                    >
+                      Next
+                    </Button>
+                  </div>
+                </CardFooter>
+              )}
             </Card>
           </TabsContent>
+
           <TabsContent value="split-bills">
             <Card>
               <CardHeader>
@@ -943,11 +967,15 @@ export default function PaymentsReportPage() {
                     <TableBody>
                       {splitTransactions.slice(0, 5).map((t) => (
                         <TableRow key={t.id}>
-                          <TableCell className="font-medium">{t.orderId}</TableCell>
+                          <TableCell className="font-medium">
+                            {t.orderId}
+                          </TableCell>
                           <TableCell className="font-mono">
                             ${t.totalAmount.toFixed(2)}
                           </TableCell>
-                          <TableCell className="text-center">{t.payers}</TableCell>
+                          <TableCell className="text-center">
+                            {t.payers}
+                          </TableCell>
                           <TableCell>{t.splitMethod || 'N/A'}</TableCell>
                           <TableCell>8m 15s</TableCell> {/* Placeholder */}
                           <TableCell>
@@ -1010,7 +1038,9 @@ export default function PaymentsReportPage() {
                               'bg-red-50/50 border-l-4 border-red-500'
                           )}
                         >
-                          <TableCell className="font-medium">{t.orderId}</TableCell>
+                          <TableCell className="font-medium">
+                            {t.orderId}
+                          </TableCell>
                           <TableCell>${t.totalAmount.toFixed(2)}</TableCell>
                           <TableCell className="text-green-600">
                             ${t.paidAmount.toFixed(2)}
@@ -1020,7 +1050,9 @@ export default function PaymentsReportPage() {
                           </TableCell>
                           <TableCell>{daysOutstanding} day(s)</TableCell>
                           <TableCell>
-                            {new Date(t.lastPaymentAttempt).toLocaleDateString()}
+                            {new Date(
+                              t.lastPaymentAttempt
+                            ).toLocaleDateString()}
                           </TableCell>
                           <TableCell>{t.closeType}</TableCell>
                           <TableCell className="text-right">
