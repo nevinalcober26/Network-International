@@ -66,8 +66,8 @@ import {
   TabsTrigger,
 } from '@/components/ui/tabs';
 import {
-  Area,
-  AreaChart,
+  Bar,
+  BarChart,
   CartesianGrid,
   ResponsiveContainer,
   Tooltip,
@@ -216,6 +216,9 @@ const initialFilterState = {
   paymentStatus: 'all',
   paymentMethod: 'all',
   table: 'all',
+  splitMethod: 'all',
+  closeType: 'all',
+  staffName: 'all',
 };
 
 const ExportDialog = ({
@@ -282,6 +285,7 @@ export default function PaymentsReportPage() {
   const [view, setView] = useState<'chart' | 'list'>('chart');
   const [isExportDialogOpen, setIsExportDialogOpen] = useState(false);
   const { toast } = useToast();
+  const [activeTab, setActiveTab] = useState('summary');
 
   const [sortConfig, setSortConfig] = useState<{
     key: keyof Transaction;
@@ -394,6 +398,22 @@ export default function PaymentsReportPage() {
     setCurrentPage(1);
   };
 
+  const resetFiltersForTab = (tab: string) => {
+    const newFilters = { ...filters };
+    if (tab === 'summary') {
+      newFilters.paymentStatus = 'all';
+      newFilters.paymentMethod = 'all';
+      newFilters.table = 'all';
+    } else if (tab === 'split-bills') {
+      newFilters.splitMethod = 'all';
+    } else if (tab === 'outstanding') {
+      newFilters.closeType = 'all';
+    } else if (tab === 'tips') {
+      newFilters.staffName = 'all';
+    }
+    setFilters(newFilters);
+  };
+  
   const resetAllFilters = () => {
     setFilters(initialFilterState);
     setCurrentPage(1);
@@ -415,13 +435,22 @@ export default function PaymentsReportPage() {
         transaction.paymentMethod === filters.paymentMethod;
       const matchesTable =
         filters.table === 'all' || transaction.table === filters.table;
+      const matchesSplitMethod = 
+        filters.splitMethod === 'all' || transaction.splitMethod === filters.splitMethod;
+      const matchesCloseType = 
+        filters.closeType === 'all' || transaction.closeType === filters.closeType;
+      const matchesStaffName = 
+        filters.staffName === 'all' || transaction.staffName === filters.staffName;
 
       return (
         matchesDate &&
         matchesBranch &&
         matchesStatus &&
         matchesMethod &&
-        matchesTable
+        matchesTable &&
+        matchesSplitMethod &&
+        matchesCloseType &&
+        matchesStaffName
       );
     });
 
@@ -536,6 +565,11 @@ export default function PaymentsReportPage() {
       (a, b) => parseInt(a.substring(1)) - parseInt(b.substring(1))
     );
   }, [transactions]);
+  
+  const staffNames = useMemo(() => {
+    return [...new Set(transactions.map((t) => t.staffName))].sort();
+  }, [transactions]);
+
 
   const SortableHeader = ({
     tKey,
@@ -634,63 +668,14 @@ export default function PaymentsReportPage() {
                 <SelectItem value="Dubai Mall">Dubai Mall</SelectItem>
               </SelectContent>
             </Select>
-            <Select
-              value={filters.paymentStatus}
-              onValueChange={(value) =>
-                handleFilterChange('paymentStatus', value)
-              }
-            >
-              <SelectTrigger className="w-full sm:w-[160px]">
-                <SelectValue placeholder="Payment Status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Statuses</SelectItem>
-                <SelectItem value="Paid">Paid</SelectItem>
-                <SelectItem value="Partial">Partial</SelectItem>
-                <SelectItem value="Unpaid">Unpaid</SelectItem>
-                <SelectItem value="Refunded">Refunded</SelectItem>
-              </SelectContent>
-            </Select>
-            <Select
-              value={filters.paymentMethod}
-              onValueChange={(value) =>
-                handleFilterChange('paymentMethod', value)
-              }
-            >
-              <SelectTrigger className="w-full sm:w-[160px]">
-                <SelectValue placeholder="Payment Method" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Methods</SelectItem>
-                <SelectItem value="Credit Card">Credit Card</SelectItem>
-                <SelectItem value="Cash">Cash</SelectItem>
-                <SelectItem value="Online">Online</SelectItem>
-              </SelectContent>
-            </Select>
-            <Select
-              value={filters.table}
-              onValueChange={(value) => handleFilterChange('table', value)}
-            >
-              <SelectTrigger className="w-full sm:w-[160px]">
-                <SelectValue placeholder="Table Number" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Tables</SelectItem>
-                {tableNumbers.map((table) => (
-                  <SelectItem key={table} value={table}>
-                    {table}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
             <Button variant="ghost" size="sm" onClick={resetAllFilters}>
               <RotateCcw className="mr-2 h-4 w-4" />
-              Reset All Filters
+              Reset Global Filters
             </Button>
           </CardContent>
         </Card>
 
-        <Tabs defaultValue="summary" className="w-full">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="summary">Summary</TabsTrigger>
             <TabsTrigger value="split-bills">Split Bills</TabsTrigger>
@@ -741,10 +726,65 @@ export default function PaymentsReportPage() {
                   <div className="flex-shrink-0">
                     <CardTitle>Sales Overview</CardTitle>
                     <CardDescription>
-                      A summary of your sales performance.
+                      A summary of your sales performance based on current
+                      filters.
                     </CardDescription>
                   </div>
                   <div className="flex items-center gap-2 flex-wrap">
+                    <Select
+                      value={filters.paymentStatus}
+                      onValueChange={(value) =>
+                        handleFilterChange('paymentStatus', value)
+                      }
+                    >
+                      <SelectTrigger className="w-full sm:w-[160px]">
+                        <SelectValue placeholder="Payment Status" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Statuses</SelectItem>
+                        <SelectItem value="Paid">Paid</SelectItem>
+                        <SelectItem value="Partial">Partial</SelectItem>
+                        <SelectItem value="Unpaid">Unpaid</SelectItem>
+                        <SelectItem value="Refunded">Refunded</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <Select
+                      value={filters.paymentMethod}
+                      onValueChange={(value) =>
+                        handleFilterChange('paymentMethod', value)
+                      }
+                    >
+                      <SelectTrigger className="w-full sm:w-[160px]">
+                        <SelectValue placeholder="Payment Method" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Methods</SelectItem>
+                        <SelectItem value="Credit Card">Credit Card</SelectItem>
+                        <SelectItem value="Cash">Cash</SelectItem>
+                        <SelectItem value="Online">Online</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <Select
+                      value={filters.table}
+                      onValueChange={(value) =>
+                        handleFilterChange('table', value)
+                      }
+                    >
+                      <SelectTrigger className="w-full sm:w-[160px]">
+                        <SelectValue placeholder="Table Number" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Tables</SelectItem>
+                        {tableNumbers.map((table) => (
+                          <SelectItem key={table} value={table}>
+                            {table}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <Button variant="ghost" size="sm" onClick={() => resetFiltersForTab('summary')}>
+                        <RotateCcw className="mr-2 h-4 w-4" /> Reset
+                    </Button>
                     <div className="flex items-center gap-1 rounded-md bg-muted p-1">
                       <Button
                         variant={view === 'chart' ? 'secondary' : 'ghost'}
@@ -772,63 +812,40 @@ export default function PaymentsReportPage() {
                     config={chartConfig}
                     className="h-[400px] w-full"
                   >
-                    <AreaChart
-                      data={chartData}
-                      margin={{
-                        top: 10,
-                        right: 30,
-                        left: 0,
-                        bottom: 0,
-                      }}
-                    >
-                      <defs>
-                        <linearGradient
-                          id="colorSales"
-                          x1="0"
-                          y1="0"
-                          x2="0"
-                          y2="1"
+                     <BarChart
+                        data={chartData}
+                        margin={{
+                            top: 10,
+                            right: 30,
+                            left: 0,
+                            bottom: 0,
+                        }}
                         >
-                          <stop
-                            offset="5%"
-                            stopColor="var(--color-sales)"
-                            stopOpacity={0.8}
-                          />
-                          <stop
-                            offset="95%"
-                            stopColor="var(--color-sales)"
-                            stopOpacity={0}
-                          />
-                        </linearGradient>
-                      </defs>
-                      <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                      <XAxis
-                        dataKey="date"
-                        tickLine={false}
-                        axisLine={false}
-                        tickMargin={8}
-                        fontSize={12}
-                      />
-                      <YAxis
-                        tickFormatter={(value) => `$${Number(value) / 1000}k`}
-                        tickLine={false}
-                        axisLine={false}
-                        fontSize={12}
-                        domain={[0, 'dataMax + 1000']}
-                      />
-                      <Tooltip
-                        cursor={{ strokeDasharray: '3 3' }}
-                        content={<ChartTooltipContent indicator="dot" />}
-                      />
-                      <Area
-                        type="monotone"
-                        dataKey="sales"
-                        stroke="var(--color-sales)"
-                        fillOpacity={1}
-                        fill="url(#colorSales)"
-                        strokeWidth={2}
-                      />
-                    </AreaChart>
+                        <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                        <XAxis
+                            dataKey="date"
+                            tickLine={false}
+                            axisLine={false}
+                            tickMargin={8}
+                            fontSize={12}
+                        />
+                        <YAxis
+                            tickFormatter={(value) => `$${Number(value) / 1000}k`}
+                            tickLine={false}
+                            axisLine={false}
+                            fontSize={12}
+                            domain={[0, 'dataMax + 1000']}
+                        />
+                        <Tooltip
+                            cursor={{ fill: "hsl(var(--muted))" }}
+                            content={<ChartTooltipContent indicator="dot" />}
+                        />
+                        <Bar
+                            dataKey="sales"
+                            fill="var(--color-sales)"
+                            radius={[4, 4, 0, 0]}
+                        />
+                    </BarChart>
                   </ChartContainer>
                 ) : (
                   <div className="relative w-full overflow-auto">
@@ -1010,12 +1027,28 @@ export default function PaymentsReportPage() {
           </TabsContent>
           <TabsContent value="split-bills" className="mt-4">
             <Card>
-              <CardHeader>
+              <CardHeader className="flex flex-row items-center justify-between">
                 <div>
                   <CardTitle>Split Bill Analytics</CardTitle>
                   <CardDescription>
                     Analysis of orders with split payments.
                   </CardDescription>
+                </div>
+                 <div className="flex items-center gap-4">
+                  <Select value={filters.splitMethod} onValueChange={(value) => handleFilterChange('splitMethod', value)}>
+                    <SelectTrigger className="w-[180px]">
+                      <SelectValue placeholder="Split Method" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Split Methods</SelectItem>
+                      <SelectItem value="Equal">Equal</SelectItem>
+                      <SelectItem value="Item-based">Item-based</SelectItem>
+                      <SelectItem value="Custom">Custom</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Button variant="ghost" size="sm" onClick={() => resetFiltersForTab('split-bills')}>
+                    <RotateCcw className="mr-2 h-4 w-4" /> Reset
+                  </Button>
                 </div>
               </CardHeader>
               <CardContent className="space-y-6">
@@ -1113,13 +1146,28 @@ export default function PaymentsReportPage() {
           </TabsContent>
           <TabsContent value="outstanding" className="mt-4">
             <Card>
-              <CardHeader>
+              <CardHeader className="flex flex-row items-center justify-between">
                 <div>
                   <CardTitle>Outstanding / Partial Payments</CardTitle>
                   <CardDescription>
                     Monitor orders with pending payments to manage risk and
                     collections.
                   </CardDescription>
+                </div>
+                 <div className="flex items-center gap-4">
+                  <Select value={filters.closeType} onValueChange={(value) => handleFilterChange('closeType', value)}>
+                    <SelectTrigger className="w-[180px]">
+                      <SelectValue placeholder="Close Type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Close Types</SelectItem>
+                      <SelectItem value="Auto">Auto</SelectItem>
+                      <SelectItem value="Manual">Manual</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Button variant="ghost" size="sm" onClick={() => resetFiltersForTab('outstanding')}>
+                    <RotateCcw className="mr-2 h-4 w-4" /> Reset
+                  </Button>
                 </div>
               </CardHeader>
               <CardContent>
@@ -1190,9 +1238,23 @@ export default function PaymentsReportPage() {
           </TabsContent>
           <TabsContent value="tips" className="mt-4">
             <Card>
-              <CardHeader>
+              <CardHeader className="flex flex-row items-center justify-between">
                 <div>
                   <CardTitle>Tips &amp; Service Charges</CardTitle>
+                </div>
+                 <div className="flex items-center gap-4">
+                  <Select value={filters.staffName} onValueChange={(value) => handleFilterChange('staffName', value)}>
+                    <SelectTrigger className="w-[180px]">
+                      <SelectValue placeholder="Filter by Staff" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Staff</SelectItem>
+                      {staffNames.map(name => <SelectItem key={name} value={name}>{name}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                  <Button variant="ghost" size="sm" onClick={() => resetFiltersForTab('tips')}>
+                    <RotateCcw className="mr-2 h-4 w-4" /> Reset
+                  </Button>
                 </div>
               </CardHeader>
               <CardContent>
