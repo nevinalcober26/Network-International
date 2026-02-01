@@ -151,9 +151,12 @@ const generateMockTransactions = (
     randomDate = setHours(randomDate, Math.floor(Math.random() * 24));
     randomDate = setMinutes(randomDate, Math.floor(Math.random() * 60));
     randomDate = setSeconds(randomDate, Math.floor(Math.random() * 60));
-    
+
     // Ensure the generated date is within the provided range
-    if (randomDate.getTime() < from.getTime() || randomDate.getTime() > endOfDay(to).getTime()) {
+    if (
+      randomDate.getTime() < from.getTime() ||
+      randomDate.getTime() > endOfDay(to).getTime()
+    ) {
       continue;
     }
 
@@ -182,7 +185,7 @@ const generateMockTransactions = (
       ];
       splitMethod = splitMethods[i % splitMethods.length];
     }
-    
+
     const staffName = staffNames[i % staffNames.length];
     let tipAmount: number | undefined = undefined;
     let tipType: Transaction['tipType'] | undefined = undefined;
@@ -220,7 +223,6 @@ const generateMockTransactions = (
   return transactions;
 };
 
-
 const getStatusBadgeVariant = (status: Transaction['paymentStatus']) => {
   switch (status) {
     case 'Paid':
@@ -240,6 +242,14 @@ const chartConfig = {
   sales: {
     label: 'Sales',
     color: 'hsl(var(--chart-1))',
+  },
+   count: {
+    label: 'Count',
+    color: 'hsl(var(--chart-2))',
+  },
+  total: {
+    label: 'Total',
+    color: 'hsl(var(--chart-3))',
   },
 };
 
@@ -318,7 +328,6 @@ export default function PaymentsReportPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
   const [filters, setFilters] = useState(initialFilterState);
-  const [view, setView] = useState<'chart' | 'list'>('chart');
   const [isExportDialogOpen, setIsExportDialogOpen] = useState(false);
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState('summary');
@@ -374,7 +383,7 @@ export default function PaymentsReportPage() {
     }
     setFilters(newFilters);
   };
-  
+
   const resetAllFilters = () => {
     setFilters(initialFilterState);
     setCurrentPage(1);
@@ -383,9 +392,13 @@ export default function PaymentsReportPage() {
   const filteredAndSortedTransactions = useMemo(() => {
     let filtered = transactions.filter((transaction) => {
       const transactionDate = new Date(transaction.timestamp);
-       const matchesDate = filters.dateRange?.from && filters.dateRange?.to
-        ? isWithinInterval(transactionDate, { start: filters.dateRange.from, end: endOfDay(filters.dateRange.to) })
-        : true;
+      const matchesDate =
+        filters.dateRange?.from && filters.dateRange?.to
+          ? isWithinInterval(transactionDate, {
+              start: filters.dateRange.from,
+              end: endOfDay(filters.dateRange.to),
+            })
+          : true;
       const matchesBranch =
         filters.branch === 'all' || transaction.branch === filters.branch;
       const matchesStatus =
@@ -396,12 +409,15 @@ export default function PaymentsReportPage() {
         transaction.paymentMethod === filters.paymentMethod;
       const matchesTable =
         filters.table === 'all' || transaction.table === filters.table;
-      const matchesSplitMethod = 
-        filters.splitMethod === 'all' || transaction.splitMethod === filters.splitMethod;
-      const matchesCloseType = 
-        filters.closeType === 'all' || transaction.closeType === filters.closeType;
-      const matchesStaffName = 
-        filters.staffName === 'all' || transaction.staffName === filters.staffName;
+      const matchesSplitMethod =
+        filters.splitMethod === 'all' ||
+        transaction.splitMethod === filters.splitMethod;
+      const matchesCloseType =
+        filters.closeType === 'all' ||
+        transaction.closeType === filters.closeType;
+      const matchesStaffName =
+        filters.staffName === 'all' ||
+        transaction.staffName === filters.staffName;
 
       return (
         matchesDate &&
@@ -485,7 +501,12 @@ export default function PaymentsReportPage() {
         change: '+0.5%',
         icon: FileText,
       },
-      { title: 'Average Time to Pay', value: '8m 15s', change: '-2.0%', icon: Clock },
+      {
+        title: 'Average Time to Pay',
+        value: '8m 15s',
+        change: '-2.0%',
+        icon: Clock,
+      },
       {
         title: 'Total Tips Collected',
         value: `$${totalTips.toLocaleString('en-US', {
@@ -509,18 +530,21 @@ export default function PaymentsReportPage() {
     );
   }, [filteredAndSortedTransactions, currentPage]);
 
-  const chartData = useMemo(() => {
+  const summaryChartData = useMemo(() => {
     if (!filters.dateRange?.from) return [];
-    
+
     const salesByDay: { [key: string]: number } = {};
-    const dateDiff = differenceInDays(endOfDay(filters.dateRange.to || new Date()), filters.dateRange.from);
+    const dateDiff = differenceInDays(
+      endOfDay(filters.dateRange.to || new Date()),
+      filters.dateRange.from
+    );
 
     // Initialize all days in the range to 0
-    for(let i = 0; i <= dateDiff; i++) {
-        const day = format(addDays(filters.dateRange.from, i), 'MMM d');
-        salesByDay[day] = 0;
+    for (let i = 0; i <= dateDiff; i++) {
+      const day = format(addDays(filters.dateRange.from, i), 'MMM d');
+      salesByDay[day] = 0;
     }
-    
+
     filteredAndSortedTransactions.forEach((t) => {
       const day = format(new Date(t.timestamp), 'MMM d');
       if (day in salesByDay) {
@@ -533,7 +557,7 @@ export default function PaymentsReportPage() {
         date: day,
         sales: salesByDay[day],
       }))
-      .sort((a,b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
   }, [filteredAndSortedTransactions, filters.dateRange]);
 
   const splitTransactions = useMemo(
@@ -555,22 +579,54 @@ export default function PaymentsReportPage() {
         splitTransactions.length
       : 1;
 
+  const splitMethodChartData = useMemo(() => {
+    const data = splitTransactions.reduce(
+      (acc, t) => {
+        const method = t.splitMethod || 'Unknown';
+        acc[method] = (acc[method] || 0) + 1;
+        return acc;
+      },
+      {} as Record<string, number>
+    );
+
+    return Object.entries(data).map(([name, count]) => ({ name, count }));
+  }, [splitTransactions]);
+
   const outstandingTransactions = useMemo(() => {
     return filteredAndSortedTransactions.filter(
       (t) => t.paymentStatus === 'Partial' || t.paymentStatus === 'Unpaid'
     );
   }, [filteredAndSortedTransactions]);
-  
+
   const outstandingKpis = useMemo(() => {
-    const totalOutstanding = outstandingTransactions.reduce((acc, t) => acc + t.outstandingAmount, 0);
+    const totalOutstanding = outstandingTransactions.reduce(
+      (acc, t) => acc + t.outstandingAmount,
+      0
+    );
     const outstandingCount = outstandingTransactions.length;
-    const totalAge = outstandingTransactions.reduce((acc, t) => acc + differenceInDays(new Date(), new Date(t.timestamp)), 0);
+    const totalAge = outstandingTransactions.reduce(
+      (acc, t) => acc + differenceInDays(new Date(), new Date(t.timestamp)),
+      0
+    );
     const avgAge = outstandingCount > 0 ? totalAge / outstandingCount : 0;
     return {
       totalOutstanding,
       outstandingCount,
       avgAge,
     };
+  }, [outstandingTransactions]);
+
+  const outstandingByStatusChartData = useMemo(() => {
+    const data = outstandingTransactions.reduce(
+      (acc, t) => {
+        const status = t.paymentStatus;
+        acc[status] = (acc[status] || 0) + t.outstandingAmount;
+        return acc;
+      },
+      {} as Record<string, number>
+    );
+
+    return Object.entries(data).map(([name, total]) => ({ name, total }));
   }, [outstandingTransactions]);
 
   const tipTransactions = useMemo(() => {
@@ -582,21 +638,46 @@ export default function PaymentsReportPage() {
   const totalGrossTips = useMemo(() => {
     return tipTransactions.reduce((acc, t) => acc + (t.tipAmount || 0), 0);
   }, [tipTransactions]);
-  
+
   const tipsKpis = useMemo(() => {
-    const paidTransactionsCount = filteredAndSortedTransactions.filter(t => t.paidAmount > 0).length;
-    const tipAdoptionRate = paidTransactionsCount > 0 ? (tipTransactions.length / paidTransactionsCount) * 100 : 0;
-    
-    const totalBillForTippedTxns = tipTransactions.reduce((acc, t) => acc + t.totalAmount, 0);
-    const avgTipPercentage = totalBillForTippedTxns > 0 ? (totalGrossTips / totalBillForTippedTxns) * 100 : 0;
+    const paidTransactionsCount = filteredAndSortedTransactions.filter(
+      (t) => t.paidAmount > 0
+    ).length;
+    const tipAdoptionRate =
+      paidTransactionsCount > 0
+        ? (tipTransactions.length / paidTransactionsCount) * 100
+        : 0;
+
+    const totalBillForTippedTxns = tipTransactions.reduce(
+      (acc, t) => acc + t.totalAmount,
+      0
+    );
+    const avgTipPercentage =
+      totalBillForTippedTxns > 0
+        ? (totalGrossTips / totalBillForTippedTxns) * 100
+        : 0;
 
     return {
       totalGrossTips,
       tipAdoptionRate,
       avgTipPercentage,
-    }
+    };
   }, [filteredAndSortedTransactions, tipTransactions, totalGrossTips]);
 
+  const tipsByStaffChartData = useMemo(() => {
+    const data = tipTransactions.reduce(
+      (acc, t) => {
+        const staff = t.staffName;
+        acc[staff] = (acc[staff] || 0) + (t.tipAmount || 0);
+        return acc;
+      },
+      {} as Record<string, number>
+    );
+
+    return Object.entries(data)
+      .map(([name, total]) => ({ name, total }))
+      .sort((a, b) => b.total - a.total);
+  }, [tipTransactions]);
 
   const requestSort = (key: keyof Transaction) => {
     let direction: 'ascending' | 'descending' = 'ascending';
@@ -632,11 +713,10 @@ export default function PaymentsReportPage() {
       (a, b) => parseInt(a.substring(1)) - parseInt(b.substring(1))
     );
   }, [transactions]);
-  
+
   const staffNames = useMemo(() => {
     return [...new Set(transactions.map((t) => t.staffName))].sort();
   }, [transactions]);
-
 
   const SortableHeader = ({
     tKey,
@@ -684,7 +764,7 @@ export default function PaymentsReportPage() {
           </Button>
         </div>
 
-        <div className="flex flex-wrap items-center justify-between gap-4 rounded-lg border bg-card p-4">
+        <div className="flex flex-wrap items-center justify-between gap-4">
           <div className="flex flex-wrap items-center gap-4">
             <DateRangePicker
               dateRange={filters.dateRange}
@@ -726,7 +806,9 @@ export default function PaymentsReportPage() {
                   <Card key={card.title}>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                       <CardDescription>{card.title}</CardDescription>
-                      {Icon && <Icon className="h-4 w-4 text-muted-foreground" />}
+                      {Icon && (
+                        <Icon className="h-4 w-4 text-muted-foreground" />
+                      )}
                     </CardHeader>
                     <CardContent>
                       <div className="text-2xl font-bold">{card.value}</div>
@@ -758,12 +840,62 @@ export default function PaymentsReportPage() {
 
             <Card>
               <CardHeader>
+                <CardTitle>Sales Overview</CardTitle>
+                <CardDescription>
+                  A summary of your sales performance based on current filters.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ChartContainer
+                  config={chartConfig}
+                  className="h-[400px] w-full"
+                >
+                  <BarChart
+                    data={summaryChartData}
+                    margin={{
+                      top: 10,
+                      right: 30,
+                      left: 0,
+                      bottom: 0,
+                    }}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                    <XAxis
+                      dataKey="date"
+                      tickLine={false}
+                      axisLine={false}
+                      tickMargin={8}
+                      fontSize={12}
+                    />
+                    <YAxis
+                      tickFormatter={(value) => `$${Number(value) / 1000}k`}
+                      tickLine={false}
+                      axisLine={false}
+                      fontSize={12}
+                      domain={[0, 'dataMax + 1000']}
+                    />
+                    <Tooltip
+                      cursor={{ fill: 'hsl(var(--muted))' }}
+                      content={<ChartTooltipContent indicator="dot" />}
+                    />
+                    <Bar
+                      dataKey="sales"
+                      fill="var(--color-sales)"
+                      radius={[4, 4, 0, 0]}
+                    />
+                  </BarChart>
+                </ChartContainer>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                   <div className="flex-shrink-0">
-                    <CardTitle>Sales Overview</CardTitle>
+                    <CardTitle>Transaction Summary</CardTitle>
                     <CardDescription>
-                      A summary of your sales performance based on current
-                      filters.
+                      A detailed list of all transactions within the filtered
+                      range.
                     </CardDescription>
                   </div>
                   <div className="flex items-center gap-2 flex-wrap">
@@ -818,249 +950,183 @@ export default function PaymentsReportPage() {
                         ))}
                       </SelectContent>
                     </Select>
-                    <Button variant="ghost" size="sm" onClick={() => resetFiltersForTab('summary')}>
-                        <RotateCcw className="mr-2 h-4 w-4" /> Reset
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => resetFiltersForTab('summary')}
+                    >
+                      <RotateCcw className="mr-2 h-4 w-4" /> Reset
                     </Button>
-                    <div className="flex items-center gap-1 rounded-md bg-muted p-1">
-                      <Button
-                        variant={view === 'chart' ? 'secondary' : 'ghost'}
-                        size="icon"
-                        onClick={() => setView('chart')}
-                        aria-label="Chart View"
-                      >
-                        <LayoutGrid className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant={view === 'list' ? 'secondary' : 'ghost'}
-                        size="icon"
-                        onClick={() => setView('list')}
-                        aria-label="List View"
-                      >
-                        <List className="h-4 w-4" />
-                      </Button>
-                    </div>
                   </div>
                 </div>
               </CardHeader>
               <CardContent>
-                {view === 'chart' ? (
-                  <ChartContainer
-                    config={chartConfig}
-                    className="h-[400px] w-full"
-                  >
-                     <BarChart
-                        data={chartData}
-                        margin={{
-                            top: 10,
-                            right: 30,
-                            left: 0,
-                            bottom: 0,
-                        }}
-                        >
-                        <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                        <XAxis
-                            dataKey="date"
-                            tickLine={false}
-                            axisLine={false}
-                            tickMargin={8}
-                            fontSize={12}
-                        />
-                        <YAxis
-                            tickFormatter={(value) => `$${Number(value) / 1000}k`}
-                            tickLine={false}
-                            axisLine={false}
-                            fontSize={12}
-                            domain={[0, 'dataMax + 1000']}
-                        />
-                        <Tooltip
-                            cursor={{ fill: "hsl(var(--muted))" }}
-                            content={<ChartTooltipContent indicator="dot" />}
-                        />
-                        <Bar
-                            dataKey="sales"
-                            fill="var(--color-sales)"
-                            radius={[4, 4, 0, 0]}
-                        />
-                    </BarChart>
-                  </ChartContainer>
-                ) : (
-                  <div className="relative w-full overflow-auto">
-                    <Table>
-                      <TableHeader className="sticky top-0 bg-background z-10">
-                        <TableRow>
-                          <TableHead className="w-12 px-4">
-                            <Checkbox
-                              checked={
-                                paginatedTransactions.length > 0 &&
-                                selectedRows.length ===
-                                  paginatedTransactions.length
-                              }
-                              onCheckedChange={handleSelectAll}
-                            />
-                          </TableHead>
-                          <TableHead>
-                            <SortableHeader tKey="id" label="Transaction ID" />
-                          </TableHead>
-                          <TableHead>
-                            <SortableHeader
-                              tKey="orderId"
-                              label="Table/Order ID"
-                            />
-                          </TableHead>
-                          <TableHead>
-                            <SortableHeader
-                              tKey="timestamp"
-                              label="Timestamp"
-                            />
-                          </TableHead>
-                          <TableHead className="text-right">
-                            <SortableHeader
-                              tKey="totalAmount"
-                              label="Total Amount"
-                            />
-                          </TableHead>
-                          <TableHead className="text-right">
-                            <SortableHeader
-                              tKey="paidAmount"
-                              label="Paid Amount"
-                            />
-                          </TableHead>
-                          <TableHead className="text-right">
-                            <SortableHeader
-                              tKey="outstandingAmount"
-                              label="Outstanding"
-                            />
-                          </TableHead>
-                          <TableHead>
-                            <SortableHeader
-                              tKey="paymentStatus"
-                              label="Payment Status"
-                            />
-                          </TableHead>
-                          <TableHead>
-                            <SortableHeader
-                              tKey="paymentMethod"
-                              label="Payment Method"
-                            />
-                          </TableHead>
-                          <TableHead className="text-right">
-                            <SortableHeader tKey="payers" label="# of Payers" />
-                          </TableHead>
-                          <TableHead>
-                            <span className="sr-only">Actions</span>
-                          </TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {paginatedTransactions.map((t) => (
-                          <TableRow
-                            key={t.id}
-                            data-state={
-                              selectedRows.includes(t.id)
-                                ? 'selected'
-                                : undefined
+                <div className="relative w-full overflow-auto">
+                  <Table>
+                    <TableHeader className="sticky top-0 bg-background z-10">
+                      <TableRow>
+                        <TableHead className="w-12 px-4">
+                          <Checkbox
+                            checked={
+                              paginatedTransactions.length > 0 &&
+                              selectedRows.length ===
+                                paginatedTransactions.length
                             }
-                          >
-                            <TableCell className="px-4">
-                              <Checkbox
-                                checked={selectedRows.includes(t.id)}
-                                onCheckedChange={() => handleRowSelect(t.id)}
-                              />
-                            </TableCell>
-                            <TableCell className="font-medium">
-                              {t.id}
-                            </TableCell>
-                            <TableCell>{t.orderId}</TableCell>
-                            <TableCell>
-                              {new Date(t.timestamp).toLocaleString()}
-                            </TableCell>
-                            <TableCell className="text-right font-mono">
-                              ${t.totalAmount.toFixed(2)}
-                            </TableCell>
-                            <TableCell className="text-right font-mono text-green-600">
-                              ${t.paidAmount.toFixed(2)}
-                            </TableCell>
-                            <TableCell className="text-right font-mono text-red-600">
-                              ${t.outstandingAmount.toFixed(2)}
-                            </TableCell>
-                            <TableCell>
-                              <Badge
-                                variant={getStatusBadgeVariant(t.paymentStatus)}
-                              >
-                                {t.paymentStatus}
-                              </Badge>
-                            </TableCell>
-                            <TableCell>{t.paymentMethod}</TableCell>
-                            <TableCell className="text-right">
-                              {t.payers}
-                            </TableCell>
-                            <TableCell className="text-right">
-                              <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                  <Button size="icon" variant="ghost">
-                                    <MoreHorizontal />
-                                  </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent>
-                                  <DropdownMenuItem>
-                                    View Order
-                                  </DropdownMenuItem>
-                                  <DropdownMenuItem>
-                                    View Receipt
-                                  </DropdownMenuItem>
-                                </DropdownMenuContent>
-                              </DropdownMenu>
-                            </TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  </div>
-                )}
+                            onCheckedChange={handleSelectAll}
+                          />
+                        </TableHead>
+                        <TableHead>
+                          <SortableHeader tKey="id" label="Transaction ID" />
+                        </TableHead>
+                        <TableHead>
+                          <SortableHeader
+                            tKey="orderId"
+                            label="Table/Order ID"
+                          />
+                        </TableHead>
+                        <TableHead>
+                          <SortableHeader tKey="timestamp" label="Timestamp" />
+                        </TableHead>
+                        <TableHead className="text-right">
+                          <SortableHeader
+                            tKey="totalAmount"
+                            label="Total Amount"
+                          />
+                        </TableHead>
+                        <TableHead className="text-right">
+                          <SortableHeader
+                            tKey="paidAmount"
+                            label="Paid Amount"
+                          />
+                        </TableHead>
+                        <TableHead className="text-right">
+                          <SortableHeader
+                            tKey="outstandingAmount"
+                            label="Outstanding"
+                          />
+                        </TableHead>
+                        <TableHead>
+                          <SortableHeader
+                            tKey="paymentStatus"
+                            label="Payment Status"
+                          />
+                        </TableHead>
+                        <TableHead>
+                          <SortableHeader
+                            tKey="paymentMethod"
+                            label="Payment Method"
+                          />
+                        </TableHead>
+                        <TableHead className="text-right">
+                          <SortableHeader tKey="payers" label="# of Payers" />
+                        </TableHead>
+                        <TableHead>
+                          <span className="sr-only">Actions</span>
+                        </TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {paginatedTransactions.map((t) => (
+                        <TableRow
+                          key={t.id}
+                          data-state={
+                            selectedRows.includes(t.id) ? 'selected' : undefined
+                          }
+                        >
+                          <TableCell className="px-4">
+                            <Checkbox
+                              checked={selectedRows.includes(t.id)}
+                              onCheckedChange={() => handleRowSelect(t.id)}
+                            />
+                          </TableCell>
+                          <TableCell className="font-medium">{t.id}</TableCell>
+                          <TableCell>{t.orderId}</TableCell>
+                          <TableCell>
+                            {new Date(t.timestamp).toLocaleString()}
+                          </TableCell>
+                          <TableCell className="text-right font-mono">
+                            ${t.totalAmount.toFixed(2)}
+                          </TableCell>
+                          <TableCell className="text-right font-mono text-green-600">
+                            ${t.paidAmount.toFixed(2)}
+                          </TableCell>
+                          <TableCell className="text-right font-mono text-red-600">
+                            ${t.outstandingAmount.toFixed(2)}
+                          </TableCell>
+                          <TableCell>
+                            <Badge
+                              variant={getStatusBadgeVariant(t.paymentStatus)}
+                            >
+                              {t.paymentStatus}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>{t.paymentMethod}</TableCell>
+                          <TableCell className="text-right">
+                            {t.payers}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button size="icon" variant="ghost">
+                                  <MoreHorizontal />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent>
+                                <DropdownMenuItem>View Order</DropdownMenuItem>
+                                <DropdownMenuItem>
+                                  View Receipt
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
               </CardContent>
-              {view === 'list' && (
-                <CardFooter className="flex items-center justify-between">
-                  <div className="text-xs text-muted-foreground">
-                    Showing{' '}
-                    <strong>
-                      {filteredAndSortedTransactions.length > 0
-                        ? (currentPage - 1) * itemsPerPage + 1
-                        : 0}
-                    </strong>{' '}
-                    to{' '}
-                    <strong>
-                      {Math.min(
-                        currentPage * itemsPerPage,
-                        filteredAndSortedTransactions.length
-                      )}
-                    </strong>{' '}
-                    of <strong>{filteredAndSortedTransactions.length}</strong>{' '}
-                    transactions
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
-                      disabled={currentPage === 1}
-                    >
-                      Previous
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() =>
-                        setCurrentPage((p) => Math.min(p + 1, totalPages))
-                      }
-                      disabled={currentPage >= totalPages}
-                    >
-                      Next
-                    </Button>
-                  </div>
-                </CardFooter>
-              )}
+              <CardFooter className="flex items-center justify-between">
+                <div className="text-xs text-muted-foreground">
+                  Showing{' '}
+                  <strong>
+                    {filteredAndSortedTransactions.length > 0
+                      ? (currentPage - 1) * itemsPerPage + 1
+                      : 0}
+                  </strong>{' '}
+                  to{' '}
+                  <strong>
+                    {Math.min(
+                      currentPage * itemsPerPage,
+                      filteredAndSortedTransactions.length
+                    )}
+                  </strong>{' '}
+                  of <strong>{filteredAndSortedTransactions.length}</strong>{' '}
+                  transactions
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
+                    disabled={currentPage === 1}
+                  >
+                    Previous
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() =>
+                      setCurrentPage((p) => Math.min(p + 1, totalPages))
+                    }
+                    disabled={currentPage >= totalPages}
+                  >
+                    Next
+                  </Button>
+                </div>
+              </CardFooter>
             </Card>
           </TabsContent>
+
           <TabsContent value="split-bills" className="mt-4 space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <Card>
@@ -1117,6 +1183,46 @@ export default function PaymentsReportPage() {
                 </CardContent>
               </Card>
             </div>
+            
+            <Card>
+              <CardHeader>
+                <CardTitle>Split Method Distribution</CardTitle>
+                <CardDescription>
+                  How customers are splitting their bills.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ChartContainer
+                  config={chartConfig}
+                  className="h-[300px] w-full"
+                >
+                  <BarChart
+                    data={splitMethodChartData}
+                    layout="vertical"
+                    margin={{ left: 20 }}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" horizontal={false} />
+                    <YAxis
+                      dataKey="name"
+                      type="category"
+                      tickLine={false}
+                      axisLine={false}
+                    />
+                    <XAxis type="number" hide />
+                    <Tooltip
+                      cursor={{ fill: 'hsl(var(--muted))' }}
+                      content={<ChartTooltipContent indicator="dot" />}
+                    />
+                    <Bar
+                      dataKey="count"
+                      fill="var(--color-count)"
+                      radius={[0, 4, 4, 0]}
+                    />
+                  </BarChart>
+                </ChartContainer>
+              </CardContent>
+            </Card>
+
             <Card>
               <CardHeader className="flex flex-row items-center justify-between">
                 <div>
@@ -1125,8 +1231,13 @@ export default function PaymentsReportPage() {
                     Analysis of orders with split payments.
                   </CardDescription>
                 </div>
-                 <div className="flex items-center gap-4">
-                  <Select value={filters.splitMethod} onValueChange={(value) => handleFilterChange('splitMethod', value)}>
+                <div className="flex items-center gap-4">
+                  <Select
+                    value={filters.splitMethod}
+                    onValueChange={(value) =>
+                      handleFilterChange('splitMethod', value)
+                    }
+                  >
                     <SelectTrigger className="w-[180px]">
                       <SelectValue placeholder="Split Method" />
                     </SelectTrigger>
@@ -1137,7 +1248,11 @@ export default function PaymentsReportPage() {
                       <SelectItem value="Custom">Custom</SelectItem>
                     </SelectContent>
                   </Select>
-                  <Button variant="ghost" size="sm" onClick={() => resetFiltersForTab('split-bills')}>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => resetFiltersForTab('split-bills')}
+                  >
                     <RotateCcw className="mr-2 h-4 w-4" /> Reset
                   </Button>
                 </div>
@@ -1158,7 +1273,8 @@ export default function PaymentsReportPage() {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {splitTransactions.slice(0, 5).map((t) => (
+                      {splitTransactions.slice(0, 5).map((t) => {
+                        return (
                         <TableRow key={t.id}>
                           <TableCell className="font-medium">
                             {t.orderId}
@@ -1179,7 +1295,7 @@ export default function PaymentsReportPage() {
                             </Badge>
                           </TableCell>
                         </TableRow>
-                      ))}
+                        )})}
                     </TableBody>
                   </Table>
                   {splitTransactions.length === 0 && (
@@ -1192,41 +1308,66 @@ export default function PaymentsReportPage() {
             </Card>
           </TabsContent>
           <TabsContent value="outstanding" className="mt-4 space-y-4">
-             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <Card>
-                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardDescription>Total Outstanding</CardDescription>
-                    <DollarSign className="h-4 w-4 text-muted-foreground" />
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-3xl font-bold text-red-500">
-                      ${outstandingKpis.totalOutstanding.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                    </div>
-                  </CardContent>
-                </Card>
-                <Card>
-                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardDescription>Outstanding Orders</CardDescription>
-                    <FileWarning className="h-4 w-4 text-muted-foreground" />
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-3xl font-bold">
-                      {outstandingKpis.outstandingCount}
-                    </div>
-                  </CardContent>
-                </Card>
-                <Card>
-                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardDescription>Avg. Days Outstanding</CardDescription>
-                    <CalendarDays className="h-4 w-4 text-muted-foreground" />
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-3xl font-bold">
-                      {outstandingKpis.avgAge.toFixed(1)}
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardDescription>Total Outstanding</CardDescription>
+                  <DollarSign className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-3xl font-bold text-red-500">
+                    $
+                    {outstandingKpis.totalOutstanding.toLocaleString('en-US', {
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2,
+                    })}
+                  </div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardDescription>Outstanding Orders</CardDescription>
+                  <FileWarning className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-3xl font-bold">
+                    {outstandingKpis.outstandingCount}
+                  </div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardDescription>Avg. Days Outstanding</CardDescription>
+                  <CalendarDays className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-3xl font-bold">
+                    {outstandingKpis.avgAge.toFixed(1)}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+            
+             <Card>
+                <CardHeader>
+                    <CardTitle>Outstanding Balance by Status</CardTitle>
+                    <CardDescription>
+                        A breakdown of remaining balances by payment status.
+                    </CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <ChartContainer config={chartConfig} className="h-[300px] w-full">
+                         <BarChart data={outstandingByStatusChartData}>
+                            <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                            <XAxis dataKey="name" tickLine={false} axisLine={false} tickMargin={8} fontSize={12} />
+                            <YAxis tickFormatter={(value) => `$${value}`} tickLine={false} axisLine={false} fontSize={12} />
+                            <Tooltip cursor={{ fill: "hsl(var(--muted))" }} content={<ChartTooltipContent indicator="dot" />} />
+                            <Bar dataKey="total" fill="var(--color-total)" radius={[4, 4, 0, 0]} />
+                        </BarChart>
+                    </ChartContainer>
+                </CardContent>
+             </Card>
+
             <Card>
               <CardHeader className="flex flex-row items-center justify-between">
                 <div>
@@ -1236,8 +1377,13 @@ export default function PaymentsReportPage() {
                     collections.
                   </CardDescription>
                 </div>
-                 <div className="flex items-center gap-4">
-                  <Select value={filters.closeType} onValueChange={(value) => handleFilterChange('closeType', value)}>
+                <div className="flex items-center gap-4">
+                  <Select
+                    value={filters.closeType}
+                    onValueChange={(value) =>
+                      handleFilterChange('closeType', value)
+                    }
+                  >
                     <SelectTrigger className="w-[180px]">
                       <SelectValue placeholder="Close Type" />
                     </SelectTrigger>
@@ -1247,7 +1393,11 @@ export default function PaymentsReportPage() {
                       <SelectItem value="Manual">Manual</SelectItem>
                     </SelectContent>
                   </Select>
-                  <Button variant="ghost" size="sm" onClick={() => resetFiltersForTab('outstanding')}>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => resetFiltersForTab('outstanding')}
+                  >
                     <RotateCcw className="mr-2 h-4 w-4" /> Reset
                   </Button>
                 </div>
@@ -1319,57 +1469,118 @@ export default function PaymentsReportPage() {
             </Card>
           </TabsContent>
           <TabsContent value="tips" className="mt-4 space-y-4">
-             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <Card>
-                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardDescription>Total Tips Collected</CardDescription>
-                    <HandCoins className="h-4 w-4 text-muted-foreground" />
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-3xl font-bold text-green-600">
-                      ${tipsKpis.totalGrossTips.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                    </div>
-                  </CardContent>
-                </Card>
-                <Card>
-                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardDescription>Tip Adoption Rate</CardDescription>
-                    <CirclePercent className="h-4 w-4 text-muted-foreground" />
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-3xl font-bold">
-                      {tipsKpis.tipAdoptionRate.toFixed(1)}%
-                    </div>
-                  </CardContent>
-                </Card>
-                <Card>
-                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardDescription>Average Tip %</CardDescription>
-                    <TrendingUp className="h-4 w-4 text-muted-foreground" />
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-3xl font-bold">
-                      {tipsKpis.avgTipPercentage.toFixed(1)}%
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardDescription>Total Tips Collected</CardDescription>
+                  <HandCoins className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-3xl font-bold text-green-600">
+                    $
+                    {tipsKpis.totalGrossTips.toLocaleString('en-US', {
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2,
+                    })}
+                  </div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardDescription>Tip Adoption Rate</CardDescription>
+                  <CirclePercent className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-3xl font-bold">
+                    {tipsKpis.tipAdoptionRate.toFixed(1)}%
+                  </div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardDescription>Average Tip %</CardDescription>
+                  <TrendingUp className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-3xl font-bold">
+                    {tipsKpis.avgTipPercentage.toFixed(1)}%
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Top Tips by Staff</CardTitle>
+                <CardDescription>
+                  Total tips collected by each staff member.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ChartContainer
+                  config={chartConfig}
+                  className="h-[300px] w-full"
+                >
+                  <BarChart
+                    data={tipsByStaffChartData}
+                    layout="vertical"
+                    margin={{ left: 20 }}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" horizontal={false} />
+                    <YAxis
+                      dataKey="name"
+                      type="category"
+                      tickLine={false}
+                      axisLine={false}
+                    />
+                    <XAxis
+                      type="number"
+                      tickFormatter={(value) => `$${value}`}
+                      hide={false}
+                    />
+                    <Tooltip
+                      cursor={{ fill: 'hsl(var(--muted))' }}
+                      content={<ChartTooltipContent indicator="dot" />}
+                    />
+                    <Bar
+                      dataKey="total"
+                      fill="var(--color-total)"
+                      radius={[0, 4, 4, 0]}
+                    />
+                  </BarChart>
+                </ChartContainer>
+              </CardContent>
+            </Card>
+
             <Card>
               <CardHeader className="flex flex-row items-center justify-between">
                 <div>
                   <CardTitle>Tips &amp; Service Charges</CardTitle>
                 </div>
-                 <div className="flex items-center gap-4">
-                  <Select value={filters.staffName} onValueChange={(value) => handleFilterChange('staffName', value)}>
+                <div className="flex items-center gap-4">
+                  <Select
+                    value={filters.staffName}
+                    onValueChange={(value) =>
+                      handleFilterChange('staffName', value)
+                    }
+                  >
                     <SelectTrigger className="w-[180px]">
                       <SelectValue placeholder="Filter by Staff" />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">All Staff</SelectItem>
-                      {staffNames.map(name => <SelectItem key={name} value={name}>{name}</SelectItem>)}
+                      {staffNames.map((name) => (
+                        <SelectItem key={name} value={name}>
+                          {name}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
-                  <Button variant="ghost" size="sm" onClick={() => resetFiltersForTab('tips')}>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => resetFiltersForTab('tips')}
+                  >
                     <RotateCcw className="mr-2 h-4 w-4" /> Reset
                   </Button>
                 </div>
