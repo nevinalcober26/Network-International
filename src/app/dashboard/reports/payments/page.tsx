@@ -51,7 +51,6 @@ import { Label } from '@/components/ui/label';
 import { DashboardHeader } from '@/components/dashboard/header';
 import { cn } from '@/lib/utils';
 import { OrdersPageSkeleton } from '@/components/dashboard/skeletons';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   Bar,
   BarChart,
@@ -239,14 +238,6 @@ const chartConfig = {
     label: 'Sales',
     color: 'hsl(var(--chart-1))',
   },
-  count: {
-    label: 'Count',
-    color: 'hsl(var(--chart-2))',
-  },
-  total: {
-    label: 'Total',
-    color: 'hsl(var(--chart-3))',
-  },
 };
 
 const initialFilterState = {
@@ -258,9 +249,6 @@ const initialFilterState = {
   paymentStatus: 'all',
   paymentMethod: 'all',
   table: 'all',
-  splitMethod: 'all',
-  closeType: 'all',
-  staffName: 'all',
 };
 
 const ExportDialog = ({
@@ -326,7 +314,6 @@ export default function PaymentsReportPage() {
   const [filters, setFilters] = useState(initialFilterState);
   const [isExportDialogOpen, setIsExportDialogOpen] = useState(false);
   const { toast } = useToast();
-  const [activeTab, setActiveTab] = useState('summary');
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
 
@@ -405,25 +392,13 @@ export default function PaymentsReportPage() {
         transaction.paymentMethod === filters.paymentMethod;
       const matchesTable =
         filters.table === 'all' || transaction.table === filters.table;
-      const matchesSplitMethod =
-        filters.splitMethod === 'all' ||
-        transaction.splitMethod === filters.splitMethod;
-      const matchesCloseType =
-        filters.closeType === 'all' ||
-        transaction.closeType === filters.closeType;
-      const matchesStaffName =
-        filters.staffName === 'all' ||
-        transaction.staffName === filters.staffName;
 
       return (
         matchesDate &&
         matchesBranch &&
         matchesStatus &&
         matchesMethod &&
-        matchesTable &&
-        matchesSplitMethod &&
-        matchesCloseType &&
-        matchesStaffName
+        matchesTable
       );
     });
 
@@ -543,199 +518,6 @@ export default function PaymentsReportPage() {
       .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
   }, [filteredAndSortedTransactions, filters.dateRange]);
 
-  const splitTransactions = useMemo(
-    () =>
-      filteredAndSortedTransactions.filter(
-        (t) => t.payers > 1 || t.splitMethod
-      ),
-    [filteredAndSortedTransactions]
-  );
-  
-  const splitKpiCards = useMemo(() => {
-      const splitAdoptionRate =
-        filteredAndSortedTransactions.length > 0
-          ? (splitTransactions.length /
-              filteredAndSortedTransactions.length) *
-            100
-          : 0;
-      const avgPayers =
-        splitTransactions.length > 0
-          ? splitTransactions.reduce((acc, t) => acc + t.payers, 0) /
-            splitTransactions.length
-          : 1;
-
-      const abandonedSplits = splitTransactions.filter(
-            (t) =>
-                t.paymentStatus === 'Unpaid' ||
-                t.paymentStatus === 'Partial'
-        ).length
-      
-      const totalOutstanding = splitTransactions.reduce((acc, t) => acc + t.outstandingAmount, 0)
-
-      return [
-        {
-            title: 'Split Adoption Rate',
-            value: `${splitAdoptionRate.toFixed(1)}%`,
-            icon: CirclePercent
-        },
-        {
-            title: 'Avg. Payers per Split',
-            value: `${avgPayers.toFixed(1)}`,
-            icon: Users
-        },
-        {
-            title: 'Abandoned Splits',
-            value: `${abandonedSplits}`,
-            icon: UserX,
-            isAlert: true
-        },
-        {
-            title: 'Total Outstanding',
-            value: `$${totalOutstanding.toFixed(2)}`,
-            icon: DollarSign
-        }
-      ]
-  }, [filteredAndSortedTransactions, splitTransactions]);
-
-  const splitMethodChartData = useMemo(() => {
-    const data = splitTransactions.reduce(
-      (acc, t) => {
-        const method = t.splitMethod || 'Unknown';
-        acc[method] = (acc[method] || 0) + 1;
-        return acc;
-      },
-      {} as Record<string, number>
-    );
-
-    return Object.entries(data).map(([name, count]) => ({ name, count }));
-  }, [splitTransactions]);
-
-  const outstandingTransactions = useMemo(() => {
-    return filteredAndSortedTransactions.filter(
-      (t) => t.paymentStatus === 'Partial' || t.paymentStatus === 'Unpaid'
-    );
-  }, [filteredAndSortedTransactions]);
-
-  const outstandingKpiCards = useMemo(() => {
-    const totalOutstanding = outstandingTransactions.reduce(
-      (acc, t) => acc + t.outstandingAmount,
-      0
-    );
-    const outstandingCount = outstandingTransactions.length;
-    const totalAge = outstandingTransactions.reduce(
-      (acc, t) => acc + differenceInDays(new Date(), new Date(t.timestamp)),
-      0
-    );
-    const avgAge = outstandingCount > 0 ? totalAge / outstandingCount : 0;
-    return [
-      {
-        title: 'Total Outstanding',
-        value: `$${totalOutstanding.toLocaleString('en-US', {
-          minimumFractionDigits: 2,
-          maximumFractionDigits: 2,
-        })}`,
-        icon: DollarSign,
-        isAlert: true
-      },
-      {
-        title: 'Outstanding Orders',
-        value: `${outstandingCount}`,
-        icon: FileWarning
-      },
-      {
-        title: 'Avg. Days Outstanding',
-        value: `${avgAge.toFixed(1)}`,
-        icon: CalendarDays
-      },
-    ];
-  }, [outstandingTransactions]);
-
-  const outstandingByStatusChartData = useMemo(() => {
-    const data = outstandingTransactions.reduce(
-      (acc, t) => {
-        const status = t.paymentStatus;
-        acc[status] = (acc[status] || 0) + t.outstandingAmount;
-        return acc;
-      },
-      {} as Record<string, number>
-    );
-
-    return Object.entries(data).map(([name, total]) => ({ name, total }));
-  }, [outstandingTransactions]);
-
-  const tipTransactions = useMemo(() => {
-    return filteredAndSortedTransactions.filter(
-      (t) => t.tipAmount && t.tipAmount > 0
-    );
-  }, [filteredAndSortedTransactions]);
-
-  const totalGrossTips = useMemo(() => {
-    return tipTransactions.reduce((acc, t) => acc + (t.tipAmount || 0), 0);
-  }, [tipTransactions]);
-
-    const serviceChargeTransactions = useMemo(() => {
-    return filteredAndSortedTransactions.filter(t => t.serviceChargeAmount && t.serviceChargeAmount > 0);
-  }, [filteredAndSortedTransactions]);
-
-  const totalServiceCharge = useMemo(() => {
-      return serviceChargeTransactions.reduce((acc, t) => acc + (t.serviceChargeAmount || 0), 0);
-  }, [serviceChargeTransactions]);
-
-  const tipsKpiCards = useMemo(() => {
-    const paidTransactionsCount = filteredAndSortedTransactions.filter(
-      (t) => t.paidAmount > 0
-    ).length;
-    const tipAdoptionRate =
-      paidTransactionsCount > 0
-        ? (tipTransactions.length / paidTransactionsCount) * 100
-        : 0;
-
-    const totalBillForTippedTxns = tipTransactions.reduce(
-      (acc, t) => acc + t.totalAmount,
-      0
-    );
-    const avgTipPercentage =
-      totalBillForTippedTxns > 0
-        ? (totalGrossTips / totalBillForTippedTxns) * 100
-        : 0;
-
-    return [
-      {
-        title: 'Total Tips Collected',
-        value: `$${totalGrossTips.toLocaleString('en-US', {
-          minimumFractionDigits: 2,
-          maximumFractionDigits: 2,
-        })}`,
-        icon: HandCoins,
-      },
-      {
-        title: 'Tip Adoption Rate',
-        value: `${tipAdoptionRate.toFixed(1)}%`,
-        icon: CirclePercent
-      },
-      {
-        title: 'Average Tip %',
-        value: `${avgTipPercentage.toFixed(1)}%`,
-        icon: TrendingUp
-      },
-    ];
-  }, [filteredAndSortedTransactions, tipTransactions, totalGrossTips]);
-
-  const tipsByStaffChartData = useMemo(() => {
-    const data = tipTransactions.reduce(
-      (acc, t) => {
-        const staff = t.staffName;
-        acc[staff] = (acc[staff] || 0) + (t.tipAmount || 0);
-        return acc;
-      },
-      {} as Record<string, number>
-    );
-
-    return Object.entries(data)
-      .map(([name, total]) => ({ name, total }))
-      .sort((a, b) => b.total - a.total);
-  }, [tipTransactions]);
-
   const requestSort = (key: keyof Transaction) => {
     let direction: 'ascending' | 'descending' = 'ascending';
     if (
@@ -764,9 +546,6 @@ export default function PaymentsReportPage() {
     if (filters.paymentStatus !== 'all') count++;
     if (filters.paymentMethod !== 'all') count++;
     if (filters.table !== 'all') count++;
-    if (filters.splitMethod !== 'all') count++;
-    if (filters.closeType !== 'all') count++;
-    if (filters.staffName !== 'all') count++;
     return count;
   }, [filters]);
 
@@ -841,10 +620,9 @@ export default function PaymentsReportPage() {
       <main className="p-4 sm:p-6 lg:p-8 space-y-6">
         <div className="flex items-start justify-between">
           <div>
-            <h1 className="text-2xl font-bold">Payments Reports</h1>
+            <h1 className="text-2xl font-bold">Payments Summary</h1>
             <p className="text-muted-foreground">
-              Track and analyze orders, payments, split bills, tips, and
-              outstanding balances.
+              Track and analyze orders, payments, and outstanding balances.
             </p>
           </div>
           <Button variant="outline" onClick={() => setIsExportDialogOpen(true)}>
@@ -852,715 +630,300 @@ export default function PaymentsReportPage() {
             Export
           </Button>
         </div>
-
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-4">
-            <TabsTrigger value="summary">Summary</TabsTrigger>
-            <TabsTrigger value="split-bills">Split Bills</TabsTrigger>
-            <TabsTrigger value="outstanding">Outstanding</TabsTrigger>
-            <TabsTrigger value="tips">Tips &amp; Charges</TabsTrigger>
-          </TabsList>
             
-          <div className="my-4 flex flex-wrap items-center justify-between gap-x-4 gap-y-2 rounded-lg border bg-card p-3">
-            <div className="flex flex-wrap items-center gap-4">
-              <span className="text-sm font-medium">Filters:</span>
-              <DateRangePicker
-                dateRange={filters.dateRange}
-                onDateRangeChange={(range) => handleFilterChange('dateRange', range)}
-              />
-              <Select
-                value={filters.branch}
-                onValueChange={(value) => handleFilterChange('branch', value)}
-              >
-                <SelectTrigger className="w-full sm:w-[180px]">
-                  <SelectValue placeholder="Branch/Venue" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Branches</SelectItem>
-                  <SelectItem value="Ras Al Khaimah">Ras Al Khaimah</SelectItem>
-                  <SelectItem value="Dubai Mall">Dubai Mall</SelectItem>
-                </SelectContent>
-              </Select>
+        <div className="my-4 flex flex-wrap items-center justify-between gap-x-4 gap-y-2 rounded-lg border bg-card p-3">
+          <div className="flex flex-wrap items-center gap-4">
+            <span className="text-sm font-medium">Filters:</span>
+            <DateRangePicker
+              dateRange={filters.dateRange}
+              onDateRangeChange={(range) => handleFilterChange('dateRange', range)}
+            />
+            <Select
+              value={filters.branch}
+              onValueChange={(value) => handleFilterChange('branch', value)}
+            >
+              <SelectTrigger className="w-full sm:w-[180px]">
+                <SelectValue placeholder="Branch/Venue" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Branches</SelectItem>
+                <SelectItem value="Ras Al Khaimah">Ras Al Khaimah</SelectItem>
+                <SelectItem value="Dubai Mall">Dubai Mall</SelectItem>
+              </SelectContent>
+            </Select>
 
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button variant="outline" className="w-full sm:w-auto">
-                    <Filter className="mr-2 h-4 w-4" />
-                    More Filters
-                    {activeSecondaryFilterCount > 0 && (
-                      <Badge variant="secondary" className="ml-2 rounded-full px-1.5 py-0.5 text-xs">
-                        {activeSecondaryFilterCount}
-                      </Badge>
-                    )}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-screen max-w-sm" align="start">
-                  <div className="space-y-4 p-4">
-                    <h4 className="font-medium leading-none">Additional Filters</h4>
-                    <p className="text-sm text-muted-foreground">
-                      Filter the data for the '{activeTab}' tab.
-                    </p>
-                    {activeTab === 'summary' && (
-                        <>
-                            <div className="space-y-2">
-                            <Label htmlFor="status-filter">Payment Status</Label>
-                            <Select
-                                value={filters.paymentStatus}
-                                onValueChange={(value) => handleFilterChange('paymentStatus', value)}
-                            >
-                                <SelectTrigger id="status-filter">
-                                <SelectValue placeholder="Payment Status" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                <SelectItem value="all">All Statuses</SelectItem>
-                                <SelectItem value="Paid">Paid</SelectItem>
-                                <SelectItem value="Partial">Partial</SelectItem>
-                                <SelectItem value="Unpaid">Unpaid</SelectItem>
-                                <SelectItem value="Refunded">Refunded</SelectItem>
-                                </SelectContent>
-                            </Select>
-                            </div>
-                            <div className="space-y-2">
-                            <Label htmlFor="method-filter">Payment Method</Label>
-                            <Select
-                                value={filters.paymentMethod}
-                                onValueChange={(value) => handleFilterChange('paymentMethod', value)}
-                            >
-                                <SelectTrigger id="method-filter">
-                                <SelectValue placeholder="Payment Method" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                <SelectItem value="all">All Methods</SelectItem>
-                                <SelectItem value="Credit Card">Credit Card</SelectItem>
-                                <SelectItem value="Cash">Cash</SelectItem>
-                                <SelectItem value="Online">Online</SelectItem>
-                                </SelectContent>
-                            </Select>
-                            </div>
-                            <div className="space-y-2">
-                            <Label htmlFor="table-filter">Table Number</Label>
-                            <Select
-                                value={filters.table}
-                                onValueChange={(value) => handleFilterChange('table', value)}
-                            >
-                                <SelectTrigger id="table-filter">
-                                <SelectValue placeholder="Table Number" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                <SelectItem value="all">All Tables</SelectItem>
-                                {tableNumbers.map((table) => (
-                                    <SelectItem key={table} value={table}>{table}</SelectItem>
-                                ))}
-                                </SelectContent>
-                            </Select>
-                            </div>
-                        </>
-                    )}
-                    {activeTab === 'split-bills' && (
-                        <div className="space-y-2">
-                            <Label htmlFor="split-filter">Split Method</Label>
-                            <Select
-                            value={filters.splitMethod}
-                            onValueChange={(value) => handleFilterChange('splitMethod', value)}
-                            >
-                            <SelectTrigger id="split-filter">
-                                <SelectValue placeholder="Split Method" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="all">All Split Methods</SelectItem>
-                                <SelectItem value="Equal">Equal</SelectItem>
-                                <SelectItem value="Item-based">Item-based</SelectItem>
-                                <SelectItem value="Custom">Custom</SelectItem>
-                            </SelectContent>
-                            </Select>
-                        </div>
-                    )}
-                    {activeTab === 'outstanding' && (
-                         <div className="space-y-2">
-                            <Label htmlFor="close-type-filter">Close Type</Label>
-                            <Select
-                            value={filters.closeType}
-                            onValueChange={(value) => handleFilterChange('closeType', value)}
-                            >
-                            <SelectTrigger id="close-type-filter">
-                                <SelectValue placeholder="Close Type" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="all">All Close Types</SelectItem>
-                                <SelectItem value="Auto">Auto</SelectItem>
-                                <SelectItem value="Manual">Manual</SelectItem>
-                            </SelectContent>
-                            </Select>
-                        </div>
-                    )}
-                    {activeTab === 'tips' && (
-                        <div className="space-y-2">
-                            <Label htmlFor="staff-filter">Staff Name</Label>
-                            <Select
-                            value={filters.staffName}
-                            onValueChange={(value) => handleFilterChange('staffName', value)}
-                            >
-                            <SelectTrigger id="staff-filter">
-                                <SelectValue placeholder="Filter by Staff" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="all">All Staff</SelectItem>
-                                {staffNames.map((name) => (
-                                <SelectItem key={name} value={name}>{name}</SelectItem>
-                                ))}
-                            </SelectContent>
-                            </Select>
-                        </div>
-                    )}
-                  </div>
-                </PopoverContent>
-              </Popover>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="outline" className="w-full sm:w-auto">
+                  <Filter className="mr-2 h-4 w-4" />
+                  More Filters
+                  {activeSecondaryFilterCount > 0 && (
+                    <Badge variant="secondary" className="ml-2 rounded-full px-1.5 py-0.5 text-xs">
+                      {activeSecondaryFilterCount}
+                    </Badge>
+                  )}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-screen max-w-sm" align="start">
+                <div className="space-y-4 p-4">
+                  <h4 className="font-medium leading-none">Additional Filters</h4>
+                  <p className="text-sm text-muted-foreground">
+                    Filter the data for the summary report.
+                  </p>
+                  <div className="space-y-2">
+                      <Label htmlFor="status-filter">Payment Status</Label>
+                      <Select
+                          value={filters.paymentStatus}
+                          onValueChange={(value) => handleFilterChange('paymentStatus', value)}
+                      >
+                          <SelectTrigger id="status-filter">
+                          <SelectValue placeholder="Payment Status" />
+                          </SelectTrigger>
+                          <SelectContent>
+                          <SelectItem value="all">All Statuses</SelectItem>
+                          <SelectItem value="Paid">Paid</SelectItem>
+                          <SelectItem value="Partial">Partial</SelectItem>
+                          <SelectItem value="Unpaid">Unpaid</SelectItem>
+                          <SelectItem value="Refunded">Refunded</SelectItem>
+                          </SelectContent>
+                      </Select>
+                      </div>
+                      <div className="space-y-2">
+                      <Label htmlFor="method-filter">Payment Method</Label>
+                      <Select
+                          value={filters.paymentMethod}
+                          onValueChange={(value) => handleFilterChange('paymentMethod', value)}
+                      >
+                          <SelectTrigger id="method-filter">
+                          <SelectValue placeholder="Payment Method" />
+                          </SelectTrigger>
+                          <SelectContent>
+                          <SelectItem value="all">All Methods</SelectItem>
+                          <SelectItem value="Credit Card">Credit Card</SelectItem>
+                          <SelectItem value="Cash">Cash</SelectItem>
+                          <SelectItem value="Online">Online</SelectItem>
+                          </SelectContent>
+                      </Select>
+                      </div>
+                      <div className="space-y-2">
+                      <Label htmlFor="table-filter">Table Number</Label>
+                      <Select
+                          value={filters.table}
+                          onValueChange={(value) => handleFilterChange('table', value)}
+                      >
+                          <SelectTrigger id="table-filter">
+                          <SelectValue placeholder="Table Number" />
+                          </SelectTrigger>
+                          <SelectContent>
+                          <SelectItem value="all">All Tables</SelectItem>
+                          {tableNumbers.map((table) => (
+                              <SelectItem key={table} value={table}>{table}</SelectItem>
+                          ))}
+                          </SelectContent>
+                      </Select>
+                    </div>
+                </div>
+              </PopoverContent>
+            </Popover>
 
 
-            </div>
-            <Button variant="ghost" size="sm" onClick={resetAllFilters}>
-              <RotateCcw className="mr-2 h-4 w-4" />
-              Reset All Filters
-            </Button>
+          </div>
+          <Button variant="ghost" size="sm" onClick={resetAllFilters}>
+            <RotateCcw className="mr-2 h-4 w-4" />
+            Reset All Filters
+          </Button>
+        </div>
+
+        <div className="space-y-6 mt-4">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+            {summaryKpiCards.map((card) => (
+              <KpiCard key={card.title} {...card}/>
+            ))}
           </div>
 
-          <TabsContent value="summary" className="space-y-6 mt-4">
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-              {summaryKpiCards.map((card) => (
-                <KpiCard key={card.title} {...card}/>
-              ))}
-            </div>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Sales Overview</CardTitle>
-                <CardDescription>
-                  A summary of your sales performance based on current filters.
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <ChartContainer
-                  config={chartConfig}
-                  className="h-[400px] w-full"
+          <Card>
+            <CardHeader>
+              <CardTitle>Sales Overview</CardTitle>
+              <CardDescription>
+                A summary of your sales performance based on current filters.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ChartContainer
+                config={chartConfig}
+                className="h-[400px] w-full"
+              >
+                <BarChart
+                  data={summaryChartData}
+                  margin={{
+                    top: 10,
+                    right: 30,
+                    left: 0,
+                    bottom: 0,
+                  }}
                 >
-                  <BarChart
-                    data={summaryChartData}
-                    margin={{
-                      top: 10,
-                      right: 30,
-                      left: 0,
-                      bottom: 0,
-                    }}
-                  >
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                    <XAxis
-                      dataKey="date"
-                      tickLine={false}
-                      axisLine={false}
-                      tickMargin={8}
-                      fontSize={12}
-                    />
-                    <YAxis
-                      tickFormatter={(value) => `$${Number(value) / 1000}k`}
-                      tickLine={false}
-                      axisLine={false}
-                      fontSize={12}
-                      domain={[0, 'dataMax + 1000']}
-                    />
-                    <Tooltip
-                      cursor={{ fill: 'hsl(var(--muted))' }}
-                      content={<ChartTooltipContent indicator="dot" />}
-                    />
-                    <Bar
-                      dataKey="sales"
-                      fill="var(--color-sales)"
-                      radius={[4, 4, 0, 0]}
-                    />
-                  </BarChart>
-                </ChartContainer>
-              </CardContent>
-            </Card>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                  <XAxis
+                    dataKey="date"
+                    tickLine={false}
+                    axisLine={false}
+                    tickMargin={8}
+                    fontSize={12}
+                  />
+                  <YAxis
+                    tickFormatter={(value) => `$${Number(value) / 1000}k`}
+                    tickLine={false}
+                    axisLine={false}
+                    fontSize={12}
+                    domain={[0, 'dataMax + 1000']}
+                  />
+                  <Tooltip
+                    cursor={{ fill: 'hsl(var(--muted))' }}
+                    content={<ChartTooltipContent indicator="dot" />}
+                  />
+                  <Bar
+                    dataKey="sales"
+                    fill="var(--color-sales)"
+                    radius={[4, 4, 0, 0]}
+                  />
+                </BarChart>
+              </ChartContainer>
+            </CardContent>
+          </Card>
 
-            <Card>
-              <CardHeader>
-                    <CardTitle>Transaction Summary</CardTitle>
-                    <CardDescription>
-                      A detailed list of all transactions within the filtered
-                      range.
-                    </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="relative w-full overflow-auto">
-                  <Table>
-                    <TableHeader>
-                      <TableRow><TableHead>
-                          <SortableHeader tKey="id" label="Transaction ID" />
-                        </TableHead>
-                        <TableHead>
-                          <SortableHeader
-                            tKey="orderId"
-                            label="Table/Order ID"
-                          />
-                        </TableHead>
-                        <TableHead>
-                          <SortableHeader tKey="timestamp" label="Timestamp" />
-                        </TableHead>
-                        <TableHead className="text-right">
-                          <SortableHeader
-                            tKey="totalAmount"
-                            label="Total Amount"
-                          />
-                        </TableHead>
-                        <TableHead className="text-right">
-                          <SortableHeader
-                            tKey="paidAmount"
-                            label="Paid Amount"
-                          />
-                        </TableHead>
-                        <TableHead className="text-right">
-                          <SortableHeader
-                            tKey="outstandingAmount"
-                            label="Outstanding"
-                          />
-                        </TableHead>
-                        <TableHead>
-                          <SortableHeader
-                            tKey="paymentStatus"
-                            label="Payment Status"
-                          />
-                        </TableHead>
-                        <TableHead>
-                          <SortableHeader
-                            tKey="paymentMethod"
-                            label="Payment Method"
-                          />
-                        </TableHead>
-                        <TableHead className="text-right">
-                          <SortableHeader tKey="payers" label="# of Payers" />
-                        </TableHead></TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {paginatedTransactions.map((t) => (
-                        <TableRow key={t.id} onClick={() => handleViewDetails(t)} className="cursor-pointer">
-                           <><TableCell className="font-medium">{t.id}</TableCell><TableCell>{t.orderId}</TableCell><TableCell>
-                            {new Date(t.timestamp).toLocaleString()}
-                          </TableCell><TableCell className="text-right font-mono">
-                            ${t.totalAmount.toFixed(2)}
-                          </TableCell><TableCell className="text-right font-mono text-green-600">
-                            ${t.paidAmount.toFixed(2)}
-                          </TableCell><TableCell className="text-right font-mono text-red-600">
-                            ${t.outstandingAmount.toFixed(2)}
-                          </TableCell><TableCell>
-                            <Badge
-                              variant={getStatusBadgeVariant(t.paymentStatus)}
-                            >
-                              {t.paymentStatus}
-                            </Badge>
-                          </TableCell><TableCell>{t.paymentMethod}</TableCell><TableCell className="text-right">
-                            {t.payers}
-                          </TableCell></>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </div>
-              </CardContent>
-              <CardFooter className="flex items-center justify-between">
-                <div className="text-xs text-muted-foreground">
-                  Showing{' '}
-                  <strong>
-                    {filteredAndSortedTransactions.length > 0
-                      ? (currentPage - 1) * itemsPerPage + 1
-                      : 0}
-                  </strong>{' '}
-                  to{' '}
-                  <strong>
-                    {Math.min(
-                      currentPage * itemsPerPage,
-                      filteredAndSortedTransactions.length
-                    )}
-                  </strong>{' '}
-                  of <strong>{filteredAndSortedTransactions.length}</strong>{' '}
-                  transactions
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
-                    disabled={currentPage === 1}
-                  >
-                    Previous
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() =>
-                      setCurrentPage((p) => Math.min(p + 1, totalPages))
-                    }
-                    disabled={currentPage >= totalPages}
-                  >
-                    Next
-                  </Button>
-                </div>
-              </CardFooter>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="split-bills" className="mt-4 space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              {splitKpiCards.map((card) => (
-                <KpiCard key={card.title} {...card}/>
-              ))}
-            </div>
-            
-            <Card>
-              <CardHeader>
-                <CardTitle>Split Method Distribution</CardTitle>
-                <CardDescription>
-                  How customers are splitting their bills.
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <ChartContainer
-                  config={chartConfig}
-                  className="h-[300px] w-full"
-                >
-                  <BarChart
-                    data={splitMethodChartData}
-                    layout="vertical"
-                    margin={{ left: 20 }}
-                  >
-                    <CartesianGrid strokeDasharray="3 3" horizontal={false} />
-                    <YAxis
-                      dataKey="name"
-                      type="category"
-                      tickLine={false}
-                      axisLine={false}
-                    />
-                    <XAxis type="number" hide />
-                    <Tooltip
-                      cursor={{ fill: 'hsl(var(--muted))' }}
-                      content={<ChartTooltipContent indicator="dot" />}
-                    />
-                    <Bar
-                      dataKey="count"
-                      fill="var(--color-count)"
-                      radius={[0, 4, 4, 0]}
-                    />
-                  </BarChart>
-                </ChartContainer>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                  <CardTitle>Split Bill Analytics</CardTitle>
+          <Card>
+            <CardHeader>
+                  <CardTitle>Transaction Summary</CardTitle>
                   <CardDescription>
-                    Analysis of orders with split payments.
+                    A detailed list of all transactions within the filtered
+                    range.
                   </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="relative w-full overflow-auto">
-                  <Table>
-                    <TableHeader>
-                      <TableRow><TableHead>Order ID</TableHead>
-                        <TableHead>Total Bill</TableHead>
-                        <TableHead className="text-center">
-                          # of Payers
-                        </TableHead>
-                        <TableHead>Split Method</TableHead>
-                        <TableHead>Time to Settle</TableHead>
-                        <TableHead>Status</TableHead></TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {splitTransactions.slice(0, 5).map((t) => (
-                        <TableRow key={t.id} onClick={() => handleViewDetails(t)} className="cursor-pointer">
-                           <>
-                           <TableCell className="font-medium">
-                            {t.orderId}
-                          </TableCell>
-                          <TableCell className="font-mono">
-                            ${t.totalAmount.toFixed(2)}
-                          </TableCell>
-                          <TableCell className="text-center">
-                            {t.payers}
-                          </TableCell>
-                          <TableCell>{t.splitMethod || 'N/A'}</TableCell>
-                          <TableCell>8m 15s</TableCell>
-                          <TableCell>
-                            <Badge
-                              variant={getStatusBadgeVariant(t.paymentStatus)}
-                            >
-                              {t.paymentStatus}
-                            </Badge>
-                          </TableCell>
-                           </>
-                        </TableRow>
-                        ))}
-                    </TableBody>
-                  </Table>
-                  {splitTransactions.length === 0 && (
-                    <p className="text-center text-muted-foreground py-8">
-                      No split bill transactions match the current filters.
-                    </p>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-          <TabsContent value="outstanding" className="mt-4 space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {outstandingKpiCards.map((card) => (
-                <KpiCard key={card.title} {...card}/>
-              ))}
-            </div>
-            
-             <Card>
-                <CardHeader>
-                    <CardTitle>Outstanding Balance by Status</CardTitle>
-                    <CardDescription>
-                        A breakdown of remaining balances by payment status.
-                    </CardDescription>
-                </CardHeader>
-                <CardContent>
-                    <ChartContainer config={chartConfig} className="h-[300px] w-full">
-                         <BarChart data={outstandingByStatusChartData}>
-                            <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                            <XAxis dataKey="name" tickLine={false} axisLine={false} tickMargin={8} fontSize={12} />
-                            <YAxis tickFormatter={(value) => `$${value}`} tickLine={false} axisLine={false} fontSize={12} />
-                            <Tooltip cursor={{ fill: "hsl(var(--muted))" }} content={<ChartTooltipContent indicator="dot" />} />
-                            <Bar dataKey="total" fill="var(--color-total)" radius={[4, 4, 0, 0]} />
-                        </BarChart>
-                    </ChartContainer>
-                </CardContent>
-             </Card>
-
-            <Card>
-              <CardHeader>
-                  <CardTitle>Outstanding / Partial Payments</CardTitle>
-                  <CardDescription>
-                    Monitor orders with pending payments to manage risk and
-                    collections.
-                  </CardDescription>
-              </CardHeader>
-              <CardContent>
+            </CardHeader>
+            <CardContent>
+              <div className="relative w-full overflow-auto">
                 <Table>
                   <TableHeader>
-                    <TableRow><TableHead>Order ID</TableHead>
-                      <TableHead>Total</TableHead>
-                      <TableHead>Paid</TableHead>
-                      <TableHead>Remaining</TableHead>
-                      <TableHead>Days Open</TableHead>
-                      <TableHead>Last Attempt</TableHead>
-                      <TableHead>Close Type</TableHead>
+                    <TableRow><TableHead>
+                        <SortableHeader tKey="id" label="Transaction ID" />
+                      </TableHead>
                       <TableHead>
-                        <span className="sr-only">Warning</span>
+                        <SortableHeader
+                          tKey="orderId"
+                          label="Table/Order ID"
+                        />
+                      </TableHead>
+                      <TableHead>
+                        <SortableHeader tKey="timestamp" label="Timestamp" />
+                      </TableHead>
+                      <TableHead className="text-right">
+                        <SortableHeader
+                          tKey="totalAmount"
+                          label="Total Amount"
+                        />
+                      </TableHead>
+                      <TableHead className="text-right">
+                        <SortableHeader
+                          tKey="paidAmount"
+                          label="Paid Amount"
+                        />
+                      </TableHead>
+                      <TableHead className="text-right">
+                        <SortableHeader
+                          tKey="outstandingAmount"
+                          label="Outstanding"
+                        />
+                      </TableHead>
+                      <TableHead>
+                        <SortableHeader
+                          tKey="paymentStatus"
+                          label="Payment Status"
+                        />
+                      </TableHead>
+                      <TableHead>
+                        <SortableHeader
+                          tKey="paymentMethod"
+                          label="Payment Method"
+                        />
+                      </TableHead>
+                      <TableHead className="text-right">
+                        <SortableHeader tKey="payers" label="# of Payers" />
                       </TableHead></TableRow>
                   </TableHeader>
                   <TableBody>
-                    {outstandingTransactions.slice(0, 5).map((t) => {
-                      const daysOutstanding = differenceInDays(
-                        new Date(),
-                        new Date(t.timestamp)
-                      );
-                      const isHighRisk = t.outstandingAmount > 50;
-                      return (
-                        <TableRow
-                          key={t.id}
-                          className={cn(
-                            "cursor-pointer",
-                            isHighRisk &&
-                              'bg-red-50/50 border-l-4 border-red-500'
-                          )}
-                          onClick={() => handleViewDetails(t)}
-                        ><>
-                          <TableCell className="font-medium">
-                            {t.orderId}
-                          </TableCell>
-                          <TableCell>${t.totalAmount.toFixed(2)}</TableCell>
-                          <TableCell className="text-green-600">
-                            ${t.paidAmount.toFixed(2)}
-                          </TableCell>
-                          <TableCell className="font-semibold text-red-600">
-                            ${t.outstandingAmount.toFixed(2)}
-                          </TableCell>
-                          <TableCell>{daysOutstanding} day(s)</TableCell>
+                    {paginatedTransactions.map((t) => (
+                      <TableRow key={t.id} onClick={() => handleViewDetails(t)} className="cursor-pointer">
+                          <TableCell className="font-medium">{t.id}</TableCell>
+                          <TableCell>{t.orderId}</TableCell>
                           <TableCell>
-                            {new Date(
-                              t.lastPaymentAttempt
-                            ).toLocaleDateString()}
-                          </TableCell>
-                          <TableCell>{t.closeType}</TableCell>
+                          {new Date(t.timestamp).toLocaleString()}
+                        </TableCell>
+                          <TableCell className="text-right font-mono">
+                          ${t.totalAmount.toFixed(2)}
+                        </TableCell>
+                          <TableCell className="text-right font-mono text-green-600">
+                          ${t.paidAmount.toFixed(2)}
+                        </TableCell>
+                          <TableCell className="text-right font-mono text-red-600">
+                          ${t.outstandingAmount.toFixed(2)}
+                        </TableCell>
+                          <TableCell>
+                          <Badge
+                            variant={getStatusBadgeVariant(t.paymentStatus)}
+                          >
+                            {t.paymentStatus}
+                          </Badge>
+                        </TableCell>
+                          <TableCell>{t.paymentMethod}</TableCell>
                           <TableCell className="text-right">
-                            {isHighRisk && (
-                              <AlertTriangle className="h-5 w-5 text-red-500" />
-                            )}
-                          </TableCell>
-                          </></TableRow>
-                      );
-                    })}
+                          {t.payers}
+                        </TableCell>
+                      </TableRow>
+                    ))}
                   </TableBody>
                 </Table>
-                {outstandingTransactions.length === 0 && (
-                  <p className="text-center text-muted-foreground py-8">
-                    No outstanding payments match the current filters.
-                  </p>
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
-          <TabsContent value="tips" className="mt-4 space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-             {tipsKpiCards.map((card) => (
-                <KpiCard key={card.title} {...card}/>
-              ))}
-            </div>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Top Tips by Staff</CardTitle>
-                <CardDescription>
-                  Total tips collected by each staff member.
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <ChartContainer
-                  config={chartConfig}
-                  className="h-[300px] w-full"
+              </div>
+            </CardContent>
+            <CardFooter className="flex items-center justify-between">
+              <div className="text-xs text-muted-foreground">
+                Showing{' '}
+                <strong>
+                  {filteredAndSortedTransactions.length > 0
+                    ? (currentPage - 1) * itemsPerPage + 1
+                    : 0}
+                </strong>{' '}
+                to{' '}
+                <strong>
+                  {Math.min(
+                    currentPage * itemsPerPage,
+                    filteredAndSortedTransactions.length
+                  )}
+                </strong>{' '}
+                of <strong>{filteredAndSortedTransactions.length}</strong>{' '}
+                transactions
+              </div>
+              <div className="flex items-center space-x-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
+                  disabled={currentPage === 1}
                 >
-                  <BarChart
-                    data={tipsByStaffChartData}
-                    layout="vertical"
-                    margin={{ left: 20 }}
-                  >
-                    <CartesianGrid strokeDasharray="3 3" horizontal={false} />
-                    <YAxis
-                      dataKey="name"
-                      type="category"
-                      tickLine={false}
-                      axisLine={false}
-                    />
-                    <XAxis
-                      type="number"
-                      tickFormatter={(value) => `$${value}`}
-                      hide={false}
-                    />
-                    <Tooltip
-                      cursor={{ fill: 'hsl(var(--muted))' }}
-                      content={<ChartTooltipContent indicator="dot" />}
-                    />
-                    <Bar
-                      dataKey="total"
-                      fill="var(--color-total)"
-                      radius={[0, 4, 4, 0]}
-                    />
-                  </BarChart>
-                </ChartContainer>
-              </CardContent>
-            </Card>
-
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Tips Report</CardTitle>
-                </CardHeader>
-                <CardContent className="p-0">
-                  <div className="relative w-full overflow-auto">
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Order ID</TableHead>
-                          <TableHead>Waiter</TableHead>
-                          <TableHead>Tip Amount</TableHead>
-                          <TableHead>Tip %</TableHead>
-                          <TableHead>Method</TableHead>
-                          <TableHead>Type</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {tipTransactions.slice(0, 5).map((t) => (
-                          <TableRow key={t.id} onClick={() => handleViewDetails(t)} className="cursor-pointer">
-                            <>
-                              <TableCell className="font-medium">{t.orderId}</TableCell>
-                              <TableCell>{t.staffName}</TableCell>
-                              <TableCell className="font-mono">${t.tipAmount?.toFixed(2)}</TableCell>
-                              <TableCell className="font-mono">
-                                {t.paidAmount > 0 ? `${((t.tipAmount! / t.paidAmount) * 100).toFixed(1)}%` : 'N/A'}
-                              </TableCell>
-                              <TableCell>{t.paymentMethod}</TableCell>
-                              <TableCell><Badge variant="outline">{t.tipType}</Badge></TableCell>
-                            </>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  </div>
-                  {tipTransactions.length === 0 && (
-                    <p className="text-center text-muted-foreground p-8">
-                      No transactions with tips match the current filters.
-                    </p>
-                  )}
-                </CardContent>
-                <CardFooter className="flex-col items-start bg-muted/50 p-6 space-y-2 border-t">
-                  <div className="flex justify-between items-center w-full text-sm font-semibold">
-                    <span>Gross Tips Collected</span>
-                    <span className="font-bold text-lg">${totalGrossTips.toFixed(2)}</span>
-                  </div>
-                  <div className="flex justify-between items-center w-full text-sm text-muted-foreground">
-                    <span>Net Tips (after 5% fee)</span>
-                    <span className="font-bold text-lg">${(totalGrossTips * 0.95).toFixed(2)}</span>
-                  </div>
-                </CardFooter>
-              </Card>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle>Service Charge Report</CardTitle>
-                </CardHeader>
-                <CardContent className="p-0">
-                  <div className="relative w-full overflow-auto">
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Order ID</TableHead>
-                          <TableHead>Date</TableHead>
-                          <TableHead className="text-right">Bill Amount</TableHead>
-                          <TableHead className="text-right">Service Charge</TableHead>
-                          <TableHead>Staff</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {serviceChargeTransactions.slice(0, 10).map((t) => (
-                          <TableRow key={t.id} onClick={() => handleViewDetails(t)} className="cursor-pointer">
-                            <>
-                              <TableCell className="font-medium">{t.orderId}</TableCell>
-                              <TableCell>{new Date(t.timestamp).toLocaleDateString()}</TableCell>
-                              <TableCell className="text-right font-mono">${t.totalAmount.toFixed(2)}</TableCell>
-                              <TableCell className="text-right font-mono">${t.serviceChargeAmount?.toFixed(2)}</TableCell>
-                              <TableCell>{t.staffName}</TableCell>
-                            </>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  </div>
-                  {serviceChargeTransactions.length === 0 && (
-                    <p className="text-center text-muted-foreground p-8">
-                      No transactions with service charges match the current filters.
-                    </p>
-                  )}
-                </CardContent>
-                <CardFooter className="bg-muted/50 p-6 border-t">
-                  <div className="flex justify-between items-center w-full text-sm font-semibold">
-                    <span>Total Service Charges Collected</span>
-                    <span className="font-bold text-lg">${totalServiceCharge.toFixed(2)}</span>
-                  </div>
-                </CardFooter>
-              </Card>
-            </div>
-          </TabsContent>
-        </Tabs>
+                  Previous
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() =>
+                    setCurrentPage((p) => Math.min(p + 1, totalPages))
+                  }
+                  disabled={currentPage >= totalPages}
+                >
+                  Next
+                </Button>
+              </div>
+            </CardFooter>
+          </Card>
+        </div>
       </main>
       <ExportDialog
         open={isExportDialogOpen}

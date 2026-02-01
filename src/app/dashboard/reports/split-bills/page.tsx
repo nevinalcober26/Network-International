@@ -1,0 +1,615 @@
+'use client';
+
+import { useState, useMemo, useEffect } from 'react';
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from '@/components/ui/card';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import {
+  Download,
+  Filter,
+  RotateCcw,
+  File as FileIcon,
+  FileText,
+  Sheet as SheetIcon,
+  DollarSign,
+  CirclePercent,
+  Users,
+  UserX,
+} from 'lucide-react';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Label } from '@/components/ui/label';
+import { DashboardHeader } from '@/components/dashboard/header';
+import { cn } from '@/lib/utils';
+import { OrdersPageSkeleton } from '@/components/dashboard/skeletons';
+import {
+  Bar,
+  BarChart,
+  CartesianGrid,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from 'recharts';
+import {
+  ChartContainer,
+  ChartTooltip,
+  ChartTooltipContent,
+} from '@/components/ui/chart';
+import {
+  isWithinInterval,
+  differenceInDays,
+  subDays,
+  endOfDay,
+  setHours,
+  setMinutes,
+  setSeconds,
+} from 'date-fns';
+import { useToast } from '@/hooks/use-toast';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from '@/components/ui/dialog';
+import { type DateRange } from 'react-day-picker';
+import { DateRangePicker } from '@/components/dashboard/reports/date-range-picker';
+import type { Order } from '@/app/dashboard/orders/types';
+import { generateMockOrders } from '@/app/dashboard/orders/mock';
+import { OrderDetailsSheet } from '@/app/dashboard/orders/order-details-sheet';
+
+type Transaction = {
+  id: string;
+  orderId: string;
+  timestamp: number;
+  totalAmount: number;
+  paidAmount: number;
+  outstandingAmount: number;
+  paymentStatus: 'Paid' | 'Partial' | 'Unpaid' | 'Refunded';
+  paymentMethod: string;
+  payers: number;
+  branch: 'Ras Al Khaimah' | 'Dubai Mall';
+  table: string;
+  splitMethod?: 'Equal' | 'Item-based' | 'Custom';
+  lastPaymentAttempt: number;
+  closeType: 'Auto' | 'Manual';
+  staffName: string;
+  tipAmount?: number;
+  tipType?: 'Preset' | 'Custom';
+  serviceChargeAmount?: number;
+};
+
+const generateMockTransactions = (
+  count: number,
+  dateRange?: DateRange
+): Transaction[] => {
+  const transactions: Transaction[] = [];
+  const { from = subDays(new Date(), 29), to = new Date() } = dateRange || {};
+  const dateDiff = Math.abs(differenceInDays(to, from));
+
+  const statuses: Transaction['paymentStatus'][] = [
+    'Paid',
+    'Partial',
+    'Unpaid',
+    'Refunded',
+  ];
+  const methods = ['Credit Card', 'Cash', 'Online'];
+  const branches: ('Ras Al Khaimah' | 'Dubai Mall')[] = [
+    'Ras Al Khaimah',
+    'Dubai Mall',
+  ];
+  const closeTypes: Transaction['closeType'][] = ['Auto', 'Manual'];
+  const staffNames = ['Alex', 'Maria', 'John', 'Sarah', 'David'];
+
+  for (let i = 0; i < count; i++) {
+    const randomDayOffset = Math.floor(Math.random() * (dateDiff + 1));
+    let randomDate = subDays(endOfDay(to), randomDayOffset);
+    randomDate = setHours(randomDate, Math.floor(Math.random() * 24));
+    randomDate = setMinutes(randomDate, Math.floor(Math.random() * 60));
+    randomDate = setSeconds(randomDate, Math.floor(Math.random() * 60));
+
+    if (
+      randomDate.getTime() < from.getTime() ||
+      randomDate.getTime() > endOfDay(to).getTime()
+    ) {
+      continue;
+    }
+
+    const timestamp = randomDate.getTime();
+
+    const totalAmount = parseFloat((Math.random() * 200 + 10).toFixed(2));
+    const status = statuses[i % statuses.length];
+    let paidAmount = 0;
+    if (status === 'Paid') {
+      paidAmount = totalAmount;
+    } else if (status === 'Partial') {
+      paidAmount = parseFloat(
+        (totalAmount * (Math.random() * 0.7 + 0.2)).toFixed(2)
+      );
+    } else if (status === 'Refunded') {
+      paidAmount = totalAmount;
+    }
+
+    const payers = Math.floor(Math.random() * 4) + 1;
+    let splitMethod: Transaction['splitMethod'] | undefined = undefined;
+    if (payers > 1 || status === 'Partial') {
+      const splitMethods: Transaction['splitMethod'][] = [
+        'Equal',
+        'Item-based',
+        'Custom',
+      ];
+      splitMethod = splitMethods[i % splitMethods.length];
+    }
+
+    transactions.push({
+      id: `txn_${12345 + i}`,
+      orderId: `#${3210 + i}`,
+      timestamp: timestamp,
+      totalAmount,
+      paidAmount,
+      outstandingAmount: totalAmount - paidAmount,
+      paymentStatus: status,
+      paymentMethod: methods[i % methods.length],
+      payers,
+      branch: branches[i % branches.length],
+      table: `T${(i % 24) + 1}`,
+      splitMethod,
+      lastPaymentAttempt: timestamp + Math.random() * 3600000,
+      closeType: closeTypes[i % closeTypes.length],
+      staffName: staffNames[i % staffNames.length],
+    });
+  }
+  return transactions;
+};
+
+const getStatusBadgeVariant = (status: Transaction['paymentStatus']) => {
+  switch (status) {
+    case 'Paid':
+      return 'default';
+    case 'Partial':
+      return 'secondary';
+    case 'Unpaid':
+      return 'destructive';
+    case 'Refunded':
+      return 'outline';
+    default:
+      return 'outline';
+  }
+};
+
+const chartConfig = {
+  count: {
+    label: 'Count',
+    color: 'hsl(var(--chart-2))',
+  },
+};
+
+const initialFilterState = {
+  dateRange: {
+    from: subDays(new Date(), 29),
+    to: new Date(),
+  } as DateRange | undefined,
+  branch: 'all',
+  splitMethod: 'all',
+};
+
+const ExportDialog = ({
+  open,
+  onOpenChange,
+  onExport,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onExport: (format: 'CSV' | 'Excel' | 'PDF') => void;
+}) => {
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Export Transactions</DialogTitle>
+          <DialogDescription>
+            Select a file format to download the current view of transactions.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="grid grid-cols-3 gap-4 py-4">
+          <Button variant="outline" className="h-24 flex-col gap-2" onClick={() => onExport('CSV')}>
+            <FileIcon className="h-6 w-6" />
+            <span>CSV</span>
+          </Button>
+          <Button variant="outline" className="h-24 flex-col gap-2" onClick={() => onExport('Excel')}>
+            <SheetIcon className="h-6 w-6" />
+            <span>Excel</span>
+          </Button>
+          <Button variant="outline" className="h-24 flex-col gap-2" onClick={() => onExport('PDF')}>
+            <FileText className="h-6 w-6" />
+            <span>PDF</span>
+          </Button>
+        </div>
+        <DialogFooter>
+          <Button variant="ghost" onClick={() => onOpenChange(false)}>
+            Cancel
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+};
+
+export default function SplitBillsReportPage() {
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [allOrders, setAllOrders] = useState<Order[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [filters, setFilters] = useState(initialFilterState);
+  const [isExportDialogOpen, setIsExportDialogOpen] = useState(false);
+  const { toast } = useToast();
+  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const [isSheetOpen, setIsSheetOpen] = useState(false);
+
+  useEffect(() => {
+    setIsLoading(true);
+    const timer = setTimeout(() => {
+      const mockTransactions = generateMockTransactions(100, filters.dateRange);
+      const mockOrders = generateMockOrders(100, filters.dateRange);
+      setTransactions(mockTransactions);
+      setAllOrders(mockOrders);
+      setIsLoading(false);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [filters.dateRange]);
+  
+  const handleViewDetails = (transaction: Transaction) => {
+    const order = allOrders.find(o => o.orderId === transaction.orderId);
+    if (order) {
+        setSelectedOrder(order);
+        setIsSheetOpen(true);
+    } else {
+        toast({
+            variant: 'destructive',
+            title: 'Order not found',
+            description: `Details for order ${transaction.orderId} are not available.`,
+        });
+    }
+  };
+
+  const handleExport = (format: 'CSV' | 'Excel' | 'PDF') => {
+    setIsExportDialogOpen(false);
+    toast({
+      title: 'Export Initiated',
+      description: `Your transactions are being prepared for a ${format} download.`,
+    });
+  };
+
+  const handleFilterChange = (
+    filterName: string,
+    value: string | DateRange | undefined
+  ) => {
+    setFilters((prev) => ({ ...prev, [filterName]: value }));
+  };
+
+  const resetAllFilters = () => {
+    setFilters(initialFilterState);
+  };
+
+  const filteredTransactions = useMemo(() => {
+    return transactions.filter((transaction) => {
+      const transactionDate = new Date(transaction.timestamp);
+      const matchesDate =
+        filters.dateRange?.from && filters.dateRange?.to
+          ? isWithinInterval(transactionDate, {
+              start: filters.dateRange.from,
+              end: endOfDay(filters.dateRange.to),
+            })
+          : true;
+      const matchesBranch =
+        filters.branch === 'all' || transaction.branch === filters.branch;
+      const matchesSplitMethod =
+        filters.splitMethod === 'all' ||
+        transaction.splitMethod === filters.splitMethod;
+
+      return (
+        matchesDate &&
+        matchesBranch &&
+        matchesSplitMethod
+      );
+    });
+  }, [transactions, filters]);
+  
+  const splitTransactions = useMemo(
+    () =>
+      filteredTransactions.filter(
+        (t) => t.payers > 1 || t.splitMethod
+      ),
+    [filteredTransactions]
+  );
+  
+  const splitKpiCards = useMemo(() => {
+      const splitAdoptionRate =
+        filteredTransactions.length > 0
+          ? (splitTransactions.length /
+              filteredTransactions.length) *
+            100
+          : 0;
+      const avgPayers =
+        splitTransactions.length > 0
+          ? splitTransactions.reduce((acc, t) => acc + t.payers, 0) /
+            splitTransactions.length
+          : 1;
+
+      const abandonedSplits = splitTransactions.filter(
+            (t) =>
+                t.paymentStatus === 'Unpaid' ||
+                t.paymentStatus === 'Partial'
+        ).length
+      
+      const totalOutstanding = splitTransactions.reduce((acc, t) => acc + t.outstandingAmount, 0)
+
+      return [
+        {
+            title: 'Split Adoption Rate',
+            value: `${splitAdoptionRate.toFixed(1)}%`,
+            icon: CirclePercent
+        },
+        {
+            title: 'Avg. Payers per Split',
+            value: `${avgPayers.toFixed(1)}`,
+            icon: Users
+        },
+        {
+            title: 'Abandoned Splits',
+            value: `${abandonedSplits}`,
+            icon: UserX,
+            isAlert: true
+        },
+        {
+            title: 'Total Outstanding',
+            value: `$${totalOutstanding.toFixed(2)}`,
+            icon: DollarSign
+        }
+      ]
+  }, [filteredTransactions, splitTransactions]);
+
+  const splitMethodChartData = useMemo(() => {
+    const data = splitTransactions.reduce(
+      (acc, t) => {
+        const method = t.splitMethod || 'Unknown';
+        acc[method] = (acc[method] || 0) + 1;
+        return acc;
+      },
+      {} as Record<string, number>
+    );
+
+    return Object.entries(data).map(([name, count]) => ({ name, count }));
+  }, [splitTransactions]);
+
+  const activeSecondaryFilterCount = useMemo(() => {
+    let count = 0;
+    if (filters.splitMethod !== 'all') count++;
+    return count;
+  }, [filters]);
+
+  const KpiCard = ({ title, value, icon: Icon, isAlert }: { title: string, value: string, icon: React.ElementType, isAlert?: boolean }) => (
+    <Card>
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+        <CardDescription>{title}</CardDescription>
+        {Icon && (
+          <Icon className={cn("h-4 w-4 text-muted-foreground", isAlert && "text-red-500")} />
+        )}
+      </CardHeader>
+      <CardContent>
+        <div className={cn("text-2xl font-bold", isAlert && "text-red-500")}>{value}</div>
+      </CardContent>
+    </Card>
+  )
+
+  if (isLoading) {
+    return <OrdersPageSkeleton view="list" />;
+  }
+
+  return (
+    <>
+      <DashboardHeader />
+      <main className="p-4 sm:p-6 lg:p-8 space-y-6">
+        <div className="flex items-start justify-between">
+          <div>
+            <h1 className="text-2xl font-bold">Split Bills Report</h1>
+            <p className="text-muted-foreground">
+              Analysis of orders with split payments.
+            </p>
+          </div>
+          <Button variant="outline" onClick={() => setIsExportDialogOpen(true)}>
+            <Download className="mr-2 h-4 w-4" />
+            Export
+          </Button>
+        </div>
+            
+        <div className="my-4 flex flex-wrap items-center justify-between gap-x-4 gap-y-2 rounded-lg border bg-card p-3">
+          <div className="flex flex-wrap items-center gap-4">
+            <span className="text-sm font-medium">Filters:</span>
+            <DateRangePicker
+              dateRange={filters.dateRange}
+              onDateRangeChange={(range) => handleFilterChange('dateRange', range)}
+            />
+            <Select
+              value={filters.branch}
+              onValueChange={(value) => handleFilterChange('branch', value)}
+            >
+              <SelectTrigger className="w-full sm:w-[180px]">
+                <SelectValue placeholder="Branch/Venue" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Branches</SelectItem>
+                <SelectItem value="Ras Al Khaimah">Ras Al Khaimah</SelectItem>
+                <SelectItem value="Dubai Mall">Dubai Mall</SelectItem>
+              </SelectContent>
+            </Select>
+
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="outline" className="w-full sm:w-auto">
+                  <Filter className="mr-2 h-4 w-4" />
+                  More Filters
+                  {activeSecondaryFilterCount > 0 && (
+                    <Badge variant="secondary" className="ml-2 rounded-full px-1.5 py-0.5 text-xs">
+                      {activeSecondaryFilterCount}
+                    </Badge>
+                  )}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-screen max-w-sm" align="start">
+                <div className="space-y-4 p-4">
+                  <h4 className="font-medium leading-none">Additional Filters</h4>
+                    <div className="space-y-2">
+                        <Label htmlFor="split-filter">Split Method</Label>
+                        <Select
+                        value={filters.splitMethod}
+                        onValueChange={(value) => handleFilterChange('splitMethod', value)}
+                        >
+                        <SelectTrigger id="split-filter">
+                            <SelectValue placeholder="Split Method" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="all">All Split Methods</SelectItem>
+                            <SelectItem value="Equal">Equal</SelectItem>
+                            <SelectItem value="Item-based">Item-based</SelectItem>
+                            <SelectItem value="Custom">Custom</SelectItem>
+                        </SelectContent>
+                        </Select>
+                    </div>
+                </div>
+              </PopoverContent>
+            </Popover>
+          </div>
+          <Button variant="ghost" size="sm" onClick={resetAllFilters}>
+            <RotateCcw className="mr-2 h-4 w-4" />
+            Reset All Filters
+          </Button>
+        </div>
+
+        <div className="space-y-6 mt-4">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              {splitKpiCards.map((card) => (
+                <KpiCard key={card.title} {...card}/>
+              ))}
+            </div>
+            
+            <Card>
+              <CardHeader>
+                <CardTitle>Split Method Distribution</CardTitle>
+                <CardDescription>
+                  How customers are splitting their bills.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ChartContainer
+                  config={chartConfig}
+                  className="h-[300px] w-full"
+                >
+                  <BarChart
+                    data={splitMethodChartData}
+                    layout="vertical"
+                    margin={{ left: 20 }}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" horizontal={false} />
+                    <YAxis
+                      dataKey="name"
+                      type="category"
+                      tickLine={false}
+                      axisLine={false}
+                    />
+                    <XAxis type="number" hide />
+                    <Tooltip
+                      cursor={{ fill: 'hsl(var(--muted))' }}
+                      content={<ChartTooltipContent indicator="dot" />}
+                    />
+                    <Bar
+                      dataKey="count"
+                      fill="var(--color-count)"
+                      radius={[0, 4, 4, 0]}
+                    />
+                  </BarChart>
+                </ChartContainer>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                  <CardTitle>Split Bill Analytics</CardTitle>
+                  <CardDescription>
+                    Detailed list of orders with split payments.
+                  </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="relative w-full overflow-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Order ID</TableHead>
+                        <TableHead>Total Bill</TableHead>
+                        <TableHead className="text-center"># of Payers</TableHead>
+                        <TableHead>Split Method</TableHead>
+                        <TableHead>Time to Settle</TableHead>
+                        <TableHead>Status</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {splitTransactions.map((t) => (
+                        <TableRow key={t.id} onClick={() => handleViewDetails(t)} className="cursor-pointer">
+                           <TableCell className="font-medium">{t.orderId}</TableCell>
+                           <TableCell className="font-mono">${t.totalAmount.toFixed(2)}</TableCell>
+                           <TableCell className="text-center">{t.payers}</TableCell>
+                           <TableCell>{t.splitMethod || 'N/A'}</TableCell>
+                           <TableCell>8m 15s</TableCell>
+                           <TableCell>
+                            <Badge variant={getStatusBadgeVariant(t.paymentStatus)}>
+                              {t.paymentStatus}
+                            </Badge>
+                          </TableCell>
+                        </TableRow>
+                        ))}
+                    </TableBody>
+                  </Table>
+                  {splitTransactions.length === 0 && (
+                    <p className="text-center text-muted-foreground py-8">
+                      No split bill transactions match the current filters.
+                    </p>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+        </div>
+      </main>
+      <ExportDialog
+        open={isExportDialogOpen}
+        onOpenChange={setIsExportDialogOpen}
+        onExport={handleExport}
+      />
+      <OrderDetailsSheet 
+        order={selectedOrder}
+        open={isSheetOpen}
+        onOpenChange={setIsSheetOpen}
+      />
+    </>
+  );
+}

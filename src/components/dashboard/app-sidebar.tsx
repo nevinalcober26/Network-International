@@ -11,6 +11,7 @@ import {
   SlidersHorizontal,
   Plus,
   Minus,
+  BrainCircuit,
 } from 'lucide-react';
 import {
   Sidebar,
@@ -39,6 +40,7 @@ import { Button } from '../ui/button';
 import { usePathname } from 'next/navigation';
 import { useState } from 'react';
 import NextLink from 'next/link';
+import { cn } from '@/lib/utils';
 
 const userAvatar = PlaceHolderImages.find((img) => img.id === 'user-avatar');
 
@@ -192,9 +194,7 @@ export function AppSidebar() {
                     <SidebarMenuSubItem>
                       <SidebarMenuSubButton
                         asChild
-                        isActive={pathname.startsWith(
-                          '/dashboard/reports/payments'
-                        )}
+                        isActive={pathname === '/dashboard/reports/payments'}
                       >
                         <NextLink href="/dashboard/reports/payments">
                           Payments
@@ -205,11 +205,35 @@ export function AppSidebar() {
                       <SidebarMenuSubButton
                         asChild
                         isActive={pathname.startsWith(
-                          '/dashboard/reports/payments'
+                          '/dashboard/reports/split-bills'
                         )}
                       >
-                        <NextLink href="/dashboard/reports/payments">
-                          Split Payments
+                        <NextLink href="/dashboard/reports/split-bills">
+                          Split Bills
+                        </NextLink>
+                      </SidebarMenuSubButton>
+                    </SidebarMenuSubItem>
+                    <SidebarMenuSubItem>
+                      <SidebarMenuSubButton
+                        asChild
+                        isActive={pathname.startsWith(
+                          '/dashboard/reports/outstanding'
+                        )}
+                      >
+                        <NextLink href="/dashboard/reports/outstanding">
+                          Outstanding
+                        </NextLink>
+                      </SidebarMenuSubButton>
+                    </SidebarMenuSubItem>
+                     <SidebarMenuSubItem>
+                      <SidebarMenuSubButton
+                        asChild
+                        isActive={pathname.startsWith(
+                          '/dashboard/reports/tips-and-charges'
+                        )}
+                      >
+                        <NextLink href="/dashboard/reports/tips-and-charges">
+                          Tips & Charges
                         </NextLink>
                       </SidebarMenuSubButton>
                     </SidebarMenuSubItem>
@@ -223,6 +247,14 @@ export function AppSidebar() {
                         <NextLink href="/dashboard/reports/staff-performance">
                           Staff Performance
                         </NextLink>
+                      </SidebarMenuSubButton>
+                    </SidebarMenuSubItem>
+                    <SidebarMenuSubItem>
+                      <SidebarMenuSubButton
+                        asChild
+                        isActive={pathname.startsWith('/dashboard/reports/ai-insights')}
+                      >
+                        <NextLink href="/dashboard/reports/ai-insights">AI Insights</NextLink>
                       </SidebarMenuSubButton>
                     </SidebarMenuSubItem>
                   </SidebarMenuSub>
@@ -281,19 +313,13 @@ export function AppSidebar() {
                       </SidebarMenuSubButton>
                     </SidebarMenuSubItem>
                     <SidebarMenuSubItem>
-                      <SidebarMenuSubButton href="#">
-                        Modifiers
-                      </SidebarMenuSubButton>
+                      <SidebarMenuSubButton>Modifiers</SidebarMenuSubButton>
                     </SidebarMenuSubItem>
                     <SidebarMenuSubItem>
-                      <SidebarMenuSubButton href="#">
-                        Promotions
-                      </SidebarMenuSubButton>
+                      <SidebarMenuSubButton>Promotions</SidebarMenuSubButton>
                     </SidebarMenuSubItem>
                     <SidebarMenuSubItem>
-                      <SidebarMenuSubButton href="#">
-                        Coupons
-                      </SidebarMenuSubButton>
+                      <SidebarMenuSubButton>Coupons</SidebarMenuSubButton>
                     </SidebarMenuSubItem>
                   </SidebarMenuSub>
                 </CollapsibleContent>
@@ -327,14 +353,10 @@ export function AppSidebar() {
                 <CollapsibleContent>
                   <SidebarMenuSub>
                     <SidebarMenuSubItem>
-                      <SidebarMenuSubButton href="#">
-                        Opening Hours
-                      </SidebarMenuSubButton>
+                      <SidebarMenuSubButton>Opening Hours</SidebarMenuSubButton>
                     </SidebarMenuSubItem>
                     <SidebarMenuSubItem>
-                      <SidebarMenuSubButton href="#">
-                        QR Codes
-                      </SidebarMenuSubButton>
+                      <SidebarMenuSubButton>QR Codes</SidebarMenuSubButton>
                     </SidebarMenuSubItem>
                     <SidebarMenuSubItem>
                       <SidebarMenuSubButton
@@ -347,9 +369,7 @@ export function AppSidebar() {
                       </SidebarMenuSubButton>
                     </SidebarMenuSubItem>
                     <SidebarMenuSubItem>
-                      <SidebarMenuSubButton href="#">
-                        Feedback Forms
-                      </SidebarMenuSubButton>
+                      <SidebarMenuSubButton>Feedback Forms</SidebarMenuSubButton>
                     </SidebarMenuSubItem>
                   </SidebarMenuSub>
                 </CollapsibleContent>
@@ -391,9 +411,7 @@ export function AppSidebar() {
                       </SidebarMenuSubButton>
                     </SidebarMenuSubItem>
                     <SidebarMenuSubItem>
-                      <SidebarMenuSubButton href="#">
-                        Status Monitor
-                      </SidebarMenuSubButton>
+                      <SidebarMenuSubButton>Status Monitor</SidebarMenuSubButton>
                     </SidebarMenuSubItem>
                   </SidebarMenuSub>
                 </CollapsibleContent>
