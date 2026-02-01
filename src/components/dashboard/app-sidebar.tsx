@@ -2,22 +2,14 @@
 import {
   PieChart,
   BarChart,
-  Box,
-  LayoutGrid,
-  Percent,
-  Ticket,
-  Clock,
-  QrCode,
-  MessageSquare,
-  Palette,
-  Languages,
-  FileText,
-  LifeBuoy,
-  ChevronDown,
+  Settings,
   ClipboardList,
   LayoutDashboard,
-  Users,
-  Bot,
+  ChevronDown,
+  BookOpen,
+  Briefcase,
+  Plug,
+  SlidersHorizontal,
 } from 'lucide-react';
 import {
   Sidebar,
@@ -127,9 +119,21 @@ export const EMenuIcon = () => (
 
 export function AppSidebar() {
   const pathname = usePathname();
-  const [isReportsOpen, setIsReportsOpen] = useState(
-    pathname.startsWith('/dashboard/reports')
+  const [isCatalogOpen, setIsCatalogOpen] = useState(
+    pathname.startsWith('/dashboard/products') ||
+      pathname.startsWith('/dashboard/categories')
   );
+  const [isOperationsOpen, setIsOperationsOpen] = useState(
+    pathname.startsWith('/dashboard/tables') ||
+      pathname.startsWith('/dashboard/reports/staff-performance')
+  );
+  const [isOrdersOpen, setIsOrdersOpen] = useState(
+    pathname.startsWith('/dashboard/orders') ||
+      pathname.startsWith('/dashboard/reports/payments')
+  );
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isIntegrationsOpen, setIsIntegrationsOpen] = useState(false);
+  const [isSystemOpen, setIsSystemOpen] = useState(false);
 
   return (
     <Sidebar variant="sidebar" collapsible="icon" className="border-r">
@@ -151,12 +155,13 @@ export function AppSidebar() {
               <SidebarMenuButton
                 asChild
                 isActive={
-                  pathname.startsWith('/dashboard') &&
-                  !pathname.startsWith('/dashboard/categories') &&
-                  !pathname.startsWith('/dashboard/orders') &&
-                  !pathname.startsWith('/dashboard/tables') &&
-                  !pathname.startsWith('/dashboard/products') &&
-                  !pathname.startsWith('/dashboard/reports')
+                  pathname === '/dashboard' ||
+                  (pathname.startsWith('/dashboard') &&
+                    !pathname.startsWith('/dashboard/reports') &&
+                    !pathname.startsWith('/dashboard/products') &&
+                    !pathname.startsWith('/dashboard/categories') &&
+                    !pathname.startsWith('/dashboard/tables') &&
+                    !pathname.startsWith('/dashboard/orders'))
                 }
                 tooltip="Dashboard"
               >
@@ -167,21 +172,40 @@ export function AppSidebar() {
               </SidebarMenuButton>
             </SidebarMenuItem>
             <SidebarMenuItem>
-              <Collapsible open={isReportsOpen} onOpenChange={setIsReportsOpen}>
+              <SidebarMenuButton
+                asChild
+                isActive={pathname.startsWith('/dashboard/reports')}
+                tooltip="Reports"
+              >
+                <NextLink href="/dashboard/reports/payments">
+                  <BarChart />
+                  <span>Reports</span>
+                </NextLink>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          </SidebarMenu>
+        </SidebarGroup>
+        <SidebarSeparator />
+
+        <SidebarGroup>
+          <SidebarGroupLabel>Management</SidebarGroupLabel>
+          <SidebarMenu>
+            <SidebarMenuItem>
+              <Collapsible open={isCatalogOpen} onOpenChange={setIsCatalogOpen}>
                 <CollapsibleTrigger asChild className="w-full">
                   <SidebarMenuButton
-                    isActive={pathname.startsWith('/dashboard/reports')}
-                    tooltip="Reports"
+                    isActive={isCatalogOpen}
+                    tooltip="Catalog"
                     className="w-full justify-between"
                   >
                     <div className="flex items-center gap-2">
-                      <BarChart />
-                      <span>Reports</span>
+                      <BookOpen />
+                      <span>Catalog</span>
                     </div>
                     <ChevronDown
                       className={cn(
                         'h-4 w-4 transition-transform duration-200',
-                        isReportsOpen && 'rotate-180'
+                        isCatalogOpen && 'rotate-180'
                       )}
                     />
                   </SidebarMenuButton>
@@ -191,13 +215,89 @@ export function AppSidebar() {
                     <SidebarMenuSubItem>
                       <SidebarMenuSubButton
                         asChild
-                        isActive={pathname.startsWith(
-                          '/dashboard/reports/payments'
-                        )}
+                        isActive={pathname.startsWith('/dashboard/products')}
                       >
-                        <NextLink href="/dashboard/reports/payments">
-                          Payments
+                        <NextLink href="/dashboard/products">Products</NextLink>
+                      </SidebarMenuSubButton>
+                    </SidebarMenuSubItem>
+                    <SidebarMenuSubItem>
+                      <SidebarMenuSubButton
+                        asChild
+                        isActive={pathname.startsWith('/dashboard/categories')}
+                      >
+                        <NextLink href="/dashboard/categories">
+                          Categories
                         </NextLink>
+                      </SidebarMenuSubButton>
+                    </SidebarMenuSubItem>
+                    <SidebarMenuSubItem>
+                      <SidebarMenuSubButton asChild href="#">
+                        Modifiers
+                      </SidebarMenuSubButton>
+                    </SidebarMenuSubItem>
+                    <SidebarMenuSubItem>
+                      <SidebarMenuSubButton asChild href="#">
+                        Promotions
+                      </SidebarMenuSubButton>
+                    </SidebarMenuSubItem>
+                    <SidebarMenuSubItem>
+                      <SidebarMenuSubButton asChild href="#">
+                        Coupons
+                      </SidebarMenuSubButton>
+                    </SidebarMenuSubItem>
+                  </SidebarMenuSub>
+                </CollapsibleContent>
+              </Collapsible>
+            </SidebarMenuItem>
+
+            <SidebarMenuItem>
+              <Collapsible
+                open={isOperationsOpen}
+                onOpenChange={setIsOperationsOpen}
+              >
+                <CollapsibleTrigger asChild className="w-full">
+                  <SidebarMenuButton
+                    isActive={isOperationsOpen}
+                    tooltip="Operations"
+                    className="w-full justify-between"
+                  >
+                    <div className="flex items-center gap-2">
+                      <Briefcase />
+                      <span>Operations</span>
+                    </div>
+                    <ChevronDown
+                      className={cn(
+                        'h-4 w-4 transition-transform duration-200',
+                        isOperationsOpen && 'rotate-180'
+                      )}
+                    />
+                  </SidebarMenuButton>
+                </CollapsibleTrigger>
+                <CollapsibleContent>
+                  <SidebarMenuSub>
+                    <SidebarMenuSubItem>
+                      <SidebarMenuSubButton asChild href="#">
+                        Opening Hours
+                      </SidebarMenuSubButton>
+                    </SidebarMenuSubItem>
+                    <SidebarMenuSubItem>
+                      <SidebarMenuSubButton asChild href="#">
+                        QR Codes
+                      </SidebarMenuSubButton>
+                    </SidebarMenuSubItem>
+                    <SidebarMenuSubItem>
+                      <SidebarMenuSubButton
+                        asChild
+                        isActive={pathname.startsWith('/dashboard/tables')}
+                      >
+                        <NextLink href="/dashboard/tables">
+                          Table States
+                        </NextLink>
+                      </SidebarMenuSubButton>
+                    </SidebarMenuSubItem>
+                    <SidebarMenuSubItem>
+                      <SidebarMenuSubButton asChild href="#">
+                        Feedback Forms
                       </SidebarMenuSubButton>
                     </SidebarMenuSubItem>
                     <SidebarMenuSubItem>
@@ -212,16 +312,61 @@ export function AppSidebar() {
                         </NextLink>
                       </SidebarMenuSubButton>
                     </SidebarMenuSubItem>
+                  </SidebarMenuSub>
+                </CollapsibleContent>
+              </Collapsible>
+            </SidebarMenuItem>
+
+            <SidebarMenuItem>
+              <Collapsible open={isOrdersOpen} onOpenChange={setIsOrdersOpen}>
+                <CollapsibleTrigger asChild className="w-full">
+                  <SidebarMenuButton
+                    isActive={isOrdersOpen}
+                    tooltip="Orders"
+                    className="w-full justify-between"
+                  >
+                    <div className="flex items-center gap-2">
+                      <ClipboardList />
+                      <span>Orders</span>
+                    </div>
+                    <ChevronDown
+                      className={cn(
+                        'h-4 w-4 transition-transform duration-200',
+                        isOrdersOpen && 'rotate-180'
+                      )}
+                    />
+                  </SidebarMenuButton>
+                </CollapsibleTrigger>
+                <CollapsibleContent>
+                  <SidebarMenuSub>
+                    <SidebarMenuSubItem>
+                      <SidebarMenuSubButton
+                        asChild
+                        isActive={pathname.startsWith('/dashboard/orders')}
+                      >
+                        <NextLink href="/dashboard/orders">Order List</NextLink>
+                      </SidebarMenuSubButton>
+                    </SidebarMenuSubItem>
                     <SidebarMenuSubItem>
                       <SidebarMenuSubButton
                         asChild
                         isActive={pathname.startsWith(
-                          '/dashboard/reports/ai-insights'
+                          '/dashboard/reports/payments'
                         )}
                       >
-                        <NextLink href="/dashboard/reports/ai-insights">
-                          AI Insights
+                        <NextLink href="/dashboard/reports/payments">
+                          Payments
                         </NextLink>
+                      </SidebarMenuSubButton>
+                    </SidebarMenuSubItem>
+                    <SidebarMenuSubItem>
+                      <SidebarMenuSubButton asChild href="#">
+                        Split Payments
+                      </SidebarMenuSubButton>
+                    </SidebarMenuSubItem>
+                    <SidebarMenuSubItem>
+                      <SidebarMenuSubButton asChild href="#">
+                        Status Monitor
                       </SidebarMenuSubButton>
                     </SidebarMenuSubItem>
                   </SidebarMenuSub>
@@ -231,140 +376,170 @@ export function AppSidebar() {
           </SidebarMenu>
         </SidebarGroup>
         <SidebarSeparator />
+
         <SidebarGroup>
-          <SidebarGroupLabel>Catalog</SidebarGroupLabel>
+          <SidebarGroupLabel>Configuration</SidebarGroupLabel>
           <SidebarMenu>
             <SidebarMenuItem>
-              <SidebarMenuButton
-                asChild
-                isActive={pathname.startsWith('/dashboard/products')}
-                tooltip="Products"
+              <Collapsible
+                open={isSettingsOpen}
+                onOpenChange={setIsSettingsOpen}
               >
-                <NextLink href="/dashboard/products">
-                  <Box />
-                  <span>Products</span>
-                </NextLink>
-              </SidebarMenuButton>
+                <CollapsibleTrigger asChild className="w-full">
+                  <SidebarMenuButton
+                    isActive={isSettingsOpen}
+                    tooltip="Settings"
+                    className="w-full justify-between"
+                  >
+                    <div className="flex items-center gap-2">
+                      <Settings />
+                      <span>Settings</span>
+                    </div>
+                    <ChevronDown
+                      className={cn(
+                        'h-4 w-4 transition-transform duration-200',
+                        isSettingsOpen && 'rotate-180'
+                      )}
+                    />
+                  </SidebarMenuButton>
+                </CollapsibleTrigger>
+                <CollapsibleContent>
+                  <SidebarMenuSub>
+                    <SidebarMenuSubItem>
+                      <SidebarMenuSubButton asChild href="#">
+                        Order Types
+                      </SidebarMenuSubButton>
+                    </SidebarMenuSubItem>
+                    <SidebarMenuSubItem>
+                      <SidebarMenuSubButton asChild href="#">
+                        Payment Models
+                      </SidebarMenuSubButton>
+                    </SidebarMenuSubItem>
+                    <SidebarMenuSubItem>
+                      <SidebarMenuSubButton asChild href="#">
+                        POS Mode
+                      </SidebarMenuSubButton>
+                    </SidebarMenuSubItem>
+                    <SidebarMenuSubItem>
+                      <SidebarMenuSubButton asChild href="#">
+                        Tips & Charges
+                      </SidebarMenuSubButton>
+                    </SidebarMenuSubItem>
+                    <SidebarMenuSubItem>
+                      <SidebarMenuSubButton asChild href="#">
+                        Pricing
+                      </SidebarMenuSubButton>
+                    </SidebarMenuSubItem>
+                    <SidebarMenuSubItem>
+                      <SidebarMenuSubButton asChild href="#">
+                        Taxes
+                      </SidebarMenuSubButton>
+                    </SidebarMenuSubItem>
+                    <SidebarMenuSubItem>
+                      <SidebarMenuSubButton asChild href="#">
+                        Discounts
+                      </SidebarMenuSubButton>
+                    </SidebarMenuSubItem>
+                    <SidebarMenuSubItem>
+                      <SidebarMenuSubButton asChild href="#">
+                        Rounding
+                      </SidebarMenuSubButton>
+                    </SidebarMenuSubItem>
+                  </SidebarMenuSub>
+                </CollapsibleContent>
+              </Collapsible>
             </SidebarMenuItem>
+
             <SidebarMenuItem>
-              <SidebarMenuButton
-                asChild
-                isActive={pathname.startsWith('/dashboard/categories')}
-                tooltip="Categories"
+              <Collapsible
+                open={isIntegrationsOpen}
+                onOpenChange={setIsIntegrationsOpen}
               >
-                <NextLink href="/dashboard/categories">
-                  <LayoutGrid />
-                  <span>Categories</span>
-                </NextLink>
-              </SidebarMenuButton>
+                <CollapsibleTrigger asChild className="w-full">
+                  <SidebarMenuButton
+                    isActive={isIntegrationsOpen}
+                    tooltip="Integrations"
+                    className="w-full justify-between"
+                  >
+                    <div className="flex items-center gap-2">
+                      <Plug />
+                      <span>Integrations</span>
+                    </div>
+                    <ChevronDown
+                      className={cn(
+                        'h-4 w-4 transition-transform duration-200',
+                        isIntegrationsOpen && 'rotate-180'
+                      )}
+                    />
+                  </SidebarMenuButton>
+                </CollapsibleTrigger>
+                <CollapsibleContent>
+                  <SidebarMenuSub>
+                    <SidebarMenuSubItem>
+                      <SidebarMenuSubButton asChild href="#">
+                        POS
+                      </SidebarMenuSubButton>
+                    </SidebarMenuSubItem>
+                    <SidebarMenuSubItem>
+                      <SidebarMenuSubButton asChild href="#">
+                        Gateway
+                      </SidebarMenuSubButton>
+                    </SidebarMenuSubItem>
+                    <SidebarMenuSubItem>
+                      <SidebarMenuSubButton asChild href="#">
+                        Webhooks
+                      </SidebarMenuSubButton>
+                    </SidebarMenuSubItem>
+                  </SidebarMenuSub>
+                </CollapsibleContent>
+              </Collapsible>
             </SidebarMenuItem>
-          </SidebarMenu>
-        </SidebarGroup>
-        <SidebarSeparator />
-        <SidebarGroup>
-          <SidebarGroupLabel>Marketing</SidebarGroupLabel>
-          <SidebarMenu>
+
             <SidebarMenuItem>
-              <SidebarMenuButton href="#" tooltip="Promotions">
-                <Percent />
-                <span>Promotions</span>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-            <SidebarMenuItem>
-              <SidebarMenuButton href="#" tooltip="Coupons">
-                <Ticket />
-                <span>Coupons</span>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          </SidebarMenu>
-        </SidebarGroup>
-        <SidebarSeparator />
-        <SidebarGroup>
-          <SidebarGroupLabel>Operations</SidebarGroupLabel>
-          <SidebarMenu>
-            <SidebarMenuItem>
-              <SidebarMenuButton href="#" tooltip="Opening Hours">
-                <Clock />
-                <span>Opening Hours</span>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-            <SidebarMenuItem>
-              <SidebarMenuButton href="#" tooltip="QR Code">
-                <QrCode />
-                <span>QR Code</span>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-            <SidebarMenuItem>
-              <SidebarMenuButton href="#" tooltip="Feedback Forms">
-                <MessageSquare />
-                <span>Feedback Forms</span>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          </SidebarMenu>
-        </SidebarGroup>
-        <SidebarSeparator />
-        <SidebarGroup>
-          <SidebarGroupLabel>Orders</SidebarGroupLabel>
-          <SidebarMenu>
-            <SidebarMenuItem>
-              <SidebarMenuButton
-                asChild
-                isActive={pathname.startsWith('/dashboard/orders')}
-                tooltip="Order List"
-              >
-                <NextLink href="/dashboard/orders">
-                  <ClipboardList />
-                  <span>Order List</span>
-                </NextLink>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-            <SidebarMenuItem>
-              <SidebarMenuButton
-                asChild
-                isActive={pathname.startsWith('/dashboard/tables')}
-                tooltip="Table States"
-              >
-                <NextLink href="/dashboard/tables">
-                  <LayoutDashboard />
-                  <span>Table States</span>
-                </NextLink>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          </SidebarMenu>
-        </SidebarGroup>
-        <SidebarSeparator />
-        <SidebarGroup>
-          <SidebarGroupLabel>Settings</SidebarGroupLabel>
-          <SidebarMenu>
-            <SidebarMenuItem>
-              <SidebarMenuButton href="#" tooltip="Appearance">
-                <Palette />
-                <span>Appearance</span>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-            <SidebarMenuItem>
-              <SidebarMenuButton href="#" tooltip="Localization">
-                <Languages />
-                <span>Localization</span>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-            <SidebarMenuItem>
-              <SidebarMenuButton href="#" tooltip="Taxes">
-                <FileText />
-                <span>Taxes</span>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          </SidebarMenu>
-        </SidebarGroup>
-        <SidebarSeparator />
-        <SidebarGroup>
-          <SidebarGroupLabel>Help</SidebarGroupLabel>
-          <SidebarMenu>
-            <SidebarMenuItem>
-              <SidebarMenuButton href="#" tooltip="Documentation">
-                <LifeBuoy />
-                <span>Documentation</span>
-              </SidebarMenuButton>
+              <Collapsible open={isSystemOpen} onOpenChange={setIsSystemOpen}>
+                <CollapsibleTrigger asChild className="w-full">
+                  <SidebarMenuButton
+                    isActive={isSystemOpen}
+                    tooltip="System"
+                    className="w-full justify-between"
+                  >
+                    <div className="flex items-center gap-2">
+                      <SlidersHorizontal />
+                      <span>System</span>
+                    </div>
+                    <ChevronDown
+                      className={cn(
+                        'h-4 w-4 transition-transform duration-200',
+                        isSystemOpen && 'rotate-180'
+                      )}
+                    />
+                  </SidebarMenuButton>
+                </CollapsibleTrigger>
+                <CollapsibleContent>
+                  <SidebarMenuSub>
+                    <SidebarMenuSubItem>
+                      <SidebarMenuSubButton asChild href="#">
+                        Appearance
+                      </SidebarMenuSubButton>
+                    </SidebarMenuSubItem>
+                    <SidebarMenuSubItem>
+                      <SidebarMenuSubButton asChild href="#">
+                        Localization
+                      </SidebarMenuSubButton>
+                    </SidebarMenuSubItem>
+                    <SidebarMenuSubItem>
+                      <SidebarMenuSubButton asChild href="#">
+                        Roles
+                      </SidebarMenuSubButton>
+                    </SidebarMenuSubItem>
+                    <SidebarMenuSubItem>
+                      <SidebarMenuSubButton asChild href="#">
+                        Business Info
+                      </SidebarMenuSubButton>
+                    </SidebarMenuSubItem>
+                  </SidebarMenuSub>
+                </CollapsibleContent>
+              </Collapsible>
             </SidebarMenuItem>
           </SidebarMenu>
         </SidebarGroup>
