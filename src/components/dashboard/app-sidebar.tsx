@@ -11,6 +11,7 @@ import {
   SlidersHorizontal,
   Plus,
   Minus,
+  User,
 } from 'lucide-react';
 import {
   Sidebar,
@@ -118,6 +119,9 @@ export function AppSidebar() {
   const pathname = usePathname();
 
   const getActiveMenu = useCallback(() => {
+    if (pathname === '/dashboard') {
+      return null;
+    }
     if (pathname.startsWith('/dashboard/reports')) {
       return 'reports';
     }
@@ -132,6 +136,9 @@ export function AppSidebar() {
     }
     if (pathname.startsWith('/dashboard/orders')) {
       return 'orders';
+    }
+    if (pathname.startsWith('/dashboard/customer')) {
+      return 'customer';
     }
     if (pathname.startsWith('/dashboard/settings')) {
       return 'settings';
@@ -182,6 +189,11 @@ export function AppSidebar() {
   const ordersSubMenu = [
     { label: 'Order List', path: '/dashboard/orders' },
     { label: 'Status Monitor', path: '#' },
+  ];
+  const customerSubMenu = [
+    { label: 'Customer List', path: '#' },
+    { label: 'Visit History', path: '#' },
+    { label: 'Payment History', path: '#' },
   ];
   const settingsSubMenu = [
     { label: 'Order Types', path: '#' },
@@ -410,6 +422,51 @@ export function AppSidebar() {
                 <CollapsibleContent>
                   <SidebarMenuSub>
                     {ordersSubMenu.map((item) => (
+                      <SidebarMenuSubItem key={item.label}>
+                        <SidebarMenuSubButton
+                          asChild
+                          isActive={pathname.startsWith(item.path)}
+                          onClick={(e) => {
+                            if (item.path === '#') e.preventDefault();
+                          }}
+                        >
+                          <NextLink href={item.path}>{item.label}</NextLink>
+                        </SidebarMenuSubButton>
+                      </SidebarMenuSubItem>
+                    ))}
+                  </SidebarMenuSub>
+                </CollapsibleContent>
+              </Collapsible>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+              <Collapsible
+                open={activeMenu === 'customer'}
+                onOpenChange={() => handleMenuToggle('customer')}
+              >
+                <CollapsibleTrigger asChild className="w-full">
+                  <SidebarMenuButton
+                    isActive={activeMenu === 'customer'}
+                    tooltip={createTooltipContent('Customer', customerSubMenu)}
+                    className="w-full"
+                  >
+                    <div className="flex w-full items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <User />
+                        <span className="group-data-[collapsible=icon]:hidden">
+                          Customer
+                        </span>
+                      </div>
+                      {activeMenu === 'customer' ? (
+                        <Minus className="h-4 w-4 opacity-0 transition-opacity group-data-[collapsible=icon]:hidden group-hover/menu-item:opacity-100" />
+                      ) : (
+                        <Plus className="h-4 w-4 opacity-0 transition-opacity group-data-[collapsible=icon]:hidden group-hover/menu-item:opacity-100" />
+                      )}
+                    </div>
+                  </SidebarMenuButton>
+                </CollapsibleTrigger>
+                <CollapsibleContent>
+                  <SidebarMenuSub>
+                    {customerSubMenu.map((item) => (
                       <SidebarMenuSubItem key={item.label}>
                         <SidebarMenuSubButton
                           asChild
