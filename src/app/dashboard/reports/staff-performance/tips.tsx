@@ -4,7 +4,8 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Download } from "lucide-react";
+import { Download, Trophy } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 const tipsData = [
     { waiter: 'Alex', total: 55.20, perTable: 4.60, perOrder: 3.68, perPayment: 3.68, avgPercent: 18.2, digitalVsCash: "80/20" },
@@ -15,19 +16,68 @@ const tipsData = [
 ];
 
 export function Tips() {
+    const sortedTips = [...tipsData].sort((a, b) => b.total - a.total);
+
+    const getRankComponent = (rank: number) => {
+        if (rank === 0) {
+            return <Trophy className="h-7 w-7 text-yellow-400" fill="currentColor" />;
+        }
+        if (rank === 1) {
+            return <Trophy className="h-7 w-7 text-slate-400" fill="currentColor" />;
+        }
+        if (rank === 2) {
+            return <Trophy className="h-7 w-7 text-amber-600" fill="currentColor" />;
+        }
+        return <span className="font-bold text-xl text-muted-foreground w-7 text-center">{rank + 1}</span>;
+    };
+
     return (
         <div className="space-y-6">
             <Card>
                 <CardHeader>
                      <div className="flex justify-between items-center">
                         <div>
-                            <CardTitle>Tips by Waiter</CardTitle>
-                            <CardDescription>Analyze tip performance for each waiter.</CardDescription>
+                            <CardTitle>Top 5 Staff by Tips</CardTitle>
+                            <CardDescription>Leaderboard of top-earning waiters.</CardDescription>
                         </div>
-                        <Button variant="outline" size="sm"><Download className="mr-2 h-4 w-4" /> Export</Button>
                     </div>
-                     <div className="flex items-center space-x-2 pt-4">
+                </CardHeader>
+                <CardContent>
+                   <div className="space-y-2">
+                       {sortedTips.map((row, index) => (
+                           <div 
+                                key={row.waiter} 
+                                className={cn(
+                                    "flex items-center gap-4 p-3 rounded-lg border transition-colors",
+                                    index === 0 && 'border-yellow-400/50 bg-yellow-50/50',
+                                    index === 1 && 'border-slate-400/50 bg-slate-50/50',
+                                    index === 2 && 'border-amber-600/50 bg-amber-50/50',
+                                )}
+                            >
+                               <div className="flex h-8 w-8 items-center justify-center">
+                                   {getRankComponent(index)}
+                               </div>
+                               <div className="flex-1">
+                                   <p className="font-semibold text-base">{row.waiter}</p>
+                                   <p className="text-sm text-muted-foreground">Avg Tip: {row.avgPercent.toFixed(1)}%</p>
+                               </div>
+                               <div className="text-right">
+                                   <p className="font-bold text-lg text-foreground">${row.total.toFixed(2)}</p>
+                                   <p className="text-xs text-muted-foreground">{row.digitalVsCash} (Digital/Cash)</p>
+                               </div>
+                           </div>
+                       ))}
+                   </div>
+                </CardContent>
+            </Card>
+
+            <Card>
+                <CardHeader>
+                    <CardTitle>Tips Breakdown</CardTitle>
+                    <CardDescription>Analyze tip performance for each waiter.</CardDescription>
+                     <div className="flex justify-between items-center pt-4">
                         <Input placeholder="Search waiter..." className="max-w-xs" />
+                        <Button variant="outline" size="sm"><Download className="mr-2 h-4 w-4" /> Export</Button>
                     </div>
                 </CardHeader>
                 <CardContent>
@@ -55,6 +105,7 @@ export function Tips() {
                     </Table>
                 </CardContent>
             </Card>
+
             <Card>
                 <CardHeader>
                     <CardTitle>Advanced Metrics</CardTitle>
