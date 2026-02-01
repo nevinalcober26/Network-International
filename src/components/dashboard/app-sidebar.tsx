@@ -40,8 +40,6 @@ import { usePathname } from 'next/navigation';
 import { useState } from 'react';
 import NextLink from 'next/link';
 import { cn } from '@/lib/utils';
-import { TooltipContent } from '../ui/tooltip';
-import { TooltipPortal } from '@radix-ui/react-tooltip';
 
 const userAvatar = PlaceHolderImages.find((img) => img.id === 'user-avatar');
 
@@ -94,33 +92,28 @@ export const EMenuIcon = () => (
 const createTooltipContent = (
   title: string,
   items: { label: string; path: string }[]
-) => (
-  <TooltipPortal>
-    <TooltipContent
-      side="right"
-      align="center"
-      className="bg-gray-900 text-gray-200 border-gray-700 p-0"
-    >
-      <div className="flex flex-col items-start p-1">
-        <p className="font-bold px-2 py-1">{title}</p>
-        <div className="flex flex-col items-start">
-          {items.map((item) => (
-            <NextLink
-              key={item.label}
-              href={item.path}
-              className="w-full text-left rounded-sm px-2 py-1.5 hover:bg-gray-800"
-              onClick={(e) => {
-                if (item.path === '#') e.preventDefault();
-              }}
-            >
-              {item.label}
-            </NextLink>
-          ))}
-        </div>
+) => ({
+  className: 'bg-gray-900 text-gray-200 border-gray-700 p-0',
+  children: (
+    <div className="flex flex-col items-start p-1">
+      <p className="font-bold px-2 py-1">{title}</p>
+      <div className="flex flex-col items-start">
+        {items.map((item) => (
+          <NextLink
+            key={item.label}
+            href={item.path}
+            className="w-full text-left rounded-sm px-2 py-1.5 hover:bg-gray-800"
+            onClick={(e) => {
+              if (item.path === '#') e.preventDefault();
+            }}
+          >
+            {item.label}
+          </NextLink>
+        ))}
       </div>
-    </TooltipContent>
-  </TooltipPortal>
-);
+    </div>
+  ),
+});
 
 export function AppSidebar() {
   const pathname = usePathname();
