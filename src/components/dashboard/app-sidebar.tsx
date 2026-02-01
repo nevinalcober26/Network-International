@@ -11,7 +11,6 @@ import {
   SlidersHorizontal,
   Plus,
   Minus,
-  BrainCircuit,
 } from 'lucide-react';
 import {
   Sidebar,
@@ -41,6 +40,7 @@ import { usePathname } from 'next/navigation';
 import { useState } from 'react';
 import NextLink from 'next/link';
 import { cn } from '@/lib/utils';
+import { TooltipContent } from '../ui/tooltip';
 
 const userAvatar = PlaceHolderImages.find((img) => img.id === 'user-avatar');
 
@@ -90,6 +90,29 @@ export const EMenuIcon = () => (
   </svg>
 );
 
+const createTooltipContent = (
+  title: string,
+  items: { label: string; path: string }[]
+) => (
+  <div className="flex flex-col items-start p-1">
+    <p className="font-bold px-2 py-1">{title}</p>
+    <div className="flex flex-col items-start">
+      {items.map((item) => (
+        <NextLink
+          key={item.path}
+          href={item.path}
+          className="w-full text-left rounded-sm px-2 py-1.5 hover:bg-gray-800"
+          onClick={(e) => {
+            if (item.path === '#') e.preventDefault();
+          }}
+        >
+          {item.label}
+        </NextLink>
+      ))}
+    </div>
+  </div>
+);
+
 export function AppSidebar() {
   const pathname = usePathname();
 
@@ -128,22 +151,56 @@ export function AppSidebar() {
   const handleMenuToggle = (menu: string) => {
     setActiveMenu((prev) => (prev === menu ? null : menu));
   };
-  
-  const reportsSubMenu = [
-    'Payments',
-    'Split Bills',
-    'Outstanding',
-    'Tips & Charges',
-    'Staff Performance',
-    'AI Insights',
-  ];
-  const catalogSubMenu = ['Products', 'Categories', 'Modifiers', 'Promotions', 'Coupons'];
-  const operationsSubMenu = ['Opening Hours', 'QR Codes', 'Table States', 'Feedback Forms'];
-  const ordersSubMenu = ['Order List', 'Status Monitor'];
-  const settingsSubMenu = ['Order Types', 'Payment Models', 'POS Mode', 'Tips & Charges', 'Pricing', 'Taxes', 'Discounts', 'Rounding'];
-  const integrationsSubMenu = ['POS', 'Gateway', 'Webhooks'];
-  const systemSubMenu = ['Appearance', 'Localization', 'Roles', 'Business Info'];
 
+  const reportsSubMenu = [
+    { label: 'Payments', path: '/dashboard/reports/payments' },
+    { label: 'Split Bills', path: '/dashboard/reports/split-bills' },
+    { label: 'Outstanding', path: '/dashboard/reports/outstanding' },
+    { label: 'Tips & Charges', path: '/dashboard/reports/tips-and-charges' },
+    {
+      label: 'Staff Performance',
+      path: '/dashboard/reports/staff-performance',
+    },
+    { label: 'AI Insights', path: '/dashboard/reports/ai-insights' },
+  ];
+  const catalogSubMenu = [
+    { label: 'Products', path: '/dashboard/products' },
+    { label: 'Categories', path: '/dashboard/categories' },
+    { label: 'Modifiers', path: '#' },
+    { label: 'Promotions', path: '#' },
+    { label: 'Coupons', path: '#' },
+  ];
+  const operationsSubMenu = [
+    { label: 'Opening Hours', path: '#' },
+    { label: 'QR Codes', path: '#' },
+    { label: 'Table States', path: '/dashboard/tables' },
+    { label: 'Feedback Forms', path: '#' },
+  ];
+  const ordersSubMenu = [
+    { label: 'Order List', path: '/dashboard/orders' },
+    { label: 'Status Monitor', path: '#' },
+  ];
+  const settingsSubMenu = [
+    { label: 'Order Types', path: '#' },
+    { label: 'Payment Models', path: '#' },
+    { label: 'POS Mode', path: '#' },
+    { label: 'Tips & Charges', path: '#' },
+    { label: 'Pricing', path: '#' },
+    { label: 'Taxes', path: '#' },
+    { label: 'Discounts', path: '#' },
+    { label: 'Rounding', path: '#' },
+  ];
+  const integrationsSubMenu = [
+    { label: 'POS', path: '#' },
+    { label: 'Gateway', path: '#' },
+    { label: 'Webhooks', path: '#' },
+  ];
+  const systemSubMenu = [
+    { label: 'Appearance', path: '#' },
+    { label: 'Localization', path: '#' },
+    { label: 'Roles', path: '#' },
+    { label: 'Business Info', path: '#' },
+  ];
 
   return (
     <Sidebar variant="sidebar" collapsible="icon" className="border-r">
@@ -164,20 +221,14 @@ export function AppSidebar() {
             <SidebarMenuItem>
               <SidebarMenuButton
                 asChild
-                isActive={
-                  pathname === '/dashboard' ||
-                  (pathname.startsWith('/dashboard') &&
-                    !pathname.startsWith('/dashboard/reports') &&
-                    !pathname.startsWith('/dashboard/products') &&
-                    !pathname.startsWith('/dashboard/categories') &&
-                    !pathname.startsWith('/dashboard/tables') &&
-                    !pathname.startsWith('/dashboard/orders'))
-                }
+                isActive={pathname === '/dashboard'}
                 tooltip="Dashboard"
               >
                 <NextLink href="/dashboard">
                   <PieChart />
-                  <span className="group-data-[collapsible=icon]:hidden">Dashboard</span>
+                  <span className="group-data-[collapsible=icon]:hidden">
+                    Dashboard
+                  </span>
                 </NextLink>
               </SidebarMenuButton>
             </SidebarMenuItem>
@@ -189,90 +240,42 @@ export function AppSidebar() {
                 <CollapsibleTrigger asChild className="w-full">
                   <SidebarMenuButton
                     isActive={activeMenu === 'reports'}
-                    tooltip={`Reports: ${reportsSubMenu.join(', ')}`}
+                    tooltip={{
+                      className: 'bg-gray-900 text-gray-200 border-gray-700 p-0',
+                      children: createTooltipContent('Reports', reportsSubMenu),
+                    }}
                     className="w-full"
                   >
                     <div className="flex w-full items-center justify-between">
                       <div className="flex items-center gap-2">
                         <BarChart />
-                        <span className="group-data-[collapsible=icon]:hidden">Reports</span>
+                        <span className="group-data-[collapsible=icon]:hidden">
+                          Reports
+                        </span>
                       </div>
                       {activeMenu === 'reports' ? (
-                        <Minus className="h-4 w-4 group-data-[collapsible=icon]:hidden" />
+                        <Minus className="h-4 w-4 opacity-0 transition-opacity group-data-[collapsible=icon]:hidden group-hover/menu-item:opacity-100" />
                       ) : (
-                        <Plus className="h-4 w-4 group-data-[collapsible=icon]:hidden" />
+                        <Plus className="h-4 w-4 opacity-0 transition-opacity group-data-[collapsible=icon]:hidden group-hover/menu-item:opacity-100" />
                       )}
                     </div>
                   </SidebarMenuButton>
                 </CollapsibleTrigger>
                 <CollapsibleContent>
                   <SidebarMenuSub>
-                    <SidebarMenuSubItem>
-                      <SidebarMenuSubButton
-                        asChild
-                        isActive={pathname === '/dashboard/reports/payments'}
-                      >
-                        <NextLink href="/dashboard/reports/payments">
-                          Payments
-                        </NextLink>
-                      </SidebarMenuSubButton>
-                    </SidebarMenuSubItem>
-                    <SidebarMenuSubItem>
-                      <SidebarMenuSubButton
-                        asChild
-                        isActive={pathname.startsWith(
-                          '/dashboard/reports/split-bills'
-                        )}
-                      >
-                        <NextLink href="/dashboard/reports/split-bills">
-                          Split Bills
-                        </NextLink>
-                      </SidebarMenuSubButton>
-                    </SidebarMenuSubItem>
-                    <SidebarMenuSubItem>
-                      <SidebarMenuSubButton
-                        asChild
-                        isActive={pathname.startsWith(
-                          '/dashboard/reports/outstanding'
-                        )}
-                      >
-                        <NextLink href="/dashboard/reports/outstanding">
-                          Outstanding
-                        </NextLink>
-                      </SidebarMenuSubButton>
-                    </SidebarMenuSubItem>
-                     <SidebarMenuSubItem>
-                      <SidebarMenuSubButton
-                        asChild
-                        isActive={pathname.startsWith(
-                          '/dashboard/reports/tips-and-charges'
-                        )}
-                      >
-                        <NextLink href="/dashboard/reports/tips-and-charges">
-                          Tips & Charges
-                        </NextLink>
-                      </SidebarMenuSubButton>
-                    </SidebarMenuSubItem>
-                    <SidebarMenuSubItem>
-                      <SidebarMenuSubButton
-                        asChild
-                        isActive={pathname.startsWith(
-                          '/dashboard/reports/staff-performance'
-                        )}
-                      >
-                        <NextLink href="/dashboard/reports/staff-performance">
-                          Staff Performance
-                        </NextLink>
-                      </SidebarMenuSubButton>
-                    </SidebarMenuSubItem>
-                    <SidebarMenuSubItem>
-                      <SidebarMenuSubButton
-                        asChild
-                        isActive={pathname.startsWith('/dashboard/reports/ai-insights')}
-                      >
-                        <NextLink href="/dashboard/reports/ai-insights">AI Insights</NextLink>
-                      </SidebarMenuSubButton>
-                    </SidebarMenuSubItem>
+                    {reportsSubMenu.map((item) => (
+                      <SidebarMenuSubItem key={item.path}>
+                        <SidebarMenuSubButton
+                          asChild
+                          isActive={pathname.startsWith(item.path)}
+                          onClick={(e) => {
+                            if (item.path === '#') e.preventDefault();
+                          }}
+                        >
+                          <NextLink href={item.path}>{item.label}</NextLink>
+                        </SidebarMenuSubButton>
+                      </SidebarMenuSubItem>
+                    ))}
                   </SidebarMenuSub>
                 </CollapsibleContent>
               </Collapsible>
@@ -292,51 +295,42 @@ export function AppSidebar() {
                 <CollapsibleTrigger asChild className="w-full">
                   <SidebarMenuButton
                     isActive={activeMenu === 'catalog'}
-                    tooltip={`Catalog: ${catalogSubMenu.join(', ')}`}
+                    tooltip={{
+                      className: 'bg-gray-900 text-gray-200 border-gray-700 p-0',
+                      children: createTooltipContent('Catalog', catalogSubMenu),
+                    }}
                     className="w-full"
                   >
                     <div className="flex w-full items-center justify-between">
                       <div className="flex items-center gap-2">
                         <BookOpen />
-                        <span className="group-data-[collapsible=icon]:hidden">Catalog</span>
+                        <span className="group-data-[collapsible=icon]:hidden">
+                          Catalog
+                        </span>
                       </div>
                       {activeMenu === 'catalog' ? (
-                        <Minus className="h-4 w-4 group-data-[collapsible=icon]:hidden" />
+                        <Minus className="h-4 w-4 opacity-0 transition-opacity group-data-[collapsible=icon]:hidden group-hover/menu-item:opacity-100" />
                       ) : (
-                        <Plus className="h-4 w-4 group-data-[collapsible=icon]:hidden" />
+                        <Plus className="h-4 w-4 opacity-0 transition-opacity group-data-[collapsible=icon]:hidden group-hover/menu-item:opacity-100" />
                       )}
                     </div>
                   </SidebarMenuButton>
                 </CollapsibleTrigger>
                 <CollapsibleContent>
                   <SidebarMenuSub>
-                    <SidebarMenuSubItem>
-                      <SidebarMenuSubButton
-                        asChild
-                        isActive={pathname.startsWith('/dashboard/products')}
-                      >
-                        <NextLink href="/dashboard/products">Products</NextLink>
-                      </SidebarMenuSubButton>
-                    </SidebarMenuSubItem>
-                    <SidebarMenuSubItem>
-                      <SidebarMenuSubButton
-                        asChild
-                        isActive={pathname.startsWith('/dashboard/categories')}
-                      >
-                        <NextLink href="/dashboard/categories">
-                          Categories
-                        </NextLink>
-                      </SidebarMenuSubButton>
-                    </SidebarMenuSubItem>
-                    <SidebarMenuSubItem>
-                      <SidebarMenuSubButton>Modifiers</SidebarMenuSubButton>
-                    </SidebarMenuSubItem>
-                    <SidebarMenuSubItem>
-                      <SidebarMenuSubButton>Promotions</SidebarMenuSubButton>
-                    </SidebarMenuSubItem>
-                    <SidebarMenuSubItem>
-                      <SidebarMenuSubButton>Coupons</SidebarMenuSubButton>
-                    </SidebarMenuSubItem>
+                    {catalogSubMenu.map((item) => (
+                      <SidebarMenuSubItem key={item.path}>
+                        <SidebarMenuSubButton
+                          asChild
+                          isActive={pathname.startsWith(item.path)}
+                          onClick={(e) => {
+                            if (item.path === '#') e.preventDefault();
+                          }}
+                        >
+                          <NextLink href={item.path}>{item.label}</NextLink>
+                        </SidebarMenuSubButton>
+                      </SidebarMenuSubItem>
+                    ))}
                   </SidebarMenuSub>
                 </CollapsibleContent>
               </Collapsible>
@@ -350,43 +344,45 @@ export function AppSidebar() {
                 <CollapsibleTrigger asChild className="w-full">
                   <SidebarMenuButton
                     isActive={activeMenu === 'operations'}
-                    tooltip={`Operations: ${operationsSubMenu.join(', ')}`}
+                    tooltip={{
+                      className: 'bg-gray-900 text-gray-200 border-gray-700 p-0',
+                      children: createTooltipContent(
+                        'Operations',
+                        operationsSubMenu
+                      ),
+                    }}
                     className="w-full"
                   >
                     <div className="flex w-full items-center justify-between">
                       <div className="flex items-center gap-2">
                         <Briefcase />
-                        <span className="group-data-[collapsible=icon]:hidden">Operations</span>
+                        <span className="group-data-[collapsible=icon]:hidden">
+                          Operations
+                        </span>
                       </div>
                       {activeMenu === 'operations' ? (
-                        <Minus className="h-4 w-4 group-data-[collapsible=icon]:hidden" />
+                        <Minus className="h-4 w-4 opacity-0 transition-opacity group-data-[collapsible=icon]:hidden group-hover/menu-item:opacity-100" />
                       ) : (
-                        <Plus className="h-4 w-4 group-data-[collapsible=icon]:hidden" />
+                        <Plus className="h-4 w-4 opacity-0 transition-opacity group-data-[collapsible=icon]:hidden group-hover/menu-item:opacity-100" />
                       )}
                     </div>
                   </SidebarMenuButton>
                 </CollapsibleTrigger>
                 <CollapsibleContent>
                   <SidebarMenuSub>
-                    <SidebarMenuSubItem>
-                      <SidebarMenuSubButton>Opening Hours</SidebarMenuSubButton>
-                    </SidebarMenuSubItem>
-                    <SidebarMenuSubItem>
-                      <SidebarMenuSubButton>QR Codes</SidebarMenuSubButton>
-                    </SidebarMenuSubItem>
-                    <SidebarMenuSubItem>
-                      <SidebarMenuSubButton
-                        asChild
-                        isActive={pathname.startsWith('/dashboard/tables')}
-                      >
-                        <NextLink href="/dashboard/tables">
-                          Table States
-                        </NextLink>
-                      </SidebarMenuSubButton>
-                    </SidebarMenuSubItem>
-                    <SidebarMenuSubItem>
-                      <SidebarMenuSubButton>Feedback Forms</SidebarMenuSubButton>
-                    </SidebarMenuSubItem>
+                    {operationsSubMenu.map((item) => (
+                      <SidebarMenuSubItem key={item.path}>
+                        <SidebarMenuSubButton
+                          asChild
+                          isActive={pathname.startsWith(item.path)}
+                          onClick={(e) => {
+                            if (item.path === '#') e.preventDefault();
+                          }}
+                        >
+                          <NextLink href={item.path}>{item.label}</NextLink>
+                        </SidebarMenuSubButton>
+                      </SidebarMenuSubItem>
+                    ))}
                   </SidebarMenuSub>
                 </CollapsibleContent>
               </Collapsible>
@@ -400,35 +396,42 @@ export function AppSidebar() {
                 <CollapsibleTrigger asChild className="w-full">
                   <SidebarMenuButton
                     isActive={activeMenu === 'orders'}
-                    tooltip={`Orders: ${ordersSubMenu.join(', ')}`}
+                    tooltip={{
+                      className: 'bg-gray-900 text-gray-200 border-gray-700 p-0',
+                      children: createTooltipContent('Orders', ordersSubMenu),
+                    }}
                     className="w-full"
                   >
                     <div className="flex w-full items-center justify-between">
                       <div className="flex items-center gap-2">
                         <ClipboardList />
-                        <span className="group-data-[collapsible=icon]:hidden">Orders</span>
+                        <span className="group-data-[collapsible=icon]:hidden">
+                          Orders
+                        </span>
                       </div>
                       {activeMenu === 'orders' ? (
-                        <Minus className="h-4 w-4 group-data-[collapsible=icon]:hidden" />
+                        <Minus className="h-4 w-4 opacity-0 transition-opacity group-data-[collapsible=icon]:hidden group-hover/menu-item:opacity-100" />
                       ) : (
-                        <Plus className="h-4 w-4 group-data-[collapsible=icon]:hidden" />
+                        <Plus className="h-4 w-4 opacity-0 transition-opacity group-data-[collapsible=icon]:hidden group-hover/menu-item:opacity-100" />
                       )}
                     </div>
                   </SidebarMenuButton>
                 </CollapsibleTrigger>
                 <CollapsibleContent>
                   <SidebarMenuSub>
-                    <SidebarMenuSubItem>
-                      <SidebarMenuSubButton
-                        asChild
-                        isActive={pathname.startsWith('/dashboard/orders')}
-                      >
-                        <NextLink href="/dashboard/orders">Order List</NextLink>
-                      </SidebarMenuSubButton>
-                    </SidebarMenuSubItem>
-                    <SidebarMenuSubItem>
-                      <SidebarMenuSubButton>Status Monitor</SidebarMenuSubButton>
-                    </SidebarMenuSubItem>
+                    {ordersSubMenu.map((item) => (
+                      <SidebarMenuSubItem key={item.path}>
+                        <SidebarMenuSubButton
+                          asChild
+                          isActive={pathname.startsWith(item.path)}
+                          onClick={(e) => {
+                            if (item.path === '#') e.preventDefault();
+                          }}
+                        >
+                          <NextLink href={item.path}>{item.label}</NextLink>
+                        </SidebarMenuSubButton>
+                      </SidebarMenuSubItem>
+                    ))}
                   </SidebarMenuSub>
                 </CollapsibleContent>
               </Collapsible>
@@ -448,48 +451,45 @@ export function AppSidebar() {
                 <CollapsibleTrigger asChild className="w-full">
                   <SidebarMenuButton
                     isActive={activeMenu === 'settings'}
-                    tooltip={`Settings: ${settingsSubMenu.join(', ')}`}
+                    tooltip={{
+                      className: 'bg-gray-900 text-gray-200 border-gray-700 p-0',
+                      children: createTooltipContent(
+                        'Settings',
+                        settingsSubMenu
+                      ),
+                    }}
                     className="w-full"
                   >
                     <div className="flex w-full items-center justify-between">
                       <div className="flex items-center gap-2">
                         <Settings />
-                        <span className="group-data-[collapsible=icon]:hidden">Settings</span>
+                        <span className="group-data-[collapsible=icon]:hidden">
+                          Settings
+                        </span>
                       </div>
                       {activeMenu === 'settings' ? (
-                        <Minus className="h-4 w-4 group-data-[collapsible=icon]:hidden" />
+                        <Minus className="h-4 w-4 opacity-0 transition-opacity group-data-[collapsible=icon]:hidden group-hover/menu-item:opacity-100" />
                       ) : (
-                        <Plus className="h-4 w-4 group-data-[collapsible=icon]:hidden" />
+                        <Plus className="h-4 w-4 opacity-0 transition-opacity group-data-[collapsible=icon]:hidden group-hover/menu-item:opacity-100" />
                       )}
                     </div>
                   </SidebarMenuButton>
                 </CollapsibleTrigger>
                 <CollapsibleContent>
                   <SidebarMenuSub>
-                    <SidebarMenuSubItem>
-                      <SidebarMenuSubButton>Order Types</SidebarMenuSubButton>
-                    </SidebarMenuSubItem>
-                    <SidebarMenuSubItem>
-                      <SidebarMenuSubButton>Payment Models</SidebarMenuSubButton>
-                    </SidebarMenuSubItem>
-                    <SidebarMenuSubItem>
-                      <SidebarMenuSubButton>POS Mode</SidebarMenuSubButton>
-                    </SidebarMenuSubItem>
-                    <SidebarMenuSubItem>
-                      <SidebarMenuSubButton>Tips & Charges</SidebarMenuSubButton>
-                    </SidebarMenuSubItem>
-                    <SidebarMenuSubItem>
-                      <SidebarMenuSubButton>Pricing</SidebarMenuSubButton>
-                    </SidebarMenuSubItem>
-                    <SidebarMenuSubItem>
-                      <SidebarMenuSubButton>Taxes</SidebarMenuSubButton>
-                    </SidebarMenuSubItem>
-                    <SidebarMenuSubItem>
-                      <SidebarMenuSubButton>Discounts</SidebarMenuSubButton>
-                    </SidebarMenuSubItem>
-                    <SidebarMenuSubItem>
-                      <SidebarMenuSubButton>Rounding</SidebarMenuSubButton>
-                    </SidebarMenuSubItem>
+                    {settingsSubMenu.map((item) => (
+                      <SidebarMenuSubItem key={item.path}>
+                        <SidebarMenuSubButton
+                          asChild
+                          isActive={pathname.startsWith(item.path)}
+                          onClick={(e) => {
+                            if (item.path === '#') e.preventDefault();
+                          }}
+                        >
+                          <NextLink href={item.path}>{item.label}</NextLink>
+                        </SidebarMenuSubButton>
+                      </SidebarMenuSubItem>
+                    ))}
                   </SidebarMenuSub>
                 </CollapsibleContent>
               </Collapsible>
@@ -503,33 +503,45 @@ export function AppSidebar() {
                 <CollapsibleTrigger asChild className="w-full">
                   <SidebarMenuButton
                     isActive={activeMenu === 'integrations'}
-                    tooltip={`Integrations: ${integrationsSubMenu.join(', ')}`}
+                    tooltip={{
+                      className: 'bg-gray-900 text-gray-200 border-gray-700 p-0',
+                      children: createTooltipContent(
+                        'Integrations',
+                        integrationsSubMenu
+                      ),
+                    }}
                     className="w-full"
                   >
                     <div className="flex w-full items-center justify-between">
                       <div className="flex items-center gap-2">
                         <Plug />
-                        <span className="group-data-[collapsible=icon]:hidden">Integrations</span>
+                        <span className="group-data-[collapsible=icon]:hidden">
+                          Integrations
+                        </span>
                       </div>
                       {activeMenu === 'integrations' ? (
-                        <Minus className="h-4 w-4 group-data-[collapsible=icon]:hidden" />
+                        <Minus className="h-4 w-4 opacity-0 transition-opacity group-data-[collapsible=icon]:hidden group-hover/menu-item:opacity-100" />
                       ) : (
-                        <Plus className="h-4 w-4 group-data-[collapsible=icon]:hidden" />
+                        <Plus className="h-4 w-4 opacity-0 transition-opacity group-data-[collapsible=icon]:hidden group-hover/menu-item:opacity-100" />
                       )}
                     </div>
                   </SidebarMenuButton>
                 </CollapsibleTrigger>
                 <CollapsibleContent>
                   <SidebarMenuSub>
-                    <SidebarMenuSubItem>
-                      <SidebarMenuSubButton>POS</SidebarMenuSubButton>
-                    </SidebarMenuSubItem>
-                    <SidebarMenuSubItem>
-                      <SidebarMenuSubButton>Gateway</SidebarMenuSubButton>
-                    </SidebarMenuSubItem>
-                    <SidebarMenuSubItem>
-                      <SidebarMenuSubButton>Webhooks</SidebarMenuSubButton>
-                    </SidebarMenuSubItem>
+                    {integrationsSubMenu.map((item) => (
+                      <SidebarMenuSubItem key={item.path}>
+                        <SidebarMenuSubButton
+                          asChild
+                          isActive={pathname.startsWith(item.path)}
+                          onClick={(e) => {
+                            if (item.path === '#') e.preventDefault();
+                          }}
+                        >
+                          <NextLink href={item.path}>{item.label}</NextLink>
+                        </SidebarMenuSubButton>
+                      </SidebarMenuSubItem>
+                    ))}
                   </SidebarMenuSub>
                 </CollapsibleContent>
               </Collapsible>
@@ -543,36 +555,42 @@ export function AppSidebar() {
                 <CollapsibleTrigger asChild className="w-full">
                   <SidebarMenuButton
                     isActive={activeMenu === 'system'}
-                    tooltip={`System: ${systemSubMenu.join(', ')}`}
+                    tooltip={{
+                      className: 'bg-gray-900 text-gray-200 border-gray-700 p-0',
+                      children: createTooltipContent('System', systemSubMenu),
+                    }}
                     className="w-full"
                   >
                     <div className="flex w-full items-center justify-between">
                       <div className="flex items-center gap-2">
                         <SlidersHorizontal />
-                        <span className="group-data-[collapsible=icon]:hidden">System</span>
+                        <span className="group-data-[collapsible=icon]:hidden">
+                          System
+                        </span>
                       </div>
                       {activeMenu === 'system' ? (
-                        <Minus className="h-4 w-4 group-data-[collapsible=icon]:hidden" />
+                        <Minus className="h-4 w-4 opacity-0 transition-opacity group-data-[collapsible=icon]:hidden group-hover/menu-item:opacity-100" />
                       ) : (
-                        <Plus className="h-4 w-4 group-data-[collapsible=icon]:hidden" />
+                        <Plus className="h-4 w-4 opacity-0 transition-opacity group-data-[collapsible=icon]:hidden group-hover/menu-item:opacity-100" />
                       )}
                     </div>
                   </SidebarMenuButton>
                 </CollapsibleTrigger>
                 <CollapsibleContent>
                   <SidebarMenuSub>
-                    <SidebarMenuSubItem>
-                      <SidebarMenuSubButton>Appearance</SidebarMenuSubButton>
-                    </SidebarMenuSubItem>
-                    <SidebarMenuSubItem>
-                      <SidebarMenuSubButton>Localization</SidebarMenuSubButton>
-                    </SidebarMenuSubItem>
-                    <SidebarMenuSubItem>
-                      <SidebarMenuSubButton>Roles</SidebarMenuSubButton>
-                    </SidebarMenuSubItem>
-                    <SidebarMenuSubItem>
-                      <SidebarMenuSubButton>Business Info</SidebarMenuSubButton>
-                    </SidebarMenuSubItem>
+                    {systemSubMenu.map((item) => (
+                      <SidebarMenuSubItem key={item.path}>
+                        <SidebarMenuSubButton
+                          asChild
+                          isActive={pathname.startsWith(item.path)}
+                          onClick={(e) => {
+                            if (item.path === '#') e.preventDefault();
+                          }}
+                        >
+                          <NextLink href={item.path}>{item.label}</NextLink>
+                        </SidebarMenuSubButton>
+                      </SidebarMenuSubItem>
+                    ))}
                   </SidebarMenuSub>
                 </CollapsibleContent>
               </Collapsible>

@@ -37,6 +37,10 @@ export default {
     'text-blue-700',
     'bg-blue-500',
     'border-current',
+    'bg-gray-900',
+    'text-gray-200',
+    'border-gray-700',
+    'hover:bg-gray-800'
   ],
   theme: {
     extend: {
