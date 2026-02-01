@@ -71,7 +71,16 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from '@/components/ui/chart';
-import { format, isWithinInterval, differenceInDays, subDays, endOfDay } from 'date-fns';
+import {
+  format,
+  isWithinInterval,
+  differenceInDays,
+  subDays,
+  endOfDay,
+  setHours,
+  setMinutes,
+  setSeconds,
+} from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 import {
   Dialog,
@@ -104,8 +113,14 @@ type Transaction = {
   tipType?: 'Preset' | 'Custom';
 };
 
-const generateMockTransactions = (count: number): Transaction[] => {
+const generateMockTransactions = (
+  count: number,
+  dateRange?: DateRange
+): Transaction[] => {
   const transactions: Transaction[] = [];
+  const { from = subDays(new Date(), 29), to = new Date() } = dateRange || {};
+  const dateDiff = Math.abs(differenceInDays(to, from));
+
   const statuses: Transaction['paymentStatus'][] = [
     'Paid',
     'Partial',
@@ -121,6 +136,13 @@ const generateMockTransactions = (count: number): Transaction[] => {
   const staffNames = ['Alex', 'Maria', 'John', 'Sarah', 'David'];
 
   for (let i = 0; i < count; i++) {
+    const randomDayOffset = Math.floor(Math.random() * (dateDiff + 1));
+    let randomDate = subDays(to, randomDayOffset);
+    randomDate = setHours(randomDate, Math.floor(Math.random() * 24));
+    randomDate = setMinutes(randomDate, Math.floor(Math.random() * 60));
+    randomDate = setSeconds(randomDate, Math.floor(Math.random() * 60));
+    const timestamp = randomDate.getTime();
+
     const totalAmount = parseFloat((Math.random() * 200 + 10).toFixed(2));
     const status = statuses[i % statuses.length];
     let paidAmount = 0;
@@ -144,7 +166,7 @@ const generateMockTransactions = (count: number): Transaction[] => {
       ];
       splitMethod = splitMethods[i % splitMethods.length];
     }
-    const timestamp = Date.now() - i * 3600000 * 3;
+    
     const staffName = staffNames[i % staffNames.length];
     let tipAmount: number | undefined = undefined;
     let tipType: Transaction['tipType'] | undefined = undefined;
@@ -181,6 +203,7 @@ const generateMockTransactions = (count: number): Transaction[] => {
   }
   return transactions;
 };
+
 
 const getStatusBadgeVariant = (status: Transaction['paymentStatus']) => {
   switch (status) {
@@ -290,12 +313,15 @@ export default function PaymentsReportPage() {
   } | null>({ key: 'timestamp', direction: 'descending' });
 
   useEffect(() => {
+    setIsLoading(true);
+    // Simulate a network request to fetch data
     const timer = setTimeout(() => {
-      setTransactions(generateMockTransactions(100));
+      // Regenerate mock data based on the current date range filter
+      setTransactions(generateMockTransactions(100, filters.dateRange));
       setIsLoading(false);
-    }, 1000);
+    }, 500); // A small delay for better UX
     return () => clearTimeout(timer);
-  }, []);
+  }, [filters.dateRange]);
 
   const handleExport = (format: 'CSV' | 'Excel' | 'PDF') => {
     setIsExportDialogOpen(false);
@@ -490,7 +516,7 @@ export default function PaymentsReportPage() {
         date: day,
         sales: salesByDay[day],
       }))
-      .reverse(); // To show chronologically
+      .sort((a,b) => new Date(a.date).getTime() - new Date(b.date).getTime());
   }, [filteredAndSortedTransactions]);
 
   const splitTransactions = useMemo(
