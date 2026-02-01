@@ -211,7 +211,7 @@ const chartConfig = {
 };
 
 const initialFilterState = {
-  date: new Date() as Date | undefined,
+  date: undefined as Date | undefined,
   branch: 'all',
   paymentStatus: 'all',
   paymentMethod: 'all',
