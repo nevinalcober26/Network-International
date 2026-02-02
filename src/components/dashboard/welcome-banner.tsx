@@ -6,6 +6,7 @@ import { format } from 'date-fns';
 import { summarizeData } from '@/ai/flows/summarize-data-flow';
 import { cn } from '@/lib/utils';
 import type { StatCardData } from './stat-cards';
+import { Button } from '@/components/ui/button';
 
 interface WelcomeBannerProps {
   statCards: StatCardData[];
@@ -16,7 +17,9 @@ export function WelcomeBanner({ statCards, chartData }: WelcomeBannerProps) {
   const [currentTime, setCurrentTime] = useState(new Date());
   const [summary, setSummary] = useState('');
   const [error, setError] = useState('');
-  const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
+  const [status, setStatus] = useState<
+    'idle' | 'loading' | 'success' | 'error'
+  >('idle');
   const isLoadingRef = useRef(false);
 
   useEffect(() => {
@@ -39,10 +42,10 @@ export function WelcomeBanner({ statCards, chartData }: WelcomeBannerProps) {
 
   const generateSummary = useCallback(() => {
     if (isLoadingRef.current) return;
-    
+
     const combinedData = {
-        stats: statCards,
-        sales: chartData,
+      stats: statCards,
+      sales: chartData,
     };
 
     if (combinedData.stats.length > 0 && combinedData.sales.length > 0) {
@@ -51,8 +54,8 @@ export function WelcomeBanner({ statCards, chartData }: WelcomeBannerProps) {
       setError('');
       setSummary('');
 
-      const dataString = JSON.stringify(combinedData); 
-      
+      const dataString = JSON.stringify(combinedData);
+
       summarizeData({ data: dataString, context: "today's restaurant status" })
         .then((result) => {
           setSummary(result.summary);
@@ -60,27 +63,35 @@ export function WelcomeBanner({ statCards, chartData }: WelcomeBannerProps) {
         })
         .catch((err) => {
           console.error('AI Summary Error:', err);
-          if (err.message && (err.message.includes('429') || err.message.includes('Too Many Requests'))) {
-            setError('You have exceeded the request limit. Please wait a moment before trying again.');
+          if (
+            err.message &&
+            (err.message.includes('429') ||
+              err.message.includes('Too Many Requests'))
+          ) {
+            setStatus('idle');
+            setSummary('');
+            setError('');
           } else {
-            setError(`Could not generate summary. The AI may be temporarily unavailable.`);
+            setError(
+              `Could not generate summary. The AI may be temporarily unavailable.`
+            );
+            setStatus('error');
           }
-          setStatus('error');
         })
         .finally(() => {
-            isLoadingRef.current = false;
+          isLoadingRef.current = false;
         });
     } else {
-        setStatus('idle');
-        setSummary('');
-        setError('');
+      setStatus('idle');
+      setSummary('');
+      setError('');
     }
   }, [statCards, chartData]);
-  
+
   useEffect(() => {
     generateSummary();
   }, [generateSummary]);
-  
+
   const renderSummaryWithBold = (text: string) => {
     if (!text) return null;
     const parts = text.split(/(\*\*.*?\*\*)/g);
@@ -95,7 +106,7 @@ export function WelcomeBanner({ statCards, chartData }: WelcomeBannerProps) {
       return part;
     });
   };
-  
+
   const renderSummaryContent = () => {
     switch (status) {
       case 'loading':
@@ -115,7 +126,7 @@ export function WelcomeBanner({ statCards, chartData }: WelcomeBannerProps) {
         );
       default:
         return (
-           <p className="mt-1 max-w-md text-gray-600">
+          <p className="mt-1 max-w-md text-gray-600">
             Welcome back to your dashboard. Today looks promising with clear
             skies ahead!🚀
           </p>
@@ -131,11 +142,23 @@ export function WelcomeBanner({ statCards, chartData }: WelcomeBannerProps) {
           <h2 className="text-2xl font-bold text-gray-800">
             {getGreeting()}, Marice! 😊
           </h2>
-           <div className="mt-2 text-sm flex items-start gap-3">
-             <Wand className="h-4 w-4 text-teal-600 flex-shrink-0 mt-0.5" />
-             <div className="flex-grow">
-                {renderSummaryContent()}
-             </div>
+          <div className="mt-2 text-sm flex items-start gap-3">
+            <Wand className="h-4 w-4 text-teal-600 flex-shrink-0 mt-0.5" />
+            <div className="flex-grow">{renderSummaryContent()}</div>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7 shrink-0 rounded-full bg-white/50 hover:bg-white/80"
+              onClick={generateSummary}
+              disabled={status === 'loading'}
+            >
+              <RefreshCw
+                className={cn(
+                  'h-4 w-4 text-muted-foreground',
+                  status === 'loading' && 'animate-spin'
+                )}
+              />
+            </Button>
           </div>
           <div className="mt-6 flex items-center">
             <div className="mr-4 h-2 w-2 rounded-full bg-teal-400"></div>
