@@ -178,6 +178,14 @@ export default function OrdersPage() {
     key: keyof Order;
     direction: 'ascending' | 'descending';
   } | null>({ key: 'orderId', direction: 'descending' });
+  
+  const [visibleColumns, setVisibleColumns] = useState({
+    branch: true,
+    table: true,
+    totalAmount: true,
+    paidAmount: true,
+    pendingAmount: true,
+  });
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -460,9 +468,60 @@ export default function OrdersPage() {
                         <Calendar mode="single" selected={date} onSelect={setDate} initialFocus />
                     </PopoverContent>
                     </Popover>
-                    <Button variant="ghost" size="icon">
-                        <Settings className="h-4 w-4" />
-                    </Button>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon">
+                          <Settings className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuLabel>Toggle Columns</DropdownMenuLabel>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuCheckboxItem
+                          checked={visibleColumns.branch}
+                          onCheckedChange={(value) =>
+                            setVisibleColumns((prev) => ({ ...prev, branch: !!value }))
+                          }
+                        >
+                          Branch
+                        </DropdownMenuCheckboxItem>
+                        <DropdownMenuCheckboxItem
+                          checked={visibleColumns.table}
+                          onCheckedChange={(value) =>
+                            setVisibleColumns((prev) => ({ ...prev, table: !!value }))
+                          }
+                        >
+                          Table
+                        </DropdownMenuCheckboxItem>
+                        <DropdownMenuCheckboxItem
+                          checked={visibleColumns.totalAmount}
+                          onCheckedChange={(value) =>
+                            setVisibleColumns((prev) => ({ ...prev, totalAmount: !!value }))
+                          }
+                        >
+                          Total
+                        </DropdownMenuCheckboxItem>
+                        <DropdownMenuCheckboxItem
+                          checked={visibleColumns.paidAmount}
+                          onCheckedChange={(value) =>
+                            setVisibleColumns((prev) => ({ ...prev, paidAmount: !!value }))
+                          }
+                        >
+                          Paid
+                        </DropdownMenuCheckboxItem>
+                        <DropdownMenuCheckboxItem
+                          checked={visibleColumns.pendingAmount}
+                          onCheckedChange={(value) =>
+                            setVisibleColumns((prev) => ({
+                              ...prev,
+                              pendingAmount: !!value,
+                            }))
+                          }
+                        >
+                          Pending
+                        </DropdownMenuCheckboxItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                 </div>
                 </div>
 
@@ -472,13 +531,13 @@ export default function OrdersPage() {
                         <TableRow>
                             <TableHead><SortableHeader tKey="orderId" label="ORDER ID" /></TableHead>
                             <TableHead><SortableHeader tKey="customer" label="CUSTOMER" /></TableHead>
-                            <TableHead><SortableHeader tKey="branch" label="BRANCH" /></TableHead>
-                            <TableHead>TABLE</TableHead>
+                            {visibleColumns.branch && <TableHead><SortableHeader tKey="branch" label="BRANCH" /></TableHead>}
+                            {visibleColumns.table && <TableHead>TABLE</TableHead>}
                             <TableHead>ORDER STATUS</TableHead>
                             <TableHead>PAYMENT STATUS</TableHead>
-                            <TableHead className="text-right"><SortableHeader tKey="totalAmount" label="TOTAL" /></TableHead>
-                            <TableHead className="text-right">PAID</TableHead>
-                            <TableHead className="text-right">PENDING</TableHead>
+                            {visibleColumns.totalAmount && <TableHead className="text-right"><SortableHeader tKey="totalAmount" label="TOTAL" /></TableHead>}
+                            {visibleColumns.paidAmount && <TableHead className="text-right">PAID</TableHead>}
+                            {visibleColumns.pendingAmount && <TableHead className="text-right">PENDING</TableHead>}
                             <TableHead className="text-right">ACTIONS</TableHead>
                         </TableRow>
                         </TableHeader>
@@ -510,15 +569,15 @@ export default function OrdersPage() {
                                     <div className="text-sm">Guest</div>
                                 )}
                             </TableCell>
-                            <TableCell>{order.branch}</TableCell>
-                            <TableCell><Badge variant="secondary">{order.table}</Badge></TableCell>
+                            {visibleColumns.branch && <TableCell>{order.branch}</TableCell>}
+                            {visibleColumns.table && <TableCell><Badge variant="secondary">{order.table}</Badge></TableCell>}
                             <TableCell><OrderStatusBadge status={order.orderStatus} /></TableCell>
                             <TableCell><PaymentStatusBadge status={order.paymentState} splitType={order.splitType} /></TableCell>
-                            <TableCell className="text-right font-mono">${order.totalAmount.toFixed(2)}</TableCell>
-                            <TableCell className="text-right font-mono text-green-600">${order.paidAmount.toFixed(2)}</TableCell>
-                            <TableCell className="text-right font-mono text-red-600">
+                            {visibleColumns.totalAmount && <TableCell className="text-right font-mono">${order.totalAmount.toFixed(2)}</TableCell>}
+                            {visibleColumns.paidAmount && <TableCell className="text-right font-mono text-green-600">${order.paidAmount.toFixed(2)}</TableCell>}
+                            {visibleColumns.pendingAmount && <TableCell className="text-right font-mono text-red-600">
                                 {order.totalAmount - order.paidAmount > 0.01 ? `$${(order.totalAmount - order.paidAmount).toFixed(2)}` : '-'}
-                            </TableCell>
+                            </TableCell>}
                             <TableCell onClick={(e) => e.stopPropagation()} className="text-right">
                                 <DropdownMenu>
                                   <DropdownMenuTrigger asChild>
