@@ -49,6 +49,7 @@ import {
   Tooltip,
   XAxis,
   YAxis,
+  Cell,
 } from 'recharts';
 import {
   ChartContainer,
@@ -202,9 +203,21 @@ const getStatusBadgeVariant = (status: Transaction['paymentStatus']) => {
 };
 
 const chartConfig = {
-  count: {
-    label: 'Count',
-    color: 'hsl(330, 85%, 60%)',
+  'Equal': {
+    label: 'Equal',
+    color: 'hsl(var(--chart-1))',
+  },
+  'Item-based': {
+    label: 'Item-based',
+    color: 'hsl(var(--chart-2))',
+  },
+  'Custom': {
+    label: 'Custom',
+    color: 'hsl(var(--chart-3))',
+  },
+  'Unknown': {
+    label: 'Unknown',
+    color: 'hsl(var(--chart-4))',
   },
 };
 
@@ -417,6 +430,14 @@ export default function SplitBillsReportPage() {
   if (isLoading) {
     return <OrdersPageSkeleton view="list" />;
   }
+  
+  const legendPayload = splitMethodChartData.map((item) => ({
+    value: item.name,
+    type: 'rect' as const,
+    id: item.name,
+    color: (chartConfig[item.name as keyof typeof chartConfig] as any)?.color,
+  }));
+
 
   return (
     <>
@@ -516,7 +537,7 @@ export default function SplitBillsReportPage() {
                   <BarChart
                     data={splitMethodChartData}
                     layout="vertical"
-                    margin={{ left: 20 }}
+                    margin={{ left: 20, right: 20 }}
                   >
                     <CartesianGrid strokeDasharray="3 3" horizontal={false} />
                     <YAxis
@@ -524,18 +545,29 @@ export default function SplitBillsReportPage() {
                       type="category"
                       tickLine={false}
                       axisLine={false}
+                      width={80}
                     />
                     <XAxis type="number" hide />
                     <Tooltip
                       cursor={{ fill: 'hsl(var(--muted))' }}
                       content={<ChartTooltipContent indicator="dot" />}
                     />
-                    <ChartLegend content={<ChartLegendContent />} />
+                    <ChartLegend content={<ChartLegendContent payload={legendPayload} />} />
                     <Bar
                       dataKey="count"
-                      fill="var(--color-count)"
                       radius={[0, 4, 4, 0]}
-                    />
+                      label={{ position: 'right', offset: 8, formatter: (value) => value, fontSize: 12 }}
+                    >
+                      {splitMethodChartData.map((entry) => (
+                        <Cell
+                          key={`cell-${entry.name}`}
+                          fill={
+                            (chartConfig[entry.name as keyof typeof chartConfig] as any)
+                              ?.color
+                          }
+                        />
+                      ))}
+                    </Bar>
                   </BarChart>
                 </ChartContainer>
               </CardContent>
