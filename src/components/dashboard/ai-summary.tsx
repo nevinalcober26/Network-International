@@ -15,10 +15,9 @@ interface AiSummaryProps {
 export function AiSummary({ data, context }: AiSummaryProps) {
   const [summary, setSummary] = useState('');
   const [error, setError] = useState('');
-  const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('success');
+  const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
   const [isVisible, setIsVisible] = useState(true);
   const isLoadingRef = useRef(false);
-  const { toast } = useToast();
 
   const generateSummary = useCallback(() => {
     if (isLoadingRef.current) return;
@@ -28,7 +27,9 @@ export function AiSummary({ data, context }: AiSummaryProps) {
       setStatus('loading');
       setError('');
       setSummary('');
-      const dataString = JSON.stringify(data.slice(0, 20));
+      // To prevent excessively large API requests, we'll slice the data.
+      // 50 records should be enough for a meaningful summary.
+      const dataString = JSON.stringify(data.slice(0, 50)); 
       
       summarizeData({ data: dataString, context })
         .then((result) => {
@@ -48,17 +49,17 @@ export function AiSummary({ data, context }: AiSummaryProps) {
             isLoadingRef.current = false;
         });
     } else {
-        setError(`Not enough data to generate a summary for ${context}.`);
-        setStatus('error');
-        isLoadingRef.current = false;
+        // If there's no data, reset to idle state.
+        setStatus('idle');
+        setSummary('');
+        setError('');
     }
   }, [data, context]);
   
-  const mockSummary = "The restaurant is facing severe operational inefficiencies, as over **75% of orders (12 out of 16)** are not fully paid, primarily due to a concerning number of cancelled and refunded orders along with several open and draft transactions.\nThis pattern indicates significant revenue leakage and potential issues in service delivery or payment management requiring immediate investigation.";
-
+  // Trigger summary generation when data changes.
   useEffect(() => {
-    setSummary(mockSummary);
-  }, []);
+    generateSummary();
+  }, [generateSummary]);
 
   const renderSummaryWithBold = (text: string) => {
     if (!text) return null;
@@ -66,7 +67,7 @@ export function AiSummary({ data, context }: AiSummaryProps) {
     return parts.map((part, index) => {
       if (part.startsWith('**') && part.endsWith('**')) {
         return (
-          <strong key={index} className="font-semibold text-red-600">
+          <strong key={index} className="font-semibold text-primary-foreground">
             {part.slice(2, -2)}
           </strong>
         );
@@ -75,7 +76,8 @@ export function AiSummary({ data, context }: AiSummaryProps) {
     });
   };
   
-  if (!isVisible) {
+  // Do not render the component if it's been closed or if there's no data to show.
+  if (!isVisible || status === 'idle') {
     return null;
   }
 
@@ -87,22 +89,20 @@ export function AiSummary({ data, context }: AiSummaryProps) {
     switch (status) {
       case 'loading':
         return (
-          <div className="flex-grow">
-            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1">AI is analyzing...</p>
-            <p className="text-sm text-foreground/90">Please wait while we generate insights from your data.</p>
+          <div className="flex-grow flex items-center gap-4">
+            <RefreshCw className="h-5 w-5 text-teal-600 animate-spin" />
+            <div>
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">AI is analyzing...</p>
+              <p className="text-sm text-foreground/90">Please wait while we generate insights.</p>
+            </div>
           </div>
         );
       case 'error':
         return (
-          <>
-            <div className="flex-grow">
-                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1">AI Error</p>
-                <p className="text-sm text-red-700">{error}</p>
-            </div>
-            <Button variant="ghost" size="sm" className="shrink-0 self-start" onClick={generateSummary} disabled={status === 'loading'}>
-                Try Again
-            </Button>
-          </>
+          <div className="flex-grow">
+              <p className="text-xs font-semibold text-red-700 uppercase tracking-wider mb-1">AI Error</p>
+              <p className="text-sm text-red-700">{error}</p>
+          </div>
         );
       case 'success':
       default:
@@ -128,9 +128,14 @@ export function AiSummary({ data, context }: AiSummaryProps) {
             </div>
         </div>
         {renderContent()}
-        <Button variant="ghost" size="icon" className="h-7 w-7 shrink-0 rounded-full bg-white/50 hover:bg-white/80" onClick={() => setIsVisible(false)}>
-          <X className="h-4 w-4 text-muted-foreground" />
-        </Button>
+        <div className="flex items-start gap-2">
+            <Button variant="ghost" size="icon" className="h-7 w-7 shrink-0 rounded-full bg-white/50 hover:bg-white/80" onClick={generateSummary} disabled={status === 'loading'}>
+              <RefreshCw className={cn("h-4 w-4 text-muted-foreground", status === 'loading' && 'animate-spin')} />
+            </Button>
+            <Button variant="ghost" size="icon" className="h-7 w-7 shrink-0 rounded-full bg-white/50 hover:bg-white/80" onClick={() => setIsVisible(false)}>
+              <X className="h-4 w-4 text-muted-foreground" />
+            </Button>
+        </div>
       </div>
     </div>
   );
