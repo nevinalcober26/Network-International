@@ -19,7 +19,7 @@ export type StatCardData = {
 
 function StatCard({ title, value, change, changeDescription, icon: Icon, color }: StatCardData) {
   return (
-    <Card className="relative overflow-hidden shadow-sm">
+    <Card className="relative overflow-hidden shadow-smooth">
       <div className={cn("absolute right-0 top-0 bottom-0 w-1.5 rounded-r-lg", `bg-${color}-400`)} />
       <CardContent className="p-4 flex flex-col justify-between h-full gap-2">
         <div className="flex justify-between items-start">
