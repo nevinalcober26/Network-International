@@ -5,7 +5,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { StatCards, type StatCardData } from "@/components/dashboard/stat-cards";
-import { Clock } from "lucide-react";
+import { Clock, Eye } from "lucide-react";
 
 const balancesData = [
   { waiter: 'John', amount: 22.50, openTables: 1, oldestAge: "45m", recoveredVsLost: "$50 / $5" },
@@ -53,7 +53,12 @@ export function Balances() {
                                     <TableCell>{row.openTables}</TableCell>
                                     <TableCell>{row.oldestAge}</TableCell>
                                     <TableCell>{row.recoveredVsLost}</TableCell>
-                                    <TableCell className="text-right"><Button variant="link" size="sm">View open tables</Button></TableCell>
+                                    <TableCell className="text-right">
+                                        <Button variant="ghost" size="icon">
+                                            <Eye className="h-5 w-5" />
+                                            <span className="sr-only">View open tables</span>
+                                        </Button>
+                                    </TableCell>
                                 </TableRow>
                             ))}
                         </TableBody>
