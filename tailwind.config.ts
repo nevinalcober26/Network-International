@@ -27,6 +27,7 @@ export default {
     'bg-red-50',
     'border-red-500',
     'text-red-700',
+    'text-red-600',
     'bg-red-500',
     'bg-yellow-50',
     'border-yellow-500',
