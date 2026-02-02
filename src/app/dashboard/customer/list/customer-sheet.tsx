@@ -86,8 +86,7 @@ export function CustomerSheet({
           <SheetHeader className="p-6 border-b">
             <div className="flex items-center gap-4">
               <Avatar className="h-16 w-16">
-                <AvatarImage src={customer.avatar} alt={customer.name} />
-                <AvatarFallback>{customer.name.charAt(0)}</AvatarFallback>
+                <AvatarFallback className="text-2xl">{customer.name.charAt(0)}</AvatarFallback>
               </Avatar>
               <div>
                 <SheetTitle className="text-2xl">{customer.name}</SheetTitle>

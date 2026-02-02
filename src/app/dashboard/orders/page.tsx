@@ -479,7 +479,6 @@ export default function OrdersPage() {
                                 {order.customer ? (
                                     <div className="flex items-center gap-3">
                                     <Avatar className="h-8 w-8">
-                                        <AvatarImage src={order.customer.avatar} alt={order.customer.name} />
                                         <AvatarFallback>{order.customer.name.charAt(0)}</AvatarFallback>
                                     </Avatar>
                                     <div>

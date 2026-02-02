@@ -136,7 +136,6 @@ export const generateMockOrders = (count: number, dateRange?: DateRange): Order[
             name: customerName,
             email: `${customerName.toLowerCase().replace(/ /g, '.').replace(/[^\w.]/g, '')}@example.com`,
             phone: `555-01${String(i).padStart(2, '0')}`,
-            avatar: `https://i.pravatar.cc/40?u=${customerName}`
           }
         : undefined,
       staffName: staffNames[i % staffNames.length],

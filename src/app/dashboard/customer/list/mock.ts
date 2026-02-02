@@ -61,7 +61,6 @@ export const generateMockCustomers = (count: number): Customer[] => {
       name,
       email: `${name.replace(' ', '.').toLowerCase()}@example.com`,
       phone: `555-01${String(i).padStart(2, '0')}`,
-      avatar: `https://i.pravatar.cc/150?u=${name}`,
       lastVisit: totalVisits > 0 ? format(subDays(new Date(), i * 5), 'PP') : 'N/A',
       totalVisits,
       totalSpent,

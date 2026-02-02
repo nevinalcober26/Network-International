@@ -181,7 +181,6 @@ export default function CustomerListPage() {
                       <TableCell>
                         <div className="flex items-center gap-3">
                           <Avatar>
-                            <AvatarImage src={customer.avatar} alt={customer.name} />
                             <AvatarFallback>{customer.name.charAt(0)}</AvatarFallback>
                           </Avatar>
                           <div>

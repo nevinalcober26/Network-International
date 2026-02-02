@@ -23,7 +23,6 @@ export type Customer = {
   name: string;
   email: string;
   phone: string;
-  avatar: string;
   lastVisit: string;
   totalVisits: number;
   totalSpent: number;
