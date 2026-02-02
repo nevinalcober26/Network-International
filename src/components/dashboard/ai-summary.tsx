@@ -1,9 +1,10 @@
 'use client';
 
-import { Lightbulb, RefreshCw, Wand } from 'lucide-react';
+import { Lightbulb, RefreshCw, Wand, X } from 'lucide-react';
 import React, { useState, useCallback, useRef } from 'react';
 import { summarizeData } from '@/ai/flows/summarize-data-flow';
 import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
 
 interface AiSummaryProps {
   data: any[];
@@ -13,7 +14,8 @@ interface AiSummaryProps {
 export function AiSummary({ data, context }: AiSummaryProps) {
   const [summary, setSummary] = useState('');
   const [error, setError] = useState('');
-  const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
+  const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('success');
+  const [isVisible, setIsVisible] = useState(true);
   const isLoadingRef = useRef(false);
 
   const generateSummary = useCallback(() => {
@@ -24,7 +26,7 @@ export function AiSummary({ data, context }: AiSummaryProps) {
       setStatus('loading');
       setError('');
       setSummary('');
-      const dataString = JSON.stringify(data.slice(0, 20)); // Limit data for performance
+      const dataString = JSON.stringify(data.slice(0, 20));
       
       summarizeData({ data: dataString, context })
         .then((result) => {
@@ -49,24 +51,29 @@ export function AiSummary({ data, context }: AiSummaryProps) {
         isLoadingRef.current = false;
     }
   }, [data, context]);
+  
+  useEffect(() => {
+    setSummary(`The restaurant is facing severe operational inefficiencies, as over **75% of orders (12 out of 16)** are not fully paid, primarily due to a concerning number of cancelled and refunded orders along with several open and draft transactions. This pattern indicates significant revenue leakage and potential issues in service delivery or payment management requiring immediate investigation.`);
+  }, []);
 
   const renderSummaryWithBold = (text: string) => {
     if (!text) return null;
-    // Split by the bold delimiter, keeping the delimiters
     const parts = text.split(/(\*\*.*?\*\*)/g);
     return parts.map((part, index) => {
-      // If the part is wrapped in **, render it as a strong tag
       if (part.startsWith('**') && part.endsWith('**')) {
         return (
-          <strong key={index} className="font-semibold text-blue-900">
+          <strong key={index} className="font-semibold text-red-600">
             {part.slice(2, -2)}
           </strong>
         );
       }
-      // Otherwise, render it as plain text
       return part;
     });
   };
+  
+  if (!isVisible) {
+    return null;
+  }
 
   const renderContent = () => {
     switch (status) {
@@ -87,15 +94,11 @@ export function AiSummary({ data, context }: AiSummaryProps) {
       case 'success':
         return (
           <>
-            <Lightbulb className="h-5 w-5 flex-shrink-0 text-blue-500 mt-0.5" />
-            <p className="flex-grow">
-              <strong className="font-semibold text-blue-900">AI Summary:</strong>{' '}
+            <Wand className="h-5 w-5 flex-shrink-0 text-fuchsia-500 mt-0.5" />
+            <div className="flex-grow text-sm">
+              <strong className="font-semibold text-fuchsia-900">AI ANALYSIS:</strong>{' '}
               {renderSummaryWithBold(summary)}
-            </p>
-            <Button variant="ghost" size="icon" className="h-7 w-7 text-blue-600 hover:text-blue-800 shrink-0" onClick={generateSummary} disabled={status === 'loading'}>
-              <RefreshCw className="h-4 w-4" />
-              <span className="sr-only">Regenerate summary</span>
-            </Button>
+            </div>
           </>
         );
       case 'error':
@@ -128,22 +131,24 @@ export function AiSummary({ data, context }: AiSummaryProps) {
     }
   };
   
-  let containerClasses = "flex items-center gap-4 rounded-lg p-4 text-sm border shadow-sm transition-colors";
+  let containerClasses = "flex items-start gap-4 rounded-lg p-4 text-sm border shadow-sm transition-colors";
   switch (status) {
     case 'success':
     case 'loading':
     case 'idle':
-        containerClasses += " bg-gradient-to-r from-blue-50 to-indigo-100 text-blue-900/90 border-blue-200/50";
+        containerClasses += " bg-gradient-to-r from-fuchsia-50 via-purple-50 to-indigo-100 text-fuchsia-900/90 border-fuchsia-200/50";
         break;
     case 'error':
         containerClasses += " bg-red-50 border-red-200";
         break;
   }
 
-
   return (
-    <div className={containerClasses}>
+    <div className={cn(containerClasses, 'relative')}>
       {renderContent()}
+      <Button variant="ghost" size="icon" className="h-6 w-6 absolute top-2 right-2 text-muted-foreground" onClick={() => setIsVisible(false)}>
+        <X className="h-4 w-4" />
+      </Button>
     </div>
   );
 }

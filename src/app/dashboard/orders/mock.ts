@@ -9,20 +9,16 @@ export const generateMockOrders = (count: number, dateRange?: DateRange): Order[
   const dateDiff = Math.abs(differenceInDays(to, from));
 
   const statuses: Order['orderStatus'][] = [
-    'Paid',
+    'Completed',
     'Open',
     'Draft',
     'Cancelled',
     'Refunded',
-  ];
-  const paymentStates: Order['paymentState'][] = [
-    'Fully Paid',
-    'Partial',
-    'Unpaid',
+    'Paid',
   ];
   const branches: Order['branch'][] = ['Ras Al Khaimah', 'Dubai Mall'];
-  const staffNames = ['Alex', 'Maria', 'John', 'Sarah', 'David'];
-  const customerNames = ['Alice', 'Bob', 'Charlie', 'Diana', 'Eve', 'Frank', 'Grace', 'Henry'];
+  const staffNames = ['Alex', 'Maria', 'John', 'Sarah', 'David', 'Frank M.'];
+  const customerNames = ['Alice', 'Bob O.', 'Charlie H.', 'Diana P.', 'Eve S.', 'Frank M.', 'Grace', 'Henry'];
   const comments = [
     'Customer requested extra napkins.',
     'Allergy alert: No nuts.',
@@ -60,19 +56,7 @@ export const generateMockOrders = (count: number, dateRange?: DateRange): Order[
 
     const orderStatus = statuses[i % statuses.length];
     const orderType = i % 2 === 0 ? 'Post-Paid' : 'Prepaid';
-    const staffName = staffNames[i % staffNames.length];
-
-    let paymentState = paymentStates[i % paymentStates.length];
-    if (orderStatus === 'Paid') paymentState = 'Fully Paid';
-    if (
-      orderStatus === 'Cancelled' ||
-      orderStatus === 'Draft' ||
-      orderStatus === 'Refunded'
-    )
-      paymentState = 'Unpaid';
-    if (orderStatus === 'Open' && paymentState === 'Fully Paid')
-      paymentState = 'Partial';
-
+    
     const orderItemsCount = Math.floor(Math.random() * 3) + 1;
     const currentItems: OrderItem[] = Array.from({ length: orderItemsCount }, (_, j) => {
       const item = menuItems[Math.floor(Math.random() * menuItems.length)];
@@ -84,77 +68,53 @@ export const generateMockOrders = (count: number, dateRange?: DateRange): Order[
         category: item.category,
       };
     });
-
-    const totalAmount = currentItems.reduce(
-      (sum, item) => sum + item.price * item.quantity,
-      0
-    );
     
+    const totalAmount = currentItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
+    
+    let paymentState: Order['paymentState'] = 'Unpaid';
     let paidAmount = 0;
     const payments: Order['payments'] = [];
     let splitType: Order['splitType'] | undefined = undefined;
 
-    if (paymentState === 'Fully Paid') {
+    if (orderStatus === 'Completed' || orderStatus === 'Paid') {
+      paymentState = 'Fully Paid';
       paidAmount = totalAmount;
-       payments.push({
-        method: orderType === 'Post-Paid' ? 'Credit Card' : (i % 3 === 0 ? 'Cash' : 'Credit Card'),
-        amount: paidAmount.toFixed(2),
-        date: new Date(orderTimestamp + 120000).toLocaleString(),
-        transactionId: `txn_${12345 + i}`,
-        guestName: 'Guest 1',
-      });
-    } else if (paymentState === 'Partial') {
-      splitType = i % 2 === 0 ? 'equally' : 'byItem';
-      const numSplits = Math.floor(Math.random() * 2) + 2; // 2 or 3 splits
-      let totalPaid = totalAmount * (Math.random() * 0.5 + 0.2); // Pay 20% to 70%
-      paidAmount = totalPaid;
-      let remainingToDistribute = totalPaid;
-
-      for (let j = 0; j < numSplits; j++) {
-        let splitAmount: number;
-        if (j === numSplits - 1) {
-          splitAmount = remainingToDistribute;
-        } else {
-          splitAmount = remainingToDistribute / (numSplits - j) * (Math.random() * 0.5 + 0.5);
-        }
-        
-        splitAmount = Math.max(0, splitAmount);
-        remainingToDistribute -= splitAmount;
-
-        let methodForSplit: 'Credit Card' | 'Cash';
-        if (orderType === 'Post-Paid') {
-            methodForSplit = 'Credit Card';
-        } else {
-            methodForSplit = j % 2 === 0 ? 'Credit Card' : 'Cash';
-        }
-
-
-        if (splitAmount > 0.01) {
-          payments.push({
-            method: methodForSplit,
-            amount: splitAmount.toFixed(2),
-            date: new Date(orderTimestamp + 120000 + j * 10000).toLocaleString(),
-            transactionId: `txn_${12345 + i}_${j}`,
-            guestName: `Guest ${j + 1}`,
-          });
-        }
+    } else if (orderStatus === 'Cancelled') {
+      paymentState = 'Voided';
+    } else if (orderStatus === 'Refunded') {
+      paymentState = 'Returned';
+      paidAmount = totalAmount;
+    } else if (orderStatus === 'Open') {
+      const rand = Math.random();
+      if (rand < 0.6) { // 60% chance of being partially paid
+          paymentState = 'Partial';
+          paidAmount = totalAmount * (Math.random() * 0.5 + 0.2);
+          splitType = i % 2 === 0 ? 'equally' : 'byItem';
+      } else { // 40% chance of being unpaid
+          paymentState = 'Unpaid';
       }
-      // Due to floating point math, ensure paidAmount is the sum of actual splits
-      paidAmount = payments.reduce((sum, p) => sum + parseFloat(p.amount), 0);
+    } else if (orderStatus === 'Draft') {
+      paymentState = 'Unpaid';
     }
     
-    if (orderStatus === 'Refunded') {
-      paidAmount = totalAmount;
+    if (paidAmount > 0) {
+        payments.push({
+            method: orderType === 'Post-Paid' ? 'Credit Card' : (i % 3 === 0 ? 'Cash' : 'Credit Card'),
+            amount: paidAmount.toFixed(2),
+            date: new Date(orderTimestamp + 120000).toLocaleString(),
+            transactionId: `txn_${12345 + i}`,
+            guestName: 'Guest 1',
+        });
     }
 
     const orderDate = new Date(orderTimestamp);
     const customerName = customerNames[i % customerNames.length];
-    const hasCustomer = i % 4 !== 0; // ~25% of orders will be from guests
+    const hasCustomer = i % 4 !== 0;
 
     orders.push({
       orderId: `#${3210 + i}`,
       branch: branches[i % branches.length],
-      table: `T${(i % 24) + 1}`,
+      table: `T${(i % 12) + 1}`,
       orderType,
       orderStatus,
       paymentState,
@@ -174,10 +134,12 @@ export const generateMockOrders = (count: number, dateRange?: DateRange): Order[
       customer: hasCustomer
         ? {
             name: customerName,
-            email: `${customerName.toLowerCase().replace(' ', '.')}@example.com`,
+            email: `${customerName.toLowerCase().replace(/ /g, '.').replace(/[^\w.]/g, '')}@example.com`,
             phone: `555-01${String(i).padStart(2, '0')}`,
+            avatar: `https://i.pravatar.cc/40?u=${customerName}`
           }
         : undefined,
+      staffName: staffNames[i % staffNames.length],
       orderComments: comments[i % comments.length] || undefined,
     });
   }

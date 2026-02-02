@@ -18,6 +18,7 @@ export type Customer = {
   name: string;
   email: string;
   phone: string;
+  avatar?: string;
 }
 
 export type Order = {
@@ -25,8 +26,8 @@ export type Order = {
   branch: 'Ras Al Khaimah' | 'Dubai Mall';
   table: string;
   orderType: 'Post-Paid' | 'Prepaid';
-  orderStatus: 'Draft' | 'Open' | 'Paid' | 'Cancelled' | 'Refunded';
-  paymentState: 'Unpaid' | 'Partial' | 'Fully Paid';
+  orderStatus: 'Draft' | 'Open' | 'Paid' | 'Cancelled' | 'Refunded' | 'Completed';
+  paymentState: 'Unpaid' | 'Partial' | 'Fully Paid' | 'Voided' | 'Returned';
   totalAmount: number;
   paidAmount: number;
   items: OrderItem[];
