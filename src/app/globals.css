@@ -109,7 +109,7 @@
   right: 0;
   bottom: 0;
   border-radius: inherit;
-  padding: 3px;
+  padding: 2.2px;
   background: conic-gradient(from var(--angle), #9E9AFF, #B7EAE0, #D2DAB8, #C9A8A9, #9E9AFF);
   -webkit-mask: 
       linear-gradient(#fff 0 0) content-box, 
