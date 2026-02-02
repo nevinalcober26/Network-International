@@ -1,6 +1,7 @@
 'use client';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import NextLink from 'next/link';
+import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -13,55 +14,37 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { EMenuIcon } from '@/components/dashboard/app-sidebar';
-import { useAuth } from '@/firebase';
-import { initiateEmailSignIn } from '@/firebase/non-blocking-login';
-import { useRouter } from 'next/navigation';
-import { useUser } from '@/firebase';
-import { onAuthStateChanged } from 'firebase/auth';
 import { AuthCardSkeleton } from '@/components/dashboard/skeletons';
 
 export default function LoginPage() {
-  const auth = useAuth();
   const router = useRouter();
-  const { user, isUserLoading } = useUser();
-  const [email, setEmail] = useState('');
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(true);
 
-  React.useEffect(() => {
-    if (!auth) return;
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      if (user) {
-        router.push('/dashboard');
-      }
-    }, (error) => {
-      if (error.code === 'auth/invalid-credential') {
-        setError('Invalid email or password. Please try again.');
-      } else {
-        setError(error.message);
-      }
-    });
+  useEffect(() => {
+    // This effect runs on the client after component mount
+    if (localStorage.getItem('isLoggedIn') === 'true') {
+      router.push('/dashboard');
+    } else {
+      setIsLoading(false);
+    }
+  }, [router]);
 
-    return () => unsubscribe();
-  }, [auth, router]);
+  const handleSignIn = () => {
+    setError('');
+    if (username === 'admin' && password === 'admin') {
+      localStorage.setItem('isLoggedIn', 'true');
+      router.push('/dashboard');
+    } else {
+      setError('Invalid username or password. Use "admin" for both.');
+    }
+  };
 
-  if (isUserLoading) {
+  if (isLoading) {
     return <AuthCardSkeleton />;
   }
-
-  if (user) {
-    // router.push('/dashboard') is handled by onAuthStateChanged
-    return null;
-  }
-
-  const handleSignIn = async () => {
-    if (!email) {
-      setError('Please enter a valid email address.');
-      return;
-    }
-    setError('');
-    initiateEmailSignIn(auth, email, password);
-  };
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-background">
@@ -72,18 +55,18 @@ export default function LoginPage() {
           </div>
           <CardTitle className="text-2xl text-center">Login</CardTitle>
           <CardDescription className="text-center">
-            Enter your email below to login to your account
+            Enter your credentials to access your account
           </CardDescription>
         </CardHeader>
         <CardContent className="grid gap-4">
           <div className="grid gap-2">
-            <Label htmlFor="email">Email</Label>
+            <Label htmlFor="username">Username</Label>
             <Input
-              id="email"
-              type="email"
-              placeholder="m@example.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              id="username"
+              type="text"
+              placeholder="admin"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
               required
             />
           </div>
@@ -92,6 +75,7 @@ export default function LoginPage() {
             <Input
               id="password"
               type="password"
+              placeholder="admin"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required

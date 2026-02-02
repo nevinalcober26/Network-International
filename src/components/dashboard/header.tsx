@@ -1,6 +1,7 @@
 'use client';
 import Image from 'next/image';
 import React, { useState, useEffect, useMemo } from 'react';
+import { useRouter } from 'next/navigation';
 import {
   Bell,
   Search,
@@ -30,6 +31,7 @@ import { AppSwitcher } from './app-switcher';
 const userAvatar = PlaceHolderImages.find((img) => img.id === 'user-avatar');
 
 export function DashboardHeader() {
+  const router = useRouter();
   const [isClient, setIsClient] = useState(false);
   const [placeholder, setPlaceholder] = useState('Search menus, orders...');
   const placeholderTexts = useMemo(
@@ -99,6 +101,11 @@ export function DashboardHeader() {
       clearTimeout(cursorTimeout);
     };
   }, [isClient, placeholderTexts]);
+
+  const handleLogout = () => {
+    localStorage.removeItem('isLoggedIn');
+    router.push('/');
+  };
 
   if (!isClient) {
     return (
@@ -211,7 +218,7 @@ export function DashboardHeader() {
               <span>Settings</span>
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>
+            <DropdownMenuItem onClick={handleLogout}>
               <LogOut className="mr-2 h-4 w-4" />
               <span>Log out</span>
             </DropdownMenuItem>

@@ -1,5 +1,5 @@
 'use client';
-import React, { useState } from 'react';
+import React from 'react';
 import NextLink from 'next/link';
 import { Button } from '@/components/ui/button';
 import {
@@ -13,52 +13,10 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { EMenuIcon } from '@/components/dashboard/app-sidebar';
-import { useAuth } from '@/firebase';
-import { initiateEmailSignUp } from '@/firebase/non-blocking-login';
-import { useRouter } from 'next/navigation';
-import { useUser } from '@/firebase';
-import { onAuthStateChanged } from 'firebase/auth';
-import { SignupCardSkeleton } from '@/components/dashboard/skeletons';
 
 export default function SignupPage() {
-  const auth = useAuth();
-  const router = useRouter();
-  const { user, isUserLoading } = useUser();
-  const [firstName, setFirstName] = useState('');
-  const [lastName, setLastName] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
-
-  React.useEffect(() => {
-    if (!auth) return;
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      if (user) {
-        // Redirect to dashboard with onboarding flag
-        router.push('/dashboard?onboarding=true');
-      }
-    });
-
-    return () => unsubscribe();
-  }, [auth, router]);
-
-  if (isUserLoading) {
-    return <SignupCardSkeleton />;
-  }
-
-  if (user) {
-    return null;
-  }
-
-  const handleSignUp = async () => {
-    if (!firstName || !lastName || !email || !password) {
-      setError('Please fill out all fields.');
-      return;
-    }
-    setError('');
-    // For now, we are just creating the user in Firebase Auth.
-    // In a real application, you would also create a user profile in Firestore here.
-    initiateEmailSignUp(auth, email, password);
+  const handleSignUp = () => {
+    alert('Signup is disabled for this simplified login demo.');
   };
 
   return (
@@ -80,9 +38,8 @@ export default function SignupPage() {
               <Input
                 id="first-name"
                 placeholder="Max"
-                value={firstName}
-                onChange={(e) => setFirstName(e.target.value)}
                 required
+                readOnly
               />
             </div>
             <div className="grid gap-2">
@@ -90,9 +47,8 @@ export default function SignupPage() {
               <Input
                 id="last-name"
                 placeholder="Robinson"
-                value={lastName}
-                onChange={(e) => setLastName(e.target.value)}
                 required
+                readOnly
               />
             </div>
           </div>
@@ -102,22 +58,14 @@ export default function SignupPage() {
               id="email"
               type="email"
               placeholder="m@example.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
               required
+              readOnly
             />
           </div>
           <div className="grid gap-2">
             <Label htmlFor="password">Password</Label>
-            <Input
-              id="password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-            />
+            <Input id="password" type="password" required readOnly />
           </div>
-          {error && <p className="text-red-500 text-sm">{error}</p>}
         </CardContent>
         <CardFooter className="flex flex-col gap-4">
           <Button className="w-full" onClick={handleSignUp}>
