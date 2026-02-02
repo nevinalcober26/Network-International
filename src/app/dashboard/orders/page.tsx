@@ -300,10 +300,10 @@ export default function OrdersPage() {
 
   const kpiCards: StatCardData[] = useMemo(() => {
     return [
-      { title: 'Total Revenue', value: '$1028.50', changeDescription: 'from 30 orders', icon: DollarSign, color: 'teal' },
-      { title: 'Total Orders', value: '+50', changeDescription: 'in the last 30 days', icon: ShoppingCart, color: 'orange' },
-      { title: 'Avg. Order Value', value: '$34.28', change: '+5.2%', changeDescription: 'vs last month', icon: TrendingUp, color: 'pink' },
-      { title: 'Cancelled & Refunded', value: '20', changeDescription: '40% of total orders', icon: XCircle, color: 'green' },
+      { title: 'Total Revenue', value: '$1028.50', changeDescription: 'from 30 orders', icon: DollarSign, color: 'teal', tooltipText: 'Total revenue from all orders in the selected period.' },
+      { title: 'Total Orders', value: '+50', changeDescription: 'in the last 30 days', icon: ShoppingCart, color: 'orange', tooltipText: 'Total number of orders placed in the selected period.' },
+      { title: 'Avg. Order Value', value: '$34.28', change: '+5.2%', changeDescription: 'vs last month', icon: TrendingUp, color: 'pink', tooltipText: 'The average amount spent per order.' },
+      { title: 'Cancelled & Refunded', value: '20', changeDescription: '40% of total orders', icon: XCircle, color: 'green', tooltipText: 'Total number of orders that were cancelled or refunded.' },
     ];
   }, []);
   

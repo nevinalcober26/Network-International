@@ -12,9 +12,9 @@ import { generateMockOrders } from '@/app/dashboard/orders/mock';
 import { useToast } from '@/hooks/use-toast';
 
 const kpis: StatCardData[] = [
-    { title: "Risky Tables", value: "3", icon: AlertTriangle, color: 'pink' },
-    { title: "Revenue at Risk", value: "$245.50", icon: DollarSign, color: 'orange' },
-    { title: "Tips Trend (7d)", value: "+5.2%", icon: TrendingUp, color: 'green', change: "+5.2%" },
+    { title: "Risky Tables", value: "3", icon: AlertTriangle, color: 'pink', tooltipText: 'Tables with unusual payment behavior, such as long pending times or multiple failed payments.' },
+    { title: "Revenue at Risk", value: "$245.50", icon: DollarSign, color: 'orange', tooltipText: 'The total outstanding amount on tables identified as having risky payment behavior.' },
+    { title: "Tips Trend (7d)", value: "+5.2%", icon: TrendingUp, color: 'green', change: "+5.2%", tooltipText: 'The percentage increase or decrease in the average tip amount over the last 7 days.' },
 ];
 
 const alerts = [

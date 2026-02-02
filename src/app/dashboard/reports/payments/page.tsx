@@ -439,6 +439,7 @@ export default function PaymentsReportPage() {
         change: '+2.5%',
         icon: DollarSign,
         color: 'teal',
+        tooltipText: 'The total gross sales amount from all transactions in the selected period, including paid, partial, and unpaid orders.'
       },
       {
         title: 'Total Collected',
@@ -449,6 +450,7 @@ export default function PaymentsReportPage() {
         change: '+2.8%',
         icon: WalletCards,
         color: 'green',
+        tooltipText: 'The total amount of money actually collected from customers in the selected period.'
       },
       {
         title: 'Outstanding Balance',
@@ -459,6 +461,7 @@ export default function PaymentsReportPage() {
         change: '-5.1%',
         icon: AlertTriangle,
         color: 'pink',
+        tooltipText: 'The total amount of money that remains unpaid across all orders in the selected period.'
       },
       {
         title: 'Average Bill Value',
@@ -466,6 +469,7 @@ export default function PaymentsReportPage() {
         change: '+0.5%',
         icon: FileText,
         color: 'orange',
+        tooltipText: 'The average value of each transaction, calculated as Total Sales divided by the number of paid transactions.'
       },
       {
         title: 'Average Time to Pay',
@@ -473,6 +477,7 @@ export default function PaymentsReportPage() {
         change: '-2.0%',
         icon: Clock,
         color: 'teal',
+        tooltipText: 'The average time it takes for a customer to complete payment after an order is opened.'
       },
     ];
   }, [filteredAndSortedTransactions]);

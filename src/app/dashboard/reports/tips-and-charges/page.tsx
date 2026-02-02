@@ -372,19 +372,22 @@ export default function TipsAndChargesReportPage() {
           maximumFractionDigits: 2,
         })}`,
         icon: HandCoins,
-        color: 'teal'
+        color: 'teal',
+        tooltipText: 'The total gross amount of all tips collected across the filtered transactions before any fees.'
       },
       {
         title: 'Tip Adoption Rate',
         value: `${tipAdoptionRate.toFixed(1)}%`,
         icon: CirclePercent,
-        color: 'orange'
+        color: 'orange',
+        tooltipText: 'The percentage of transactions with a paid amount where a tip was also given.'
       },
       {
         title: 'Average Tip %',
         value: `${avgTipPercentage.toFixed(1)}%`,
         icon: TrendingUp,
-        color: 'pink'
+        color: 'pink',
+        tooltipText: 'The average tip amount as a percentage of the total bill for transactions that included a tip.'
       },
     ];
   }, [filteredTransactions, tipTransactions, totalGrossTips]);

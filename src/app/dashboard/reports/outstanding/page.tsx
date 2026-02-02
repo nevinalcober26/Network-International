@@ -334,19 +334,22 @@ export default function OutstandingReportPage() {
         })}`,
         icon: DollarSign,
         color: 'pink',
-        changeDescription: 'Across all filtered orders'
+        changeDescription: 'Across all filtered orders',
+        tooltipText: 'The total amount of money that has not yet been paid across all partially paid or unpaid orders.'
       },
       {
         title: 'Outstanding Orders',
         value: `${outstandingCount}`,
         icon: FileWarning,
-        color: 'orange'
+        color: 'orange',
+        tooltipText: 'The total number of orders that are either partially paid or completely unpaid.'
       },
       {
         title: 'Avg. Days Outstanding',
         value: `${avgAge.toFixed(1)}`,
         icon: CalendarDays,
-        color: 'green'
+        color: 'green',
+        tooltipText: 'The average number of days an order has remained in an outstanding (unpaid or partially paid) state.'
       },
     ];
   }, [outstandingTransactions]);

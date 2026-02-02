@@ -6,8 +6,15 @@ import {
 import {
   TrendingUp,
   TrendingDown,
+  HelpCircle,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 
 export type StatCardData = {
   title: string;
@@ -16,14 +23,29 @@ export type StatCardData = {
   changeDescription?: string;
   icon: React.ElementType;
   color: string;
+  tooltipText?: string;
 };
 
-function StatCard({ title, value, change, changeDescription, icon: Icon, color }: StatCardData) {
+function StatCard({ title, value, change, changeDescription, icon: Icon, color, tooltipText }: StatCardData) {
   return (
     <Card className="border-0 shadow-smooth h-full">
       <CardContent className="p-4 flex flex-col justify-between h-full gap-2">
         <div className="flex justify-between items-start gap-2">
-            <p className="text-xs font-medium text-muted-foreground truncate">{title}</p>
+            <TooltipProvider>
+              <div className="flex items-center gap-1.5">
+                <p className="text-xs font-medium text-muted-foreground truncate">{title}</p>
+                {tooltipText && (
+                  <Tooltip delayDuration={100}>
+                    <TooltipTrigger>
+                      <HelpCircle className="h-3.5 w-3.5 text-muted-foreground cursor-help" />
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p className="max-w-xs">{tooltipText}</p>
+                    </TooltipContent>
+                  </Tooltip>
+                )}
+              </div>
+            </TooltipProvider>
             <div className={cn("p-1.5 rounded-md flex-shrink-0", `bg-${color}-100`)}>
                 <Icon className={cn("h-4 w-4", `text-${color}-600`)}/>
             </div>

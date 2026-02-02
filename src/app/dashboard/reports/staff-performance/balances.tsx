@@ -14,9 +14,9 @@ const balancesData = [
 ];
 
 const balanceCards: StatCardData[] = [
-    { title: "0-10 min", value: "$5.50", icon: Clock, color: 'green' },
-    { title: "10-30 min", value: "$0.00", icon: Clock, color: 'orange' },
-    { title: "30+ min", value: "$63.30", icon: Clock, color: 'pink' }
+    { title: "0-10 min", value: "$5.50", icon: Clock, color: 'green', tooltipText: 'Total outstanding balance from orders that have been open for less than 10 minutes.' },
+    { title: "10-30 min", value: "$0.00", icon: Clock, color: 'orange', tooltipText: 'Total outstanding balance from orders that have been open for 10 to 30 minutes.' },
+    { title: "30+ min", value: "$63.30", icon: Clock, color: 'pink', tooltipText: 'Total outstanding balance from orders that have been open for more than 30 minutes.' }
 ];
 
 

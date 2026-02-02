@@ -17,18 +17,21 @@ const leakageKpiCards: StatCardData[] = [
         value: '$40.80',
         icon: DollarSign,
         color: 'pink',
+        tooltipText: 'The total estimated revenue lost due to issues like unresolved bills or order discrepancies.'
     },
     {
         title: 'Tickets Involved',
         value: '2',
         icon: FileText,
         color: 'orange',
+        tooltipText: 'The number of individual orders or tickets that are contributing to the estimated revenue leakage.'
     },
     {
         title: 'Leakage Types',
         value: '2',
         icon: AlertCircle,
         color: 'green',
+        tooltipText: 'The number of different categories of issues (e.g., "Closed w/o Settlement") causing revenue leakage.'
     }
 ];
 

@@ -20,9 +20,9 @@ export function Tips() {
     const sortedTips = [...tipsData].sort((a, b) => b.total - a.total);
 
     const advancedMetrics: StatCardData[] = [
-        { title: "Tip Volatility", value: "12.5%", icon: Zap, color: 'pink', change: "-2.1%", changeDescription: "Lower is better" },
-        { title: "Normalization Index", value: "8.5/10", icon: Scale, color: 'orange', change: "+0.5", changeDescription: "vs. restaurant avg." },
-        { title: "Fairness Score", value: "92%", icon: GitCompareArrows, color: 'teal', changeDescription: "Based on Gini Coefficient" },
+        { title: "Tip Volatility", value: "12.5%", icon: Zap, color: 'pink', change: "-2.1%", changeDescription: "Lower is better", tooltipText: 'Measures the consistency of tip percentages. A lower value indicates more predictable tipping behavior.' },
+        { title: "Normalization Index", value: "8.5/10", icon: Scale, color: 'orange', change: "+0.5", changeDescription: "vs. restaurant avg.", tooltipText: 'A score indicating how a waiter\'s tip performance compares to the restaurant average, adjusted for factors like bill size.' },
+        { title: "Fairness Score", value: "92%", icon: GitCompareArrows, color: 'teal', changeDescription: "Based on Gini Coefficient", tooltipText: 'Measures the equality of tip distribution among staff. A higher score indicates a more even distribution.' },
     ];
 
     const getRankComponent = (rank: number) => {

@@ -28,6 +28,7 @@ const initialStatCards: StatCardData[] = [
     changeDescription: 'vs last month',
     icon: LayoutGrid,
     color: 'orange',
+    tooltipText: 'The total number of product categories in your menu.',
   },
   {
     title: 'Active Products',
@@ -36,6 +37,7 @@ const initialStatCards: StatCardData[] = [
     changeDescription: 'New items added',
     icon: Package,
     color: 'pink',
+    tooltipText: 'The number of products currently available for sale.',
   },
   {
     title: 'Published Pages',
@@ -43,6 +45,7 @@ const initialStatCards: StatCardData[] = [
     changeDescription: 'Updated 2 days ago',
     icon: FileText,
     color: 'green',
+    tooltipText: 'The number of static pages (e.g., About Us) that are live.',
   },
   {
     title: "Today's Orders",
@@ -51,6 +54,7 @@ const initialStatCards: StatCardData[] = [
     changeDescription: 'vs yesterday',
     icon: ShoppingCart,
     color: 'teal',
+    tooltipText: 'The total number of orders placed so far today.',
   },
 ];
 

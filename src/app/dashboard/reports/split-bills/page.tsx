@@ -386,25 +386,29 @@ export default function SplitBillsReportPage() {
             title: 'Split Adoption Rate',
             value: `${splitAdoptionRate.toFixed(1)}%`,
             icon: CirclePercent,
-            color: 'teal'
+            color: 'teal',
+            tooltipText: 'The percentage of total transactions where the bill was split among multiple payers.'
         },
         {
             title: 'Avg. Payers per Split',
             value: `${avgPayers.toFixed(1)}`,
             icon: Users,
-            color: 'orange'
+            color: 'orange',
+            tooltipText: 'The average number of individuals who contributed to paying a single bill when it was split.'
         },
         {
             title: 'Abandoned Splits',
             value: `${abandonedSplits}`,
             icon: UserX,
-            color: 'pink'
+            color: 'pink',
+            tooltipText: 'The number of split bill transactions that were not fully paid and remain in a partial or unpaid state.'
         },
         {
             title: 'Total Outstanding',
             value: `$${totalOutstanding.toFixed(2)}`,
             icon: DollarSign,
-            color: 'green'
+            color: 'green',
+            tooltipText: 'The total outstanding amount from split bill transactions that were not fully paid.'
         }
       ]
   }, [filteredTransactions, splitTransactions]);
