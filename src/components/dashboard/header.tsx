@@ -38,6 +38,10 @@ export function DashboardHeader() {
   );
 
   useEffect(() => {
+    setIsClient(true);
+  }, []);
+
+  useEffect(() => {
     if (!isClient) return;
 
     let textIndex = 0;
