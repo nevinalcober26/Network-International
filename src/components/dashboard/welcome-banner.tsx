@@ -74,7 +74,7 @@ export function WelcomeBanner({ statCards, chartData }: WelcomeBannerProps) {
           }
           setStatus('success'); // Set status to success to display the fallback
           setError(''); // Clear any previous errors
-          
+
           // If it's a rate limit error, prevent auto-retries.
           if (
             err.message &&
@@ -132,12 +132,6 @@ export function WelcomeBanner({ statCards, chartData }: WelcomeBannerProps) {
           </div>
         );
       case 'error':
-        // This case is now a fallback and should ideally not be hit.
-        return (
-          <p className="max-w-md text-gray-600">
-            Welcome back! Key metrics are being calculated.
-          </p>
-        );
       case 'success':
         return (
           <p className="max-w-md text-gray-600">

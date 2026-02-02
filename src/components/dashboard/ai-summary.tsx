@@ -120,19 +120,8 @@ export function AiSummary({ data, context }: AiSummaryProps) {
             </div>
           </div>
         );
-      case 'error': // This case now acts as a fallback
-        return (
-          <div className="flex-grow">
-            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1">
-              AI ANALYSIS
-            </p>
-            <p className="text-sm text-foreground/90">
-              {`Key metrics: **${data.length} items** found for **${context}**.`}
-            </p>
-          </div>
-        );
+      case 'error':
       case 'success':
-      default:
         return (
           <div className="flex-grow">
             <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1">
@@ -149,6 +138,17 @@ export function AiSummary({ data, context }: AiSummaryProps) {
             )}
           </div>
         );
+      default:
+        return (
+          <div className="flex-grow">
+             <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1">
+              AI ANALYSIS
+            </p>
+            <p className="text-sm text-foreground/90">
+              No data to analyze.
+            </p>
+          </div>
+        )
     }
   };
 
