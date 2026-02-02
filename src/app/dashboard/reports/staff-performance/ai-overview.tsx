@@ -8,7 +8,7 @@ import { StatCards, type StatCardData } from "@/components/dashboard/stat-cards"
 import { AlertTriangle, DollarSign, TrendingUp, Eye } from "lucide-react";
 import { OrderDetailsSheet } from '@/app/dashboard/orders/order-details-sheet';
 import type { Order } from '@/app/dashboard/orders/types';
-import { generateMockOrders } from '@/app/dashboard/orders/mock';
+import { mockDataStore } from '@/lib/mock-data-store';
 import { useToast } from '@/hooks/use-toast';
 
 const kpis: StatCardData[] = [
@@ -30,7 +30,7 @@ export function AiOverview() {
     const { toast } = useToast();
 
     useEffect(() => {
-        setOrders(generateMockOrders(50));
+        setOrders(mockDataStore.orders);
     }, []);
 
     const handleViewDetails = (orderId: string) => {
