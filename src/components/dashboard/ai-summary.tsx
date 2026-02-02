@@ -52,8 +52,10 @@ export function AiSummary({ data, context }: AiSummaryProps) {
     }
   }, [data, context]);
   
+  const mockSummary = "The restaurant is facing severe operational inefficiencies, as over **75% of orders (12 out of 16)** are not fully paid, primarily due to a concerning number of cancelled and refunded orders along with several open and draft transactions.\nThis pattern indicates significant revenue leakage and potential issues in service delivery or payment management requiring immediate investigation.";
+
   useEffect(() => {
-    setSummary(`The restaurant is facing severe operational inefficiencies, as over **75% of orders (12 out of 16)** are not fully paid, primarily due to a concerning number of cancelled and refunded orders along with several open and draft transactions. This pattern indicates significant revenue leakage and potential issues in service delivery or payment management requiring immediate investigation.`);
+    setSummary(mockSummary);
   }, []);
 
   const renderSummaryWithBold = (text: string) => {
@@ -75,41 +77,58 @@ export function AiSummary({ data, context }: AiSummaryProps) {
     return null;
   }
 
+  // Split summary into two parts for rendering
+  const summaryParts = summary.split('\n');
+  const mainSummary = summaryParts[0] || '';
+  const secondarySummary = summaryParts[1] || '';
+
   const renderContent = () => {
     switch (status) {
       case 'loading':
         return (
           <>
-            <Lightbulb className="h-5 w-5 flex-shrink-0 text-blue-500 mt-0.5" />
-            <div className="flex-grow">
-              <p className="font-semibold text-blue-900">AI is analyzing your data</p>
-              <div className="flex items-center gap-1.5 mt-1">
-                <span className="h-1.5 w-1.5 rounded-full bg-blue-400 animate-pulse [animation-delay:-0.3s]"></span>
-                <span className="h-1.5 w-1.5 rounded-full bg-blue-400 animate-pulse [animation-delay:-0.15s]"></span>
-                <span className="h-1.5 w-1.5 rounded-full bg-blue-400 animate-pulse"></span>
+            <div className="flex-shrink-0">
+              <div className="flex items-center justify-center h-10 w-10 rounded-lg bg-blue-100">
+                <Lightbulb className="h-6 w-6 text-blue-500" />
               </div>
+            </div>
+            <div className="flex-grow">
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1">AI is analyzing...</p>
+              <p className="text-sm text-foreground/90">Please wait while we generate insights from your data.</p>
             </div>
           </>
         );
       case 'success':
         return (
           <>
-            <Wand className="h-5 w-5 flex-shrink-0 text-fuchsia-500 mt-0.5" />
-            <div className="flex-grow text-sm">
-              <strong className="font-semibold text-fuchsia-900">AI ANALYSIS:</strong>{' '}
-              {renderSummaryWithBold(summary)}
+            <div className="flex-shrink-0">
+                <div className="flex items-center justify-center h-10 w-10 rounded-lg bg-teal-400/10">
+                    <Wand className="h-6 w-6 text-teal-500" />
+                </div>
+            </div>
+            <div className="flex-grow">
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1">AI Analysis</p>
+                <p className="text-sm text-foreground/90">
+                    <span className="font-bold">Summary: </span>
+                    {renderSummaryWithBold(mainSummary)}
+                </p>
+                {secondarySummary && <p className="text-xs text-muted-foreground mt-2">{secondarySummary}</p>}
             </div>
           </>
         );
       case 'error':
         return (
             <>
-                <Lightbulb className="h-5 w-5 flex-shrink-0 text-red-500 mt-0.5" />
-                <p className="flex-grow text-red-900">
-                    <strong className="font-semibold">AI Error:</strong>{' '}
-                    {error}
-                </p>
-                <Button variant="ghost" size="sm" className="shrink-0" onClick={generateSummary} disabled={status === 'loading'}>
+                <div className="flex-shrink-0">
+                    <div className="flex items-center justify-center h-10 w-10 rounded-lg bg-red-100">
+                        <Lightbulb className="h-6 w-6 text-red-500" />
+                    </div>
+                </div>
+                <div className="flex-grow">
+                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1">AI Error</p>
+                    <p className="text-sm text-red-700">{error}</p>
+                </div>
+                <Button variant="ghost" size="sm" className="shrink-0 self-start" onClick={generateSummary} disabled={status === 'loading'}>
                     Try Again
                 </Button>
             </>
@@ -118,37 +137,32 @@ export function AiSummary({ data, context }: AiSummaryProps) {
       default:
         return (
           <>
-            <Lightbulb className="h-5 w-5 flex-shrink-0 text-blue-500" />
-            <p className="flex-grow font-medium text-blue-900/90">
-              Get an AI-powered summary of the data below.
-            </p>
-            <Button size="sm" onClick={generateSummary} disabled={status === 'loading'} className="bg-blue-600 text-white hover:bg-blue-700 disabled:bg-blue-400">
+            <div className="flex-shrink-0">
+                <div className="flex items-center justify-center h-10 w-10 rounded-lg bg-blue-100">
+                    <Lightbulb className="h-6 w-6 text-blue-500" />
+                </div>
+            </div>
+            <div className="flex-grow">
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1">AI Summary</p>
+                <p className="text-sm text-foreground/90">Get an AI-powered summary of the data below.</p>
+            </div>
+            <Button size="sm" onClick={generateSummary} disabled={status === 'loading'} className="bg-blue-600 text-white hover:bg-blue-700 disabled:bg-blue-400 self-center">
               <Wand className="mr-2 h-4 w-4" />
-              Generate Summary
+              Generate
             </Button>
           </>
         );
     }
   };
-  
-  let containerClasses = "flex items-start gap-4 rounded-lg p-4 text-sm border shadow-sm transition-colors";
-  switch (status) {
-    case 'success':
-    case 'loading':
-    case 'idle':
-        containerClasses += " bg-gradient-to-r from-fuchsia-50 via-purple-50 to-indigo-100 text-fuchsia-900/90 border-fuchsia-200/50";
-        break;
-    case 'error':
-        containerClasses += " bg-red-50 border-red-200";
-        break;
-  }
 
   return (
-    <div className={cn(containerClasses, 'relative')}>
-      {renderContent()}
-      <Button variant="ghost" size="icon" className="h-6 w-6 absolute top-2 right-2 text-muted-foreground" onClick={() => setIsVisible(false)}>
-        <X className="h-4 w-4" />
-      </Button>
+    <div className="animated-gradient-border relative rounded-lg">
+      <div className="relative z-10 flex items-start gap-4 rounded-lg bg-background p-4">
+        {renderContent()}
+        <Button variant="ghost" size="icon" className="h-7 w-7 absolute top-2 right-2 rounded-full bg-background/50 hover:bg-background/80" onClick={() => setIsVisible(false)}>
+          <X className="h-4 w-4 text-muted-foreground" />
+        </Button>
+      </div>
     </div>
   );
 }
