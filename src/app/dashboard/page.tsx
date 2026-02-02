@@ -55,13 +55,13 @@ const initialStatCards: StatCardData[] = [
 ];
 
 const generateChartData = () => [
-  { date: 'Mon', orders: Math.floor(Math.random() * 5) + 30 },
-  { date: 'Tue', orders: Math.floor(Math.random() * 5) + 35 },
-  { date: 'Wed', orders: Math.floor(Math.random() * 5) + 32 },
-  { date: 'Thu', orders: Math.floor(Math.random() * 5) + 45 },
-  { date: 'Fri', orders: Math.floor(Math.random() * 5) + 40 },
-  { date: 'Sat', orders: Math.floor(Math.random() * 5) + 55 },
-  { date: 'Sun', orders: Math.floor(Math.random() * 5) + 50 },
+  { date: 'Mon', sales: Math.floor(Math.random() * 500) + 3000 },
+  { date: 'Tue', sales: Math.floor(Math.random() * 500) + 3500 },
+  { date: 'Wed', sales: Math.floor(Math.random() * 500) + 3200 },
+  { date: 'Thu', sales: Math.floor(Math.random() * 500) + 4500 },
+  { date: 'Fri', sales: Math.floor(Math.random() * 500) + 4000 },
+  { date: 'Sat', sales: Math.floor(Math.random() * 500) + 5500 },
+  { date: 'Sun', sales: Math.floor(Math.random() * 500) + 5000 },
 ];
 
 export default function DashboardPage() {
@@ -90,7 +90,7 @@ export default function DashboardPage() {
         const dayIndex = (new Date().getDay() + 6) % 7;
         
         if(dayIndex >= 0 && dayIndex < 7) {
-            newData[dayIndex].orders += Math.floor(Math.random() * 2);
+            newData[dayIndex].sales += Math.floor(Math.random() * 200);
         }
         return newData;
       });
@@ -111,7 +111,7 @@ export default function DashboardPage() {
     <>
       <DashboardHeader />
       <main className="p-4 sm:p-6 lg:p-8 space-y-6">
-        <WelcomeBanner />
+        <WelcomeBanner statCards={statCardsData} chartData={chartData} />
         <StatCards cards={statCardsData} />
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

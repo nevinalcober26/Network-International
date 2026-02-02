@@ -31,8 +31,8 @@ import {
 } from '@/components/ui/chart';
 
 const chartConfig = {
-  orders: {
-    label: 'Orders',
+  sales: {
+    label: 'Sales',
     color: 'hsl(var(--chart-1))',
   },
 };
@@ -52,9 +52,9 @@ export function OrderAnalyticsChart({ data }: { data: any[] }) {
     <Card>
       <CardHeader className="flex flex-row items-start justify-between">
         <div>
-          <CardTitle>Order Analytics</CardTitle>
+          <CardTitle>Sales Analytics</CardTitle>
           <CardDescription>
-            An overview of your order volume over the past week.
+            A summary of your sales performance.
           </CardDescription>
         </div>
         <Select defaultValue="7">
@@ -75,7 +75,7 @@ export function OrderAnalyticsChart({ data }: { data: any[] }) {
             margin={{ top: 5, right: 20, left: -10, bottom: 0 }}
           >
             <defs>
-              <linearGradient id="colorOrders" x1="0" y1="0" x2="0" y2="1">
+              <linearGradient id="colorSales" x1="0" y1="0" x2="0" y2="1">
                 <stop
                   offset="5%"
                   stopColor="hsl(var(--chart-1))"
@@ -101,8 +101,8 @@ export function OrderAnalyticsChart({ data }: { data: any[] }) {
               fontSize={12}
               tickLine={false}
               axisLine={false}
-              domain={[0, 'dataMax + 10']}
-              tickFormatter={(value) => `${value}`}
+              domain={[0, 'dataMax + 1000']}
+              tickFormatter={(value) => `$${Number(value) / 1000}k`}
             />
             <Tooltip
               cursor={false}
@@ -110,11 +110,11 @@ export function OrderAnalyticsChart({ data }: { data: any[] }) {
             />
             <Area
               type="monotone"
-              dataKey="orders"
+              dataKey="sales"
               stroke="hsl(var(--chart-1))"
               strokeWidth={2}
               fillOpacity={1}
-              fill="url(#colorOrders)"
+              fill="url(#colorSales)"
             />
           </AreaChart>
         </ChartContainer>
