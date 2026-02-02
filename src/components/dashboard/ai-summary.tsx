@@ -120,8 +120,8 @@ export function AiSummary({ data, context }: AiSummaryProps) {
   };
 
   return (
-    <div className="animated-gradient-border relative rounded-lg">
-      <div className="relative z-10 flex items-start gap-4 rounded-lg bg-gradient-to-r from-[#FDFFEF] via-[#F1FFFE] to-[#FFECF5] p-4">
+    <div className="animated-gradient-border relative rounded-lg bg-gradient-to-r from-teal-50/60 to-blue-100/60 p-6 shadow-sm">
+      <div className="relative z-10 flex items-start gap-4">
         <div className="flex-shrink-0">
             <div className="flex items-center justify-center h-10 w-10 rounded-lg bg-white/50">
                 <Wand className="h-6 w-6 text-teal-500" />
