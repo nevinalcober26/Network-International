@@ -102,7 +102,7 @@ export function AiSummary({ data, context }: AiSummaryProps) {
         return (
           <>
             <div className="flex-shrink-0">
-                <div className="flex items-center justify-center h-10 w-10 rounded-lg bg-green-50">
+                <div className="flex items-center justify-center h-10 w-10 rounded-lg bg-white/50">
                     <Wand className="h-6 w-6 text-teal-500" />
                 </div>
             </div>
@@ -157,9 +157,9 @@ export function AiSummary({ data, context }: AiSummaryProps) {
 
   return (
     <div className="animated-gradient-border relative rounded-lg">
-      <div className="relative z-10 flex items-start gap-4 rounded-lg bg-gradient-to-r from-background to-accent/20 p-4">
+      <div className="relative z-10 flex items-start gap-4 rounded-lg bg-gradient-to-r from-[#FDFFEF] via-[#F1FFFE] to-[#FFECF5] p-4">
         {renderContent()}
-        <Button variant="ghost" size="icon" className="h-7 w-7 absolute top-2 right-2 rounded-full bg-card/50 hover:bg-card/80" onClick={() => setIsVisible(false)}>
+        <Button variant="ghost" size="icon" className="h-7 w-7 absolute top-2 right-2 rounded-full bg-white/50 hover:bg-white/80" onClick={() => setIsVisible(false)}>
           <X className="h-4 w-4 text-muted-foreground" />
         </Button>
       </div>
