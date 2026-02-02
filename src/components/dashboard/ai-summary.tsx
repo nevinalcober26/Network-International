@@ -86,7 +86,7 @@ export function AiSummary({ data, context }: AiSummaryProps) {
     return parts.map((part, index) => {
       if (part.startsWith('**') && part.endsWith('**')) {
         return (
-          <strong key={index} className="font-semibold text-primary-foreground">
+          <strong key={index} className="font-semibold text-gray-900">
             {part.slice(2, -2)}
           </strong>
         );
@@ -111,10 +111,10 @@ export function AiSummary({ data, context }: AiSummaryProps) {
           <div className="flex-grow flex items-center gap-4">
             <RefreshCw className="h-5 w-5 text-teal-600 animate-spin" />
             <div>
-              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+              <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
                 AI is analyzing...
               </p>
-              <p className="text-sm text-foreground/90">
+              <p className="text-sm text-gray-700">
                 Please wait while we generate insights.
               </p>
             </div>
@@ -124,15 +124,15 @@ export function AiSummary({ data, context }: AiSummaryProps) {
       case 'success':
         return (
           <div className="flex-grow">
-            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1">
+            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">
               AI ANALYSIS
             </p>
-            <p className="text-sm text-foreground/90">
-              <span className="font-bold">Summary: </span>
+            <p className="text-sm text-gray-700">
+              <span className="font-bold text-gray-900">Summary: </span>
               {renderSummaryWithBold(mainSummary)}
             </p>
             {secondarySummary && (
-              <p className="text-xs text-muted-foreground mt-2">
+              <p className="text-xs text-gray-500 mt-2">
                 {secondarySummary}
               </p>
             )}
@@ -141,10 +141,10 @@ export function AiSummary({ data, context }: AiSummaryProps) {
       default:
         return (
           <div className="flex-grow">
-             <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1">
+             <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">
               AI ANALYSIS
             </p>
-            <p className="text-sm text-foreground/90">
+            <p className="text-sm text-gray-700">
               No data to analyze.
             </p>
           </div>
