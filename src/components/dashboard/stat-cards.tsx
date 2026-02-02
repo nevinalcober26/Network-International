@@ -20,8 +20,7 @@ export type StatCardData = {
 
 function StatCard({ title, value, change, changeDescription, icon: Icon, color }: StatCardData) {
   return (
-    <Card className="relative overflow-hidden shadow-sm h-full">
-      <div className={cn("absolute right-0 top-0 bottom-0 w-1.5 rounded-r-lg", `bg-${color}-400`)} />
+    <Card className="border-0 shadow-lg h-full">
       <CardContent className="p-4 flex flex-col justify-between h-full gap-2">
         <div className="flex justify-between items-start gap-2">
             <p className="text-xs font-medium text-muted-foreground truncate">{title}</p>
