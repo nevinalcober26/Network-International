@@ -3,14 +3,16 @@ export type Variation = {
   value: string;
   matrix: string;
   price: number;
-  visible: boolean;
   hidden: boolean;
+  categoryPage?: boolean;
+  productPage?: boolean;
 };
 
 export type Product = {
   id: string;
   name: string;
   category: string;
+  properties?: string;
   branch: 'Ras Al Khaimah' | 'Dubai Mall';
   price: number;
   stock: number;
@@ -23,6 +25,7 @@ export type Product = {
   hiddenTitle?: boolean;
   hiddenImage?: boolean;
   disableLink?: boolean;
+  externalLink?: string;
   cardShadow?: boolean;
   hidden?: boolean;
   outOfStock?: boolean;
@@ -33,5 +36,4 @@ export type Product = {
   additionalImages?: string[];
   videoUrl?: string;
   variations?: Variation[];
-  properties?: { key: string; value: string }[];
 };

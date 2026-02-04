@@ -68,11 +68,13 @@ import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { generateProductDescription } from '@/ai/flows/generate-product-description-flow';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
+import { Checkbox } from '../ui/checkbox';
 
 const productSchema = z
   .object({
     name: z.string().min(1, 'Product name is required'),
     category: z.string().min(1, 'Category is required'),
+    properties: z.string().optional(),
     branch: z.string().min(1, 'Branch is required'),
     price: z.coerce.number().min(0.01, 'Price must be greater than 0'),
     smallDescription: z.string().optional(),
@@ -91,14 +93,16 @@ const productSchema = z
     enableCombo: z.boolean().default(false),
     comboGroup: z.string().optional(),
     videoUrl: z.string().url().optional().or(z.literal('')),
+    externalLink: z.string().url().optional().or(z.literal('')),
     variations: z
       .array(
         z.object({
           value: z.string().min(1, 'Variation value is required'),
           matrix: z.string().optional(),
           price: z.coerce.number().min(0, "Price can't be negative"),
-          visible: z.boolean().default(true),
           hidden: z.boolean().default(false),
+          categoryPage: z.boolean().default(false),
+          productPage: z.boolean().default(false),
         })
       )
       .optional(),
@@ -138,6 +142,8 @@ const mockCategories = [
   'Beverages',
 ];
 
+const mockProperties = ['Spicy', 'Vegetarian', 'Gluten-Free', 'New'];
+
 export function ProductSheet({
   open,
   onOpenChange,
@@ -168,6 +174,7 @@ export function ProductSheet({
     return {
       name: product?.name || '',
       category: product?.category || '',
+      properties: product?.properties || '',
       branch: product?.branch || '',
       price: product?.price || 0,
       smallDescription: product?.smallDescription || '',
@@ -186,6 +193,7 @@ export function ProductSheet({
       enableCombo: product?.enableCombo || false,
       comboGroup: product?.comboGroup || '',
       videoUrl: product?.videoUrl || '',
+      externalLink: product?.externalLink || '',
       variations: product?.variations || [],
     };
   }, [product]);
@@ -423,7 +431,7 @@ export function ProductSheet({
                                         </FormItem>
                                         )}
                                     />
-                                    <div className="grid grid-cols-2 gap-4">
+                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                         <FormField
                                             control={form.control}
                                             name="category"
@@ -444,6 +452,31 @@ export function ProductSheet({
                                                     <SelectItem key={cat} value={cat}>
                                                         {cat}
                                                     </SelectItem>
+                                                    ))}
+                                                </SelectContent>
+                                                </Select>
+                                                <FormMessage />
+                                            </FormItem>
+                                            )}
+                                        />
+                                         <FormField
+                                            control={form.control}
+                                            name="properties"
+                                            render={({ field }) => (
+                                            <FormItem>
+                                                <FormLabel>Properties</FormLabel>
+                                                <Select
+                                                onValueChange={field.onChange}
+                                                defaultValue={field.value}
+                                                >
+                                                <FormControl>
+                                                    <SelectTrigger>
+                                                    <SelectValue placeholder="Select properties" />
+                                                    </SelectTrigger>
+                                                </FormControl>
+                                                <SelectContent>
+                                                    {mockProperties.map((prop) => (
+                                                        <SelectItem key={prop} value={prop}>{prop}</SelectItem>
                                                     ))}
                                                 </SelectContent>
                                                 </Select>
@@ -738,6 +771,7 @@ export function ProductSheet({
                                 <FormField control={form.control} name="hidden" render={({ field }) => (<FormItem className="flex items-center justify-between rounded-lg border p-3"><div className="space-y-0.5"><FormLabel>Hidden</FormLabel></div><FormControl><Switch checked={field.value} onCheckedChange={field.onChange}/></FormControl></FormItem>)} />
                                 <FormField control={form.control} name="outOfStock" render={({ field }) => (<FormItem className="flex items-center justify-between rounded-lg border p-3"><div className="space-y-0.5"><FormLabel>Out of Stock</FormLabel></div><FormControl><Switch checked={field.value} onCheckedChange={field.onChange}/></FormControl></FormItem>)} />
                                 <FormField control={form.control} name="disableLink" render={({ field }) => (<FormItem className="flex items-center justify-between rounded-lg border p-3"><div className="space-y-0.5"><FormLabel>Disable Link</FormLabel></div><FormControl><Switch checked={field.value} onCheckedChange={field.onChange}/></FormControl></FormItem>)} />
+                                 {form.watch('disableLink') && <FormField control={form.control} name="externalLink" render={({ field }) => (<FormItem className="p-3 border rounded-lg"><FormLabel>External Link</FormLabel><FormControl><Input placeholder="https://example.com" {...field} /></FormControl><FormDescription>If provided, this product will link to this URL.</FormDescription><FormMessage /></FormItem>)} />}
                             </CardContent>
                           </Card>
                           <Card className="md:col-span-2">
@@ -821,6 +855,10 @@ export function ProductSheet({
                                             )}
                                         />
                                         <div>
+                                            <Label>Video List</Label>
+                                            <Button type="button" variant="outline" className="w-full mt-2">Create Video List</Button>
+                                        </div>
+                                        <div>
                                             <Label>Image Gallery</Label>
                                             <div className="mt-2 p-4 h-24 border rounded-lg border-dashed flex items-center justify-center">
                                                 <p className="text-center text-sm text-muted-foreground">Image gallery coming soon.</p>
@@ -842,124 +880,47 @@ export function ProductSheet({
                             <CardContent className="space-y-4">
                                 {variationFields.length > 0 && (
                                     <div className="space-y-4">
-                                        <div className="grid grid-cols-[1fr,1fr,100px,auto,auto] gap-2 items-center text-sm font-medium text-muted-foreground px-1">
+                                        <div className="grid grid-cols-[1fr,1fr,100px,auto,auto,auto,auto] gap-4 items-center text-sm font-medium text-muted-foreground px-1">
                                              <Label>Value*</Label>
                                                 <Label className="flex items-center gap-1.5">
                                                     Matrix ID
                                                     <Tooltip delayDuration={100}>
                                                     <TooltipTrigger asChild>
-                                                        <button
-                                                        type="button"
-                                                        onClick={(e) => e.preventDefault()}
-                                                        >
-                                                        <HelpCircle className="h-4 w-4 cursor-help" />
+                                                        <button type="button" onClick={(e) => e.preventDefault()} >
+                                                            <HelpCircle className="h-4 w-4 cursor-help" />
                                                         </button>
                                                     </TooltipTrigger>
-                                                    <TooltipContent>
-                                                        <p>
-                                                        Optional identifier for your Point of Sale
-                                                        (POS) system integration.
-                                                        </p>
-                                                    </TooltipContent>
+                                                    <TooltipContent><p>Optional identifier for your POS system.</p></TooltipContent>
                                                     </Tooltip>
                                                 </Label>
                                                 <Label className="flex items-center gap-1.5">
                                                     Price*
                                                     <Tooltip delayDuration={100}>
                                                     <TooltipTrigger asChild>
-                                                        <button
-                                                        type="button"
-                                                        onClick={(e) => e.preventDefault()}
-                                                        >
-                                                        <HelpCircle className="h-4 w-4 cursor-help" />
+                                                        <button type="button" onClick={(e) => e.preventDefault()}>
+                                                            <HelpCircle className="h-4 w-4 cursor-help" />
                                                         </button>
                                                     </TooltipTrigger>
-                                                    <TooltipContent>
-                                                        <p>
-                                                        This price will override the product's
-                                                        base price for this variation.
-                                                        </p>
-                                                    </TooltipContent>
+                                                    <TooltipContent><p>This price will override the base price.</p></TooltipContent>
                                                     </Tooltip>
                                                 </Label>
-                                                <Label className="text-center">Visible</Label>
-                                                <div>
-                                                    <span className="sr-only">Actions</span>
-                                                </div>
+                                                <Label className="text-center">Cat. Page</Label>
+                                                <Label className="text-center">Prod. Page</Label>
+                                                <Label className="text-center">Hidden</Label>
+                                                <div><span className="sr-only">Actions</span></div>
                                         </div>
                                         {variationFields.map((field, index) => (
                                         <div
                                             key={field.id}
-                                            className="grid grid-cols-[1fr,1fr,100px,auto,auto] gap-2 items-start"
+                                            className="grid grid-cols-[1fr,1fr,100px,auto,auto,auto,auto] gap-4 items-start"
                                         >
-                                            <FormField
-                                            control={form.control}
-                                            name={`variations.${index}.value`}
-                                            render={({ field }) => (
-                                                <FormItem>
-                                                <FormControl>
-                                                    <Input
-                                                    placeholder="Value (e.g. Large)"
-                                                    {...field}
-                                                    />
-                                                </FormControl>
-                                                <FormMessage />
-                                                </FormItem>
-                                            )}
-                                            />
-                                            <FormField
-                                            control={form.control}
-                                            name={`variations.${index}.matrix`}
-                                            render={({ field }) => (
-                                                <FormItem>
-                                                <FormControl>
-                                                    <Input
-                                                    placeholder="Matrix ID"
-                                                    {...field}
-                                                    />
-                                                </FormControl>
-                                                <FormMessage />
-                                                </FormItem>
-                                            )}
-                                            />
-                                            <FormField
-                                            control={form.control}
-                                            name={`variations.${index}.price`}
-                                            render={({ field }) => (
-                                                <FormItem>
-                                                <FormControl>
-                                                    <Input
-                                                    type="number"
-                                                    placeholder="Price"
-                                                    {...field}
-                                                    />
-                                                </FormControl>
-                                                <FormMessage />
-                                                </FormItem>
-                                            )}
-                                            />
-                                            <FormField
-                                            control={form.control}
-                                            name={`variations.${index}.visible`}
-                                            render={({ field }) => (
-                                                <FormItem className="flex flex-col items-center h-10 justify-center">
-                                                <FormControl>
-                                                    <Switch
-                                                    checked={field.value}
-                                                    onCheckedChange={field.onChange}
-                                                    />
-                                                </FormControl>
-                                                </FormItem>
-                                            )}
-                                            />
-                                            <Button
-                                            type="button"
-                                            variant="ghost"
-                                            size="icon"
-                                            onClick={() => removeVariation(index)}
-                                            >
-                                            <Trash className="h-4 w-4 text-destructive" />
-                                            </Button>
+                                            <FormField control={form.control} name={`variations.${index}.value`} render={({ field }) => (<FormItem><FormControl><Input placeholder="e.g. Large" {...field}/></FormControl><FormMessage /></FormItem>)} />
+                                            <FormField control={form.control} name={`variations.${index}.matrix`} render={({ field }) => (<FormItem><FormControl><Input placeholder="Matrix ID" {...field}/></FormControl><FormMessage /></FormItem>)} />
+                                            <FormField control={form.control} name={`variations.${index}.price`} render={({ field }) => (<FormItem><FormControl><Input type="number" placeholder="Price" {...field}/></FormControl><FormMessage /></FormItem>)} />
+                                            <FormField control={form.control} name={`variations.${index}.categoryPage`} render={({ field }) => (<FormItem className="flex h-10 items-center justify-center"><FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange} /></FormControl></FormItem>)} />
+                                            <FormField control={form.control} name={`variations.${index}.productPage`} render={({ field }) => (<FormItem className="flex h-10 items-center justify-center"><FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange} /></FormControl></FormItem>)} />
+                                            <FormField control={form.control} name={`variations.${index}.hidden`} render={({ field }) => (<FormItem className="flex h-10 items-center justify-center"><FormControl><Switch checked={field.value} onCheckedChange={field.onChange}/></FormControl></FormItem>)}/>
+                                            <Button type="button" variant="ghost" size="icon" onClick={() => removeVariation(index)}><Trash className="h-4 w-4 text-destructive" /></Button>
                                         </div>
                                         ))}
                                     </div>
@@ -969,13 +930,7 @@ export function ProductSheet({
                                     variant="outline"
                                     size="sm"
                                     onClick={() =>
-                                    appendVariation({
-                                        value: '',
-                                        matrix: '',
-                                        price: 0,
-                                        visible: true,
-                                        hidden: false,
-                                    })
+                                    appendVariation({ value: '', matrix: '', price: 0, hidden: false, categoryPage: true, productPage: true })
                                     }
                                 >
                                     <PlusCircle className="mr-2 h-4 w-4" />
