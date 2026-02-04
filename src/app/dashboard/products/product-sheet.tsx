@@ -67,6 +67,7 @@ import Image from 'next/image';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { generateProductDescription } from '@/ai/flows/generate-product-description-flow';
+import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
 
 const productSchema = z.object({
   name: z.string().min(1, 'Product name is required'),
@@ -138,7 +139,7 @@ export function ProductSheet({
       price: product?.price || 0,
       smallDescription: product?.smallDescription || '',
       description: product?.description || '',
-      discountedPrice: product?.discountedPrice ?? '',
+      discountedPrice: product?.discountedPrice ?? undefined,
       recommend: product?.recommend || false,
       displayFullwidth: product?.displayFullwidth || false,
       hiddenTitle: product?.hiddenTitle || false,
@@ -175,10 +176,6 @@ export function ProductSheet({
   const productCategory = form.watch('category');
 
   useEffect(() => {
-    // When the `product` prop changes, the `defaultValues` are re-calculated.
-    // This effect ensures the form is reset with the new `defaultValues`,
-    // keeping the form state in sync with the currently selected product.
-    // This fixes the issue where the form would hold stale data when re-opening the sheet.
     form.reset(defaultValues);
   }, [defaultValues, form]);
 
@@ -246,9 +243,10 @@ export function ProductSheet({
     const fullProductData: Product = {
       ...product!,
       id: product?.id || `new_${Date.now()}`,
-      stock: product?.stock || 0, // Mocked data
-      status: product?.status || 'Active', // Mocked data
+      stock: product?.stock || 0, 
+      status: product?.status || 'Active', 
       ...data,
+      discountedPrice: data.discountedPrice || undefined,
     };
     onSave(fullProductData);
     onOpenChange(false);
@@ -269,7 +267,6 @@ export function ProductSheet({
     for (const key of errorKeys) {
       if (tabMap[key]) {
         setActiveTab(tabMap[key]);
-        // Find and focus the element
         setTimeout(() => {
           const fieldElement = document.getElementsByName(key)[0];
           fieldElement?.focus();
@@ -279,7 +276,6 @@ export function ProductSheet({
     }
   };
 
-  // Tab validation status
   const isBasicInfoComplete =
     !errors.name &&
     !errors.category &&
@@ -348,521 +344,545 @@ export function ProductSheet({
                       </TabsTrigger>
                     </TabsList>
                     <div className="p-6 space-y-6 flex-grow">
-                      <TabsContent value="basic-info">
-                        <div className="space-y-4">
-                          <FormField
-                            control={form.control}
-                            name="name"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Product Name*</FormLabel>
-                                <FormControl>
-                                  <Input
-                                    placeholder="e.g., Classic Cheeseburger"
-                                    {...field}
-                                  />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                          <FormField
-                            control={form.control}
-                            name="smallDescription"
-                            render={({ field }) => (
-                              <FormItem>
-                                <div className="flex justify-between items-center">
-                                  <FormLabel className="flex items-center gap-1.5">
-                                    Small Description
-                                    <Tooltip delayDuration={100}>
-                                      <TooltipTrigger asChild>
-                                        <button
-                                          type="button"
-                                          onClick={(e) => e.preventDefault()}
-                                        >
-                                          <HelpCircle className="h-4 w-4 text-muted-foreground cursor-help" />
-                                        </button>
-                                      </TooltipTrigger>
-                                      <TooltipContent>
-                                        <p>
-                                          A short, catchy description for product
-                                          cards and list views.
-                                        </p>
-                                      </TooltipContent>
-                                    </Tooltip>
-                                  </FormLabel>
-                                  <Tooltip>
-                                    <TooltipTrigger asChild>
-                                      {/* The div is needed to make the tooltip work on a disabled button */}
-                                      <div>
-                                        <Button
-                                          type="button"
-                                          size="sm"
-                                          variant="ghost"
-                                          onClick={() =>
-                                            handleGenerateDescription('short')
-                                          }
-                                          disabled={
-                                            isGenerating !== null ||
-                                            !productName ||
-                                            !productCategory
-                                          }
-                                          className="gap-1.5"
-                                        >
-                                          {isGenerating === 'short' ? (
-                                            <RefreshCw className="h-4 w-4 animate-spin" />
-                                          ) : (
-                                            <Wand className="h-4 w-4" />
-                                          )}
-                                          Generate
-                                        </Button>
-                                      </div>
-                                    </TooltipTrigger>
-                                    <TooltipContent>
-                                      <p>
-                                        {!productName || !productCategory
-                                          ? 'Enter name and category first'
-                                          : 'Generate with AI'}
-                                      </p>
-                                    </TooltipContent>
-                                  </Tooltip>
-                                </div>
-                                <FormControl>
-                                  <Textarea
-                                    placeholder="A short, catchy line for your product."
-                                    rows={2}
-                                    {...field}
-                                  />
-                                </FormControl>
-                              </FormItem>
-                            )}
-                          />
-                          <FormField
-                            control={form.control}
-                            name="description"
-                            render={({ field }) => (
-                              <FormItem>
-                                <div className="flex justify-between items-center">
-                                  <FormLabel>Description</FormLabel>
-                                  <Tooltip>
-                                    <TooltipTrigger asChild>
-                                      {/* The div is needed to make the tooltip work on a disabled button */}
-                                      <div>
-                                        <Button
-                                          type="button"
-                                          size="sm"
-                                          variant="ghost"
-                                          onClick={() =>
-                                            handleGenerateDescription('long')
-                                          }
-                                          disabled={
-                                            isGenerating !== null ||
-                                            !productName ||
-                                            !productCategory
-                                          }
-                                          className="gap-1.5"
-                                        >
-                                          {isGenerating === 'long' ? (
-                                            <RefreshCw className="h-4 w-4 animate-spin" />
-                                          ) : (
-                                            <Wand className="h-4 w-4" />
-                                          )}
-                                          Generate
-                                        </Button>
-                                      </div>
-                                    </TooltipTrigger>
-                                    <TooltipContent>
-                                      <p>
-                                        {!productName || !productCategory
-                                          ? 'Enter name and category first'
-                                          : 'Generate with AI'}
-                                      </p>
-                                    </TooltipContent>
-                                  </Tooltip>
-                                </div>
-                                <FormControl>
-                                  <Textarea
-                                    placeholder="Detailed description including ingredients, allergens, etc."
-                                    rows={5}
-                                    {...field}
-                                  />
-                                </FormControl>
-                              </FormItem>
-                            )}
-                          />
-                           <div className="grid grid-cols-2 gap-4">
-                             <FormField
-                                control={form.control}
-                                name="category"
-                                render={({ field }) => (
-                                  <FormItem>
-                                    <FormLabel>Category*</FormLabel>
-                                    <Select
-                                      onValueChange={field.onChange}
-                                      defaultValue={field.value}
-                                    >
-                                      <FormControl>
-                                        <SelectTrigger>
-                                          <SelectValue placeholder="Select a category" />
-                                        </SelectTrigger>
-                                      </FormControl>
-                                      <SelectContent>
-                                        {mockCategories.map((cat) => (
-                                          <SelectItem key={cat} value={cat}>
-                                            {cat}
-                                          </SelectItem>
-                                        ))}
-                                      </SelectContent>
-                                    </Select>
-                                    <FormMessage />
-                                  </FormItem>
-                                )}
-                              />
-                              <FormField
-                                control={form.control}
-                                name="branch"
-                                render={({ field }) => (
-                                  <FormItem>
-                                    <FormLabel>Branch*</FormLabel>
-                                    <Select
-                                      onValueChange={field.onChange}
-                                      defaultValue={field.value}
-                                    >
-                                      <FormControl>
-                                        <SelectTrigger>
-                                          <SelectValue placeholder="Select a branch" />
-                                        </SelectTrigger>
-                                      </FormControl>
-                                      <SelectContent>
-                                        <SelectItem value="Ras Al Khaimah">Ras Al Khaimah</SelectItem>
-                                        <SelectItem value="Dubai Mall">Dubai Mall</SelectItem>
-                                      </SelectContent>
-                                    </Select>
-                                    <FormMessage />
-                                  </FormItem>
-                                )}
-                              />
-                           </div>
+                      <TabsContent value="basic-info" className="mt-0">
+                        <div className="space-y-6">
+                            <Card>
+                                <CardHeader>
+                                    <CardTitle>Basic Information</CardTitle>
+                                    <CardDescription>This is the core information for your product.</CardDescription>
+                                </CardHeader>
+                                <CardContent className="space-y-4">
+                                    <FormField
+                                        control={form.control}
+                                        name="name"
+                                        render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>Product Name*</FormLabel>
+                                            <FormControl>
+                                            <Input
+                                                placeholder="e.g., Classic Cheeseburger"
+                                                {...field}
+                                            />
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                        )}
+                                    />
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <FormField
+                                            control={form.control}
+                                            name="category"
+                                            render={({ field }) => (
+                                            <FormItem>
+                                                <FormLabel>Category*</FormLabel>
+                                                <Select
+                                                onValueChange={field.onChange}
+                                                defaultValue={field.value}
+                                                >
+                                                <FormControl>
+                                                    <SelectTrigger>
+                                                    <SelectValue placeholder="Select a category" />
+                                                    </SelectTrigger>
+                                                </FormControl>
+                                                <SelectContent>
+                                                    {mockCategories.map((cat) => (
+                                                    <SelectItem key={cat} value={cat}>
+                                                        {cat}
+                                                    </SelectItem>
+                                                    ))}
+                                                </SelectContent>
+                                                </Select>
+                                                <FormMessage />
+                                            </FormItem>
+                                            )}
+                                        />
+                                        <FormField
+                                            control={form.control}
+                                            name="branch"
+                                            render={({ field }) => (
+                                            <FormItem>
+                                                <FormLabel>Branch*</FormLabel>
+                                                <Select
+                                                onValueChange={field.onChange}
+                                                defaultValue={field.value}
+                                                >
+                                                <FormControl>
+                                                    <SelectTrigger>
+                                                    <SelectValue placeholder="Select a branch" />
+                                                    </SelectTrigger>
+                                                </FormControl>
+                                                <SelectContent>
+                                                    <SelectItem value="Ras Al Khaimah">Ras Al Khaimah</SelectItem>
+                                                    <SelectItem value="Dubai Mall">Dubai Mall</SelectItem>
+                                                </SelectContent>
+                                                </Select>
+                                                <FormMessage />
+                                            </FormItem>
+                                            )}
+                                        />
+                                    </div>
+                                </CardContent>
+                            </Card>
+                             <Card>
+                                <CardHeader>
+                                    <CardTitle>Marketing Copy</CardTitle>
+                                    <CardDescription>Write compelling descriptions to attract customers. Use our AI assistant to help!</CardDescription>
+                                </CardHeader>
+                                <CardContent className="space-y-6">
+                                    <FormField
+                                        control={form.control}
+                                        name="smallDescription"
+                                        render={({ field }) => (
+                                        <FormItem>
+                                            <div className="flex justify-between items-center">
+                                                <FormLabel className="flex items-center gap-1.5">
+                                                    Small Description
+                                                    <Tooltip delayDuration={100}>
+                                                    <TooltipTrigger asChild>
+                                                        <button
+                                                        type="button"
+                                                        onClick={(e) => e.preventDefault()}
+                                                        >
+                                                        <HelpCircle className="h-4 w-4 text-muted-foreground cursor-help" />
+                                                        </button>
+                                                    </TooltipTrigger>
+                                                    <TooltipContent>
+                                                        <p>
+                                                        A short, catchy description for product
+                                                        cards and list views.
+                                                        </p>
+                                                    </TooltipContent>
+                                                    </Tooltip>
+                                                </FormLabel>
+                                                <Tooltip>
+                                                    <TooltipTrigger asChild>
+                                                    <div>
+                                                        <Button
+                                                        type="button"
+                                                        size="sm"
+                                                        variant="ghost"
+                                                        onClick={() =>
+                                                            handleGenerateDescription('short')
+                                                        }
+                                                        disabled={
+                                                            isGenerating !== null ||
+                                                            !productName ||
+                                                            !productCategory
+                                                        }
+                                                        className="gap-1.5"
+                                                        >
+                                                        {isGenerating === 'short' ? (
+                                                            <RefreshCw className="h-4 w-4 animate-spin" />
+                                                        ) : (
+                                                            <Wand className="h-4 w-4" />
+                                                        )}
+                                                        Generate
+                                                        </Button>
+                                                    </div>
+                                                    </TooltipTrigger>
+                                                    <TooltipContent>
+                                                    <p>
+                                                        {!productName || !productCategory
+                                                        ? 'Enter name and category first'
+                                                        : 'Generate with AI'}
+                                                    </p>
+                                                    </TooltipContent>
+                                                </Tooltip>
+                                            </div>
+                                            <FormControl>
+                                            <Textarea
+                                                placeholder="A short, catchy line for your product."
+                                                rows={2}
+                                                {...field}
+                                            />
+                                            </FormControl>
+                                        </FormItem>
+                                        )}
+                                    />
+                                    <FormField
+                                        control={form.control}
+                                        name="description"
+                                        render={({ field }) => (
+                                        <FormItem>
+                                            <div className="flex justify-between items-center">
+                                                <FormLabel>Description</FormLabel>
+                                                <Tooltip>
+                                                    <TooltipTrigger asChild>
+                                                    <div>
+                                                        <Button
+                                                        type="button"
+                                                        size="sm"
+                                                        variant="ghost"
+                                                        onClick={() =>
+                                                            handleGenerateDescription('long')
+                                                        }
+                                                        disabled={
+                                                            isGenerating !== null ||
+                                                            !productName ||
+                                                            !productCategory
+                                                        }
+                                                        className="gap-1.5"
+                                                        >
+                                                        {isGenerating === 'long' ? (
+                                                            <RefreshCw className="h-4 w-4 animate-spin" />
+                                                        ) : (
+                                                            <Wand className="h-4 w-4" />
+                                                        )}
+                                                        Generate
+                                                        </Button>
+                                                    </div>
+                                                    </TooltipTrigger>
+                                                    <TooltipContent>
+                                                    <p>
+                                                        {!productName || !productCategory
+                                                        ? 'Enter name and category first'
+                                                        : 'Generate with AI'}
+                                                    </p>
+                                                    </TooltipContent>
+                                                </Tooltip>
+                                            </div>
+                                            <FormControl>
+                                            <Textarea
+                                                placeholder="Detailed description including ingredients, allergens, etc."
+                                                rows={5}
+                                                {...field}
+                                            />
+                                            </FormControl>
+                                        </FormItem>
+                                        )}
+                                    />
+                                </CardContent>
+                             </Card>
                         </div>
                       </TabsContent>
                       <TabsContent value="pricing">
-                        <div className="space-y-6 max-w-md">
-                          <FormField
-                            control={form.control}
-                            name="price"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Price (AED)*</FormLabel>
-                                <FormControl>
-                                  <Input type="number" {...field} />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                          <FormField
-                            control={form.control}
-                            name="discountedPrice"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Discounted Price</FormLabel>
-                                <FormControl>
-                                  <Input type="number" {...field} />
-                                </FormControl>
-                              </FormItem>
-                            )}
-                          />
-                          <FormItem>
-                            <FormLabel className="flex items-center gap-1.5">
-                              Discount %
-                              <Tooltip delayDuration={100}>
-                                <TooltipTrigger asChild>
-                                  <button
-                                    type="button"
-                                    onClick={(e) => e.preventDefault()}
-                                  >
-                                    <HelpCircle className="h-4 w-4 text-muted-foreground cursor-help" />
-                                  </button>
-                                </TooltipTrigger>
-                                <TooltipContent>
-                                  <p>
-                                    Calculated automatically from the Price and
-                                    Discounted Price.
-                                  </p>
-                                </TooltipContent>
-                              </Tooltip>
-                            </FormLabel>
-                            <Input value={discount} readOnly />
-                          </FormItem>
-                        </div>
+                        <Card className="max-w-lg">
+                            <CardHeader>
+                                <CardTitle>Pricing Strategy</CardTitle>
+                                <CardDescription>Set the price for your product and an optional discounted price.</CardDescription>
+                            </CardHeader>
+                            <CardContent className="space-y-6">
+                                <FormField
+                                    control={form.control}
+                                    name="price"
+                                    render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Price (AED)*</FormLabel>
+                                        <FormControl>
+                                        <Input type="number" {...field} />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                    )}
+                                />
+                                <FormField
+                                    control={form.control}
+                                    name="discountedPrice"
+                                    render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Discounted Price</FormLabel>
+                                        <FormControl>
+                                        <Input type="number" {...field} />
+                                        </FormControl>
+                                    </FormItem>
+                                    )}
+                                />
+                                <FormItem>
+                                    <FormLabel className="flex items-center gap-1.5">
+                                    Discount %
+                                    <Tooltip delayDuration={100}>
+                                        <TooltipTrigger asChild>
+                                        <button
+                                            type="button"
+                                            onClick={(e) => e.preventDefault()}
+                                        >
+                                            <HelpCircle className="h-4 w-4 text-muted-foreground cursor-help" />
+                                        </button>
+                                        </TooltipTrigger>
+                                        <TooltipContent>
+                                        <p>
+                                            Calculated automatically from the Price and
+                                            Discounted Price.
+                                        </p>
+                                        </TooltipContent>
+                                    </Tooltip>
+                                    </FormLabel>
+                                    <div className="relative">
+                                        <Input value={discount} readOnly className="pr-8 font-mono bg-muted" />
+                                        <span className="absolute inset-y-0 right-3 flex items-center text-muted-foreground">%</span>
+                                    </div>
+                                </FormItem>
+                            </CardContent>
+                        </Card>
                       </TabsContent>
                       <TabsContent value="display">
-                        <div className="space-y-4">
-                          <FormField
-                            control={form.control}
-                            name="recommend"
-                            render={({ field }) => (
-                              <FormItem className="flex items-center justify-between rounded-lg border p-4">
-                                <div className="space-y-0.5">
-                                  <FormLabel className="flex items-center gap-1.5">
-                                    Recommend
-                                    <Tooltip delayDuration={100}>
-                                      <TooltipTrigger asChild>
-                                        <button
-                                          type="button"
-                                          onClick={(e) => e.preventDefault()}
-                                        >
-                                          <HelpCircle className="h-4 w-4 text-muted-foreground cursor-help" />
-                                        </button>
-                                      </TooltipTrigger>
-                                      <TooltipContent>
-                                        <p>
-                                          Feature this item as a "Recommended"
-                                          product on your menu.
-                                        </p>
-                                      </TooltipContent>
-                                    </Tooltip>
-                                  </FormLabel>
-                                </div>
-                                <FormControl>
-                                  <Switch
-                                    checked={field.value}
-                                    onCheckedChange={field.onChange}
-                                  />
-                                </FormControl>
-                              </FormItem>
-                            )}
-                          />
-                          {/* Add other switches similarly */}
-                          <FormField
-                            control={form.control}
-                            name="outOfStock"
-                            render={({ field }) => (
-                              <FormItem className="flex items-center justify-between rounded-lg border p-4">
-                                <div className="space-y-0.5">
-                                  <FormLabel>
-                                    Mark as Out of Stock
-                                  </FormLabel>
-                                </div>
-                                <FormControl>
-                                  <Switch
-                                    checked={field.value}
-                                    onCheckedChange={field.onChange}
-                                  />
-                                </FormControl>
-                              </FormItem>
-                            )}
-                          />
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                          <Card>
+                            <CardHeader>
+                              <CardTitle>Menu Display</CardTitle>
+                              <CardDescription>How the product card looks on the menu.</CardDescription>
+                            </CardHeader>
+                            <CardContent className="space-y-2">
+                                <FormField control={form.control} name="hiddenTitle" render={({ field }) => (<FormItem className="flex items-center justify-between rounded-lg border p-3"><div className="space-y-0.5"><FormLabel>Hidden Title</FormLabel></div><FormControl><Switch checked={field.value} onCheckedChange={field.onChange}/></FormControl></FormItem>)} />
+                                <FormField control={form.control} name="hiddenImage" render={({ field }) => (<FormItem className="flex items-center justify-between rounded-lg border p-3"><div className="space-y-0.5"><FormLabel>Hidden Image</FormLabel></div><FormControl><Switch checked={field.value} onCheckedChange={field.onChange}/></FormControl></FormItem>)} />
+                                <FormField control={form.control} name="cardShadow" render={({ field }) => (<FormItem className="flex items-center justify-between rounded-lg border p-3"><div className="space-y-0.5"><FormLabel>Card Shadow</FormLabel></div><FormControl><Switch checked={field.value} onCheckedChange={field.onChange}/></FormControl></FormItem>)} />
+                                <FormField control={form.control} name="displayFullwidth" render={({ field }) => (<FormItem className="flex items-center justify-between rounded-lg border p-3"><div className="space-y-0.5"><FormLabel>Display Fullwidth</FormLabel></div><FormControl><Switch checked={field.value} onCheckedChange={field.onChange}/></FormControl></FormItem>)} />
+                            </CardContent>
+                          </Card>
+                          <Card>
+                             <CardHeader>
+                              <CardTitle>Behavior & Visibility</CardTitle>
+                              <CardDescription>Control stock and menu visibility.</CardDescription>
+                            </CardHeader>
+                            <CardContent className="space-y-2">
+                                <FormField control={form.control} name="hidden" render={({ field }) => (<FormItem className="flex items-center justify-between rounded-lg border p-3"><div className="space-y-0.5"><FormLabel>Hidden</FormLabel></div><FormControl><Switch checked={field.value} onCheckedChange={field.onChange}/></FormControl></FormItem>)} />
+                                <FormField control={form.control} name="outOfStock" render={({ field }) => (<FormItem className="flex items-center justify-between rounded-lg border p-3"><div className="space-y-0.5"><FormLabel>Out of Stock</FormLabel></div><FormControl><Switch checked={field.value} onCheckedChange={field.onChange}/></FormControl></FormItem>)} />
+                                <FormField control={form.control} name="disableLink" render={({ field }) => (<FormItem className="flex items-center justify-between rounded-lg border p-3"><div className="space-y-0.5"><FormLabel>Disable Link</FormLabel></div><FormControl><Switch checked={field.value} onCheckedChange={field.onChange}/></FormControl></FormItem>)} />
+                            </CardContent>
+                          </Card>
+                          <Card className="md:col-span-2">
+                             <CardHeader>
+                              <CardTitle>Advanced Options</CardTitle>
+                              <CardDescription>Special features like upselling and combos.</CardDescription>
+                            </CardHeader>
+                            <CardContent className="space-y-2">
+                                <FormField control={form.control} name="recommend" render={({ field }) => (<FormItem className="flex items-center justify-between rounded-lg border p-3"><div className="space-y-0.5"><FormLabel>Recommend</FormLabel><FormDescription>Feature this product on your menu.</FormDescription></div><FormControl><Switch checked={field.value} onCheckedChange={field.onChange}/></FormControl></FormItem>)} />
+                                <FormField control={form.control} name="upsell" render={({ field }) => (<FormItem className="flex items-center justify-between rounded-lg border p-3"><div className="space-y-0.5"><FormLabel>Enable Upsell</FormLabel></div><FormControl><Switch checked={field.value} onCheckedChange={field.onChange}/></FormControl></FormItem>)} />
+                                <FormField control={form.control} name="enableCombo" render={({ field }) => (<FormItem className="flex items-center justify-between rounded-lg border p-3"><div className="space-y-0.5"><FormLabel>Enable Combo</FormLabel></div><FormControl><Switch checked={field.value} onCheckedChange={field.onChange}/></FormControl></FormItem>)} />
+                                {form.watch('enableCombo') && <FormField control={form.control} name="comboGroup" render={({ field }) => (<FormItem className="p-3"><FormLabel>Combo Group</FormLabel><FormControl><Input placeholder="e.g. Burger Combos" {...field} /></FormControl><FormMessage /></FormItem>)} />}
+                            </CardContent>
+                          </Card>
                         </div>
                       </TabsContent>
                       <TabsContent value="media">
-                        <div className="space-y-6">
-                          <div>
-                            <Label>Main Image</Label>
-                            <div className="mt-2 flex items-center gap-6">
-                              <div className="w-40 h-24 rounded-md border border-dashed flex items-center justify-center bg-muted">
-                                <Image
-                                  src="https://picsum.photos/seed/product/160/96"
-                                  width={160}
-                                  height={96}
-                                  alt="Product image"
-                                  className="rounded-md object-cover"
-                                />
-                              </div>
-                              <div className="flex flex-col gap-2">
-                                <Button variant="outline" asChild>
-                                  <label
-                                    htmlFor="image-upload"
-                                    className="cursor-pointer"
-                                  >
-                                    <Upload className="mr-2 h-4 w-4" />
-                                    Upload Image
-                                    <Input
-                                      id="image-upload"
-                                      type="file"
-                                      className="sr-only"
-                                    />
-                                  </label>
-                                </Button>
-                                <Button
-                                  variant="ghost"
-                                  className="text-destructive hover:text-destructive"
-                                >
-                                  Clear
-                                </Button>
-                              </div>
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                            <Card>
+                                <CardHeader>
+                                    <CardTitle>Main Image</CardTitle>
+                                    <CardDescription>This is the primary image shown for the product.</CardDescription>
+                                </CardHeader>
+                                <CardContent className="space-y-4">
+                                    <div className="w-full aspect-video rounded-md border border-dashed flex items-center justify-center bg-muted overflow-hidden">
+                                        <Image
+                                        src="https://picsum.photos/seed/product/320/180"
+                                        width={320}
+                                        height={180}
+                                        alt="Product image"
+                                        className="object-cover w-full h-full"
+                                        />
+                                    </div>
+                                    <div className="flex gap-2">
+                                        <Button variant="outline" asChild className="w-full">
+                                            <label
+                                                htmlFor="image-upload"
+                                                className="cursor-pointer"
+                                            >
+                                                <Upload className="mr-2 h-4 w-4" />
+                                                Upload Image
+                                            </label>
+                                        </Button>
+                                        <Input
+                                            id="image-upload"
+                                            type="file"
+                                            className="sr-only"
+                                        />
+                                        <Button
+                                            type="button"
+                                            variant="ghost"
+                                            className="text-destructive hover:text-destructive"
+                                        >
+                                            Clear
+                                        </Button>
+                                    </div>
+                                </CardContent>
+                            </Card>
+                            <div className="space-y-6">
+                                <Card>
+                                    <CardHeader>
+                                        <CardTitle>Additional Media</CardTitle>
+                                    </CardHeader>
+                                    <CardContent className="space-y-4">
+                                        <FormField
+                                            control={form.control}
+                                            name="videoUrl"
+                                            render={({ field }) => (
+                                            <FormItem>
+                                                <FormLabel className="flex items-center gap-2">
+                                                <Video /> Video URL (Optional)
+                                                </FormLabel>
+                                                <FormControl>
+                                                <Input
+                                                    placeholder="https://www.youtube.com/watch?v=..."
+                                                    {...field}
+                                                />
+                                                </FormControl>
+                                                <FormMessage />
+                                            </FormItem>
+                                            )}
+                                        />
+                                        <div>
+                                            <Label>Image Gallery</Label>
+                                            <div className="mt-2 p-4 h-24 border rounded-lg border-dashed flex items-center justify-center">
+                                                <p className="text-center text-sm text-muted-foreground">Image gallery coming soon.</p>
+                                            </div>
+                                        </div>
+                                    </CardContent>
+                                </Card>
                             </div>
-                          </div>
-                          <div>
-                            <Label>Additional Images</Label>
-                            <div className="mt-2 p-4 border rounded-lg">
-                              <p className="text-center text-sm text-muted-foreground">
-                                Additional images feature coming soon.
-                              </p>
-                            </div>
-                          </div>
-                          <FormField
-                            control={form.control}
-                            name="videoUrl"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel className="flex items-center gap-2">
-                                  <Video /> Video URL (Optional)
-                                </FormLabel>
-                                <FormControl>
-                                  <Input
-                                    placeholder="https://www.youtube.com/watch?v=..."
-                                    {...field}
-                                  />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
                         </div>
                       </TabsContent>
                       <TabsContent value="variations">
-                        <div className="space-y-4">
-                          <Label>Product Variations</Label>
-                          <div className="p-4 border rounded-lg space-y-4">
-                            <div className="grid grid-cols-[1fr,1fr,100px,auto,auto] gap-2 items-center text-sm font-medium text-muted-foreground px-1">
-                              <Label>Value*</Label>
-                              <Label className="flex items-center gap-1.5">
-                                Matrix ID
-                                <Tooltip delayDuration={100}>
-                                  <TooltipTrigger asChild>
-                                    <button
-                                      type="button"
-                                      onClick={(e) => e.preventDefault()}
-                                    >
-                                      <HelpCircle className="h-4 w-4 cursor-help" />
-                                    </button>
-                                  </TooltipTrigger>
-                                  <TooltipContent>
-                                    <p>
-                                      Optional identifier for your Point of Sale
-                                      (POS) system integration.
-                                    </p>
-                                  </TooltipContent>
-                                </Tooltip>
-                              </Label>
-                              <Label className="flex items-center gap-1.5">
-                                Price*
-                                <Tooltip delayDuration={100}>
-                                  <TooltipTrigger asChild>
-                                    <button
-                                      type="button"
-                                      onClick={(e) => e.preventDefault()}
-                                    >
-                                      <HelpCircle className="h-4 w-4 cursor-help" />
-                                    </button>
-                                  </TooltipTrigger>
-                                  <TooltipContent>
-                                    <p>
-                                      This price will override the product's
-                                      base price for this variation.
-                                    </p>
-                                  </TooltipContent>
-                                </Tooltip>
-                              </Label>
-                              <Label className="text-center">Visible</Label>
-                              <div>
-                                <span className="sr-only">Actions</span>
-                              </div>
-                            </div>
-                            {variationFields.map((field, index) => (
-                              <div
-                                key={field.id}
-                                className="grid grid-cols-[1fr,1fr,100px,auto,auto] gap-2 items-start"
-                              >
-                                <FormField
-                                  control={form.control}
-                                  name={`variations.${index}.value`}
-                                  render={({ field }) => (
-                                    <FormItem>
-                                      <FormControl>
-                                        <Input
-                                          placeholder="Value (e.g. Large)"
-                                          {...field}
-                                        />
-                                      </FormControl>
-                                      <FormMessage />
-                                    </FormItem>
-                                  )}
-                                />
-                                <FormField
-                                  control={form.control}
-                                  name={`variations.${index}.matrix`}
-                                  render={({ field }) => (
-                                    <FormItem>
-                                      <FormControl>
-                                        <Input
-                                          placeholder="Matrix ID"
-                                          {...field}
-                                        />
-                                      </FormControl>
-                                      <FormMessage />
-                                    </FormItem>
-                                  )}
-                                />
-                                <FormField
-                                  control={form.control}
-                                  name={`variations.${index}.price`}
-                                  render={({ field }) => (
-                                    <FormItem>
-                                      <FormControl>
-                                        <Input
-                                          type="number"
-                                          placeholder="Price"
-                                          {...field}
-                                        />
-                                      </FormControl>
-                                      <FormMessage />
-                                    </FormItem>
-                                  )}
-                                />
-                                <FormField
-                                  control={form.control}
-                                  name={`variations.${index}.visible`}
-                                  render={({ field }) => (
-                                    <FormItem className="flex flex-col items-center h-10 justify-center">
-                                      <FormControl>
-                                        <Switch
-                                          checked={field.value}
-                                          onCheckedChange={field.onChange}
-                                        />
-                                      </FormControl>
-                                    </FormItem>
-                                  )}
-                                />
+                        <Card>
+                            <CardHeader>
+                                <CardTitle>Product Variations</CardTitle>
+                                <CardDescription>
+                                    Offer different options for this product, like size or type. Each variation can have its own price.
+                                </CardDescription>
+                            </CardHeader>
+                            <CardContent className="space-y-4">
+                                {variationFields.length > 0 && (
+                                    <div className="space-y-4">
+                                        <div className="grid grid-cols-[1fr,1fr,100px,auto,auto] gap-2 items-center text-sm font-medium text-muted-foreground px-1">
+                                             <Label>Value*</Label>
+                                                <Label className="flex items-center gap-1.5">
+                                                    Matrix ID
+                                                    <Tooltip delayDuration={100}>
+                                                    <TooltipTrigger asChild>
+                                                        <button
+                                                        type="button"
+                                                        onClick={(e) => e.preventDefault()}
+                                                        >
+                                                        <HelpCircle className="h-4 w-4 cursor-help" />
+                                                        </button>
+                                                    </TooltipTrigger>
+                                                    <TooltipContent>
+                                                        <p>
+                                                        Optional identifier for your Point of Sale
+                                                        (POS) system integration.
+                                                        </p>
+                                                    </TooltipContent>
+                                                    </Tooltip>
+                                                </Label>
+                                                <Label className="flex items-center gap-1.5">
+                                                    Price*
+                                                    <Tooltip delayDuration={100}>
+                                                    <TooltipTrigger asChild>
+                                                        <button
+                                                        type="button"
+                                                        onClick={(e) => e.preventDefault()}
+                                                        >
+                                                        <HelpCircle className="h-4 w-4 cursor-help" />
+                                                        </button>
+                                                    </TooltipTrigger>
+                                                    <TooltipContent>
+                                                        <p>
+                                                        This price will override the product's
+                                                        base price for this variation.
+                                                        </p>
+                                                    </TooltipContent>
+                                                    </Tooltip>
+                                                </Label>
+                                                <Label className="text-center">Visible</Label>
+                                                <div>
+                                                    <span className="sr-only">Actions</span>
+                                                </div>
+                                        </div>
+                                        {variationFields.map((field, index) => (
+                                        <div
+                                            key={field.id}
+                                            className="grid grid-cols-[1fr,1fr,100px,auto,auto] gap-2 items-start"
+                                        >
+                                            <FormField
+                                            control={form.control}
+                                            name={`variations.${index}.value`}
+                                            render={({ field }) => (
+                                                <FormItem>
+                                                <FormControl>
+                                                    <Input
+                                                    placeholder="Value (e.g. Large)"
+                                                    {...field}
+                                                    />
+                                                </FormControl>
+                                                <FormMessage />
+                                                </FormItem>
+                                            )}
+                                            />
+                                            <FormField
+                                            control={form.control}
+                                            name={`variations.${index}.matrix`}
+                                            render={({ field }) => (
+                                                <FormItem>
+                                                <FormControl>
+                                                    <Input
+                                                    placeholder="Matrix ID"
+                                                    {...field}
+                                                    />
+                                                </FormControl>
+                                                <FormMessage />
+                                                </FormItem>
+                                            )}
+                                            />
+                                            <FormField
+                                            control={form.control}
+                                            name={`variations.${index}.price`}
+                                            render={({ field }) => (
+                                                <FormItem>
+                                                <FormControl>
+                                                    <Input
+                                                    type="number"
+                                                    placeholder="Price"
+                                                    {...field}
+                                                    />
+                                                </FormControl>
+                                                <FormMessage />
+                                                </FormItem>
+                                            )}
+                                            />
+                                            <FormField
+                                            control={form.control}
+                                            name={`variations.${index}.visible`}
+                                            render={({ field }) => (
+                                                <FormItem className="flex flex-col items-center h-10 justify-center">
+                                                <FormControl>
+                                                    <Switch
+                                                    checked={field.value}
+                                                    onCheckedChange={field.onChange}
+                                                    />
+                                                </FormControl>
+                                                </FormItem>
+                                            )}
+                                            />
+                                            <Button
+                                            type="button"
+                                            variant="ghost"
+                                            size="icon"
+                                            onClick={() => removeVariation(index)}
+                                            >
+                                            <Trash className="h-4 w-4 text-destructive" />
+                                            </Button>
+                                        </div>
+                                        ))}
+                                    </div>
+                                )}
                                 <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  onClick={() => removeVariation(index)}
+                                    type="button"
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() =>
+                                    appendVariation({
+                                        value: '',
+                                        matrix: '',
+                                        price: 0,
+                                        visible: true,
+                                        hidden: false,
+                                    })
+                                    }
                                 >
-                                  <Trash className="h-4 w-4 text-destructive" />
+                                    <PlusCircle className="mr-2 h-4 w-4" />
+                                    Add Variation
                                 </Button>
-                              </div>
-                            ))}
-                          </div>
-                          <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            onClick={() =>
-                              appendVariation({
-                                value: '',
-                                matrix: '',
-                                price: 0,
-                                visible: true,
-                                hidden: false,
-                              })
-                            }
-                          >
-                            <PlusCircle className="mr-2 h-4 w-4" />
-                            Add Variation
-                          </Button>
-                        </div>
+                            </CardContent>
+                        </Card>
                       </TabsContent>
                     </div>
                   </Tabs>
@@ -880,7 +900,6 @@ export function ProductSheet({
                     open={!isValid ? undefined : false}
                   >
                     <TooltipTrigger asChild>
-                      {/* This div is necessary to make the tooltip work on a disabled button */}
                       <div tabIndex={0}>
                         <Button type="submit" disabled={!isValid}>
                           {product ? 'Update Product' : 'Save Product'}
