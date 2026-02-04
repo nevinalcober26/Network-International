@@ -71,6 +71,7 @@ import { generateProductDescription } from '@/ai/flows/generate-product-descript
 const productSchema = z.object({
   name: z.string().min(1, 'Product name is required'),
   category: z.string().min(1, 'Category is required'),
+  branch: z.string().min(1, 'Branch is required'),
   price: z.coerce.number().min(0.01, 'Price must be greater than 0'),
   smallDescription: z.string().optional(),
   description: z.string().optional(),
@@ -133,6 +134,7 @@ export function ProductSheet({
     return {
       name: product?.name || '',
       category: product?.category || '',
+      branch: product?.branch || '',
       price: product?.price || 0,
       smallDescription: product?.smallDescription || '',
       description: product?.description || '',
@@ -258,6 +260,7 @@ export function ProductSheet({
     const tabMap: Record<string, string> = {
       name: 'basic-info',
       category: 'basic-info',
+      branch: 'basic-info',
       price: 'pricing',
       discountedPrice: 'pricing',
       variations: 'variations',
@@ -280,8 +283,10 @@ export function ProductSheet({
   const isBasicInfoComplete =
     !errors.name &&
     !errors.category &&
+    !errors.branch &&
     form.getValues('name') &&
-    form.getValues('category');
+    form.getValues('category') &&
+    form.getValues('branch');
   const isPricingComplete = !errors.price && form.getValues('price') > 0;
   const areVariationsComplete = !errors.variations;
 
@@ -361,7 +366,7 @@ export function ProductSheet({
                               </FormItem>
                             )}
                           />
-                           <FormField
+                          <FormField
                             control={form.control}
                             name="smallDescription"
                             render={({ field }) => (
@@ -485,33 +490,59 @@ export function ProductSheet({
                               </FormItem>
                             )}
                           />
-                          <FormField
-                            control={form.control}
-                            name="category"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Category*</FormLabel>
-                                <Select
-                                  onValueChange={field.onChange}
-                                  defaultValue={field.value}
-                                >
-                                  <FormControl>
-                                    <SelectTrigger>
-                                      <SelectValue placeholder="Select a category" />
-                                    </SelectTrigger>
-                                  </FormControl>
-                                  <SelectContent>
-                                    {mockCategories.map((cat) => (
-                                      <SelectItem key={cat} value={cat}>
-                                        {cat}
-                                      </SelectItem>
-                                    ))}
-                                  </SelectContent>
-                                </Select>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
+                           <div className="grid grid-cols-2 gap-4">
+                             <FormField
+                                control={form.control}
+                                name="category"
+                                render={({ field }) => (
+                                  <FormItem>
+                                    <FormLabel>Category*</FormLabel>
+                                    <Select
+                                      onValueChange={field.onChange}
+                                      defaultValue={field.value}
+                                    >
+                                      <FormControl>
+                                        <SelectTrigger>
+                                          <SelectValue placeholder="Select a category" />
+                                        </SelectTrigger>
+                                      </FormControl>
+                                      <SelectContent>
+                                        {mockCategories.map((cat) => (
+                                          <SelectItem key={cat} value={cat}>
+                                            {cat}
+                                          </SelectItem>
+                                        ))}
+                                      </SelectContent>
+                                    </Select>
+                                    <FormMessage />
+                                  </FormItem>
+                                )}
+                              />
+                              <FormField
+                                control={form.control}
+                                name="branch"
+                                render={({ field }) => (
+                                  <FormItem>
+                                    <FormLabel>Branch*</FormLabel>
+                                    <Select
+                                      onValueChange={field.onChange}
+                                      defaultValue={field.value}
+                                    >
+                                      <FormControl>
+                                        <SelectTrigger>
+                                          <SelectValue placeholder="Select a branch" />
+                                        </SelectTrigger>
+                                      </FormControl>
+                                      <SelectContent>
+                                        <SelectItem value="Ras Al Khaimah">Ras Al Khaimah</SelectItem>
+                                        <SelectItem value="Dubai Mall">Dubai Mall</SelectItem>
+                                      </SelectContent>
+                                    </Select>
+                                    <FormMessage />
+                                  </FormItem>
+                                )}
+                              />
+                           </div>
                         </div>
                       </TabsContent>
                       <TabsContent value="pricing">

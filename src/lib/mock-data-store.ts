@@ -14,6 +14,7 @@ const productNames = [
 ];
 const categories = ['Burgers', 'Sides', 'Desserts', 'Mains', 'Salads', 'Breakfast', 'Beverages'];
 const productStatuses: Product['status'][] = ['Active', 'Draft', 'Archived', 'Out of Stock'];
+const branches: ('Ras Al Khaimah' | 'Dubai Mall')[] = ['Ras Al Khaimah', 'Dubai Mall'];
 
 const generateMockProducts = (count: number): Product[] => {
     const products: Product[] = [];
@@ -30,6 +31,7 @@ const generateMockProducts = (count: number): Product[] => {
             id: `prod_${i}`,
             name: `${name} ${i < productNames.length ? '' : `#${Math.floor(i / productNames.length)}`}`,
             category: categories[i % categories.length],
+            branch: branches[i % branches.length],
             price,
             stock: status === 'Out of Stock' ? 0 : Math.floor(Math.random() * 100),
             status,
@@ -47,7 +49,6 @@ const generateMockProducts = (count: number): Product[] => {
 const firstNames = ['John', 'Jane', 'Alex', 'Emily', 'Chris', 'Katie', 'Michael', 'Sarah', 'David', 'Laura'];
 const lastNames = ['Smith', 'Doe', 'Johnson', 'Williams', 'Brown', 'Jones', 'Garcia', 'Miller', 'Davis', 'Rodriguez'];
 const staffNames = ['Alex', 'Maria', 'John', 'Sarah', 'David', 'Frank M.'];
-const branches: Order['branch'][] = ['Ras Al Khaimah', 'Dubai Mall'];
 const comments = ['Customer requested extra napkins.', 'Allergy alert: No nuts.', 'Birthday celebration at the table.', null, 'Guest is in a hurry.'];
 
 const generateRelatedMockData = (customerCount: number, orderCount: number, products: Product[]) => {

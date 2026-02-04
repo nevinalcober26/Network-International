@@ -22,8 +22,6 @@ import {
   Card,
   CardContent,
   CardHeader,
-  CardTitle,
-  CardDescription,
   CardFooter,
 } from '@/components/ui/card';
 import {
@@ -40,10 +38,10 @@ import {
   GripVertical,
   MoreHorizontal,
   PlusCircle,
-  ListFilter,
   FileDown,
   Image as ImageIcon,
   ChevronDown,
+  ArrowUpDown,
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -53,6 +51,13 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { DashboardHeader } from '@/components/dashboard/header';
 import { cn } from '@/lib/utils';
 import type { Product } from './types';
@@ -99,14 +104,11 @@ const SortableProductRow = ({
       data-state={isSelected ? 'selected' : undefined}
       onClick={() => onRowClick(product)}
       className={cn(
-        "cursor-pointer bg-card transition-shadow",
-        isDragging && "z-10 opacity-60 shadow-lg"
+        'cursor-pointer bg-card transition-shadow',
+        isDragging && 'z-10 opacity-60 shadow-lg'
       )}
     >
-      <TableCell
-        className="w-12 px-2"
-        onClick={(e) => e.stopPropagation()}
-      >
+      <TableCell className="w-12 px-2" onClick={(e) => e.stopPropagation()}>
         <div
           className="cursor-grab touch-none p-2"
           {...attributes}
@@ -139,6 +141,7 @@ const SortableProductRow = ({
       </TableCell>
       <TableCell className="font-medium">{product.name}</TableCell>
       <TableCell>{product.category}</TableCell>
+      <TableCell>{product.branch}</TableCell>
       <TableCell>${product.price.toFixed(2)}</TableCell>
       <TableCell>{product.stock}</TableCell>
       <TableCell>
@@ -179,11 +182,19 @@ export default function ProductsPage() {
   const [selectedInfoProduct, setSelectedInfoProduct] = useState<Product | null>(
     null
   );
-  const [search, setSearch] = useState('');
   const [selectedRows, setSelectedRows] = useState<string[]>([]);
   const { toast } = useToast();
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
+  const [filters, setFilters] = useState({
+    search: '',
+    branch: 'all',
+    status: 'all',
+  });
+  const [sortConfig, setSortConfig] = useState<{
+    key: keyof Product;
+    direction: 'ascending' | 'descending';
+  } | null>({ key: 'name', direction: 'ascending' });
 
   useEffect(() => {
     // Simulate fetching data
@@ -200,17 +211,65 @@ export default function ProductsPage() {
     })
   );
 
-  const filteredProducts = useMemo(() => {
-    return allProducts.filter((product) =>
-      product.name.toLowerCase().includes(search.toLowerCase())
-    );
-  }, [allProducts, search]);
+  const handleFilterChange = (type: keyof typeof filters, value: string) => {
+    setFilters((prev) => ({ ...prev, [type]: value }));
+    setCurrentPage(1);
+  };
 
-  const totalPages = Math.ceil(filteredProducts.length / itemsPerPage);
+  const requestSort = (key: keyof Product) => {
+    let direction: 'ascending' | 'descending' = 'ascending';
+    if (
+      sortConfig &&
+      sortConfig.key === key &&
+      sortConfig.direction === 'ascending'
+    ) {
+      direction = 'descending';
+    }
+    setSortConfig({ key, direction });
+  };
+
+  const filteredAndSortedProducts = useMemo(() => {
+    let filtered = allProducts.filter((product) => {
+      const matchesSearch = product.name
+        .toLowerCase()
+        .includes(filters.search.toLowerCase());
+      const matchesBranch =
+        filters.branch === 'all' || product.branch === filters.branch;
+      const matchesStatus =
+        filters.status === 'all' || product.status === filters.status;
+      return matchesSearch && matchesBranch && matchesStatus;
+    });
+
+    if (sortConfig !== null) {
+      filtered.sort((a, b) => {
+        const aValue = a[sortConfig.key];
+        const bValue = b[sortConfig.key];
+        if (aValue === undefined || aValue === null) return 1;
+        if (bValue === undefined || bValue === null) return -1;
+
+        if (aValue < bValue) {
+          return sortConfig.direction === 'ascending' ? -1 : 1;
+        }
+        if (aValue > bValue) {
+          return sortConfig.direction === 'ascending' ? 1 : -1;
+        }
+        return 0;
+      });
+    }
+
+    return filtered;
+  }, [allProducts, filters, sortConfig]);
+
+  const totalPages = Math.ceil(
+    filteredAndSortedProducts.length / itemsPerPage
+  );
   const paginatedProducts = useMemo(() => {
     const startIndex = (currentPage - 1) * itemsPerPage;
-    return filteredProducts.slice(startIndex, startIndex + itemsPerPage);
-  }, [filteredProducts, currentPage]);
+    return filteredAndSortedProducts.slice(
+      startIndex,
+      startIndex + itemsPerPage
+    );
+  }, [filteredAndSortedProducts, currentPage]);
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
@@ -300,6 +359,30 @@ export default function ProductsPage() {
     }, 150);
   };
 
+  const SortableHeader = ({
+    tKey,
+    label,
+    className,
+  }: {
+    tKey: keyof Product;
+    label: string;
+    className?: string;
+  }) => (
+    <Button
+      variant="ghost"
+      onClick={() => requestSort(tKey)}
+      className={cn('-ml-4', className)}
+    >
+      {label}
+      <ArrowUpDown
+        className={cn(
+          'ml-2 h-4 w-4',
+          sortConfig?.key !== tKey && 'text-muted-foreground/50'
+        )}
+      />
+    </Button>
+  );
+
   return (
     <>
       <DashboardHeader />
@@ -365,19 +448,42 @@ export default function ProductsPage() {
         <Card>
           <CardHeader>
             <div className="flex items-center justify-between">
-              <Input
-                placeholder="Search products..."
-                value={search}
-                onChange={(e) => {
-                  setSearch(e.target.value);
-                  setCurrentPage(1);
-                }}
-                className="max-w-sm"
-              />
-              <Button variant="outline" size="sm">
-                <ListFilter className="mr-2 h-4 w-4" />
-                Filter
-              </Button>
+              <div className="flex items-center gap-2">
+                <Input
+                  placeholder="Search products..."
+                  value={filters.search}
+                  onChange={(e) => handleFilterChange('search', e.target.value)}
+                  className="max-w-sm"
+                />
+                <Select
+                  value={filters.branch}
+                  onValueChange={(value) => handleFilterChange('branch', value)}
+                >
+                  <SelectTrigger className="w-[180px]">
+                    <SelectValue placeholder="All Branches" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Branches</SelectItem>
+                    <SelectItem value="Ras Al Khaimah">Ras Al Khaimah</SelectItem>
+                    <SelectItem value="Dubai Mall">Dubai Mall</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Select
+                  value={filters.status}
+                  onValueChange={(value) => handleFilterChange('status', value)}
+                >
+                  <SelectTrigger className="w-[180px]">
+                    <SelectValue placeholder="All Statuses" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Statuses</SelectItem>
+                    <SelectItem value="Active">Active</SelectItem>
+                    <SelectItem value="Draft">Draft</SelectItem>
+                    <SelectItem value="Archived">Archived</SelectItem>
+                    <SelectItem value="Out of Stock">Out of Stock</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
           </CardHeader>
           <CardContent>
@@ -406,11 +512,32 @@ export default function ProductsPage() {
                       <TableHead className="w-16 p-2">
                         <span className="sr-only">Image</span>
                       </TableHead>
-                      <TableHead>Product</TableHead>
-                      <TableHead>Category</TableHead>
-                      <TableHead>Price</TableHead>
-                      <TableHead>Stock</TableHead>
-                      <TableHead>Status</TableHead>
+                      <TableHead>
+                        <SortableHeader tKey="name" label="Product" />
+                      </TableHead>
+                      <TableHead>
+                        <SortableHeader tKey="category" label="Category" />
+                      </TableHead>
+                      <TableHead>
+                        <SortableHeader tKey="branch" label="Branch" />
+                      </TableHead>
+                      <TableHead>
+                        <SortableHeader
+                          tKey="price"
+                          label="Price"
+                          className="justify-end w-full"
+                        />
+                      </TableHead>
+                      <TableHead>
+                        <SortableHeader
+                          tKey="stock"
+                          label="Stock"
+                          className="justify-end w-full"
+                        />
+                      </TableHead>
+                      <TableHead>
+                        <SortableHeader tKey="status" label="Status" />
+                      </TableHead>
                       <TableHead>
                         <span className="sr-only">Actions</span>
                       </TableHead>
@@ -424,7 +551,7 @@ export default function ProductsPage() {
                       {isLoading ? (
                         [...Array(5)].map((_, i) => (
                           <TableRow key={i}>
-                            {[...Array(9)].map((_, j) => (
+                            {[...Array(10)].map((_, j) => (
                               <TableCell key={j}>
                                 <div className="h-4 bg-muted rounded animate-pulse"></div>
                               </TableCell>
@@ -445,7 +572,7 @@ export default function ProductsPage() {
                       ) : (
                         <TableRow>
                           <TableCell
-                            colSpan={9}
+                            colSpan={10}
                             className="h-24 text-center text-muted-foreground"
                           >
                             No products found.
@@ -462,7 +589,7 @@ export default function ProductsPage() {
             <div className="text-xs text-muted-foreground">
               Showing{' '}
               <strong>
-                {filteredProducts.length === 0
+                {filteredAndSortedProducts.length === 0
                   ? 0
                   : (currentPage - 1) * itemsPerPage + 1}
               </strong>{' '}
@@ -470,10 +597,10 @@ export default function ProductsPage() {
               <strong>
                 {Math.min(
                   currentPage * itemsPerPage,
-                  filteredProducts.length
+                  filteredAndSortedProducts.length
                 )}
               </strong>{' '}
-              of <strong>{filteredProducts.length}</strong> products
+              of <strong>{filteredAndSortedProducts.length}</strong> products
             </div>
             <div className="flex items-center space-x-2">
               <Button

@@ -77,6 +77,7 @@ export function ProductInfoSheet({
                     {product.status}
                   </Badge>
                   <Badge variant="outline">{product.category}</Badge>
+                  <Badge variant="outline">{product.branch}</Badge>
                 </div>
               </div>
             </div>
