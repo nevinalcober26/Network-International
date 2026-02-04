@@ -27,7 +27,6 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import {
   Select,
   SelectContent,
@@ -79,6 +78,7 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from '@/components/ui/collapsible';
+import { Textarea } from '@/components/ui/textarea';
 
 const productSchema = z
   .object({
@@ -314,12 +314,13 @@ export function ProductSheet({
     const { discountType: dt, discountValue: dv, ...restOfData } = data;
 
     const fullProductData: Product = {
-      ...(product || {}),
+      ...(product || {
+        id: `new_${Date.now()}`,
+        stock: 0,
+        status: 'Active',
+      }),
       ...restOfData,
-      id: product?.id || `new_${Date.now()}`,
-      stock: product?.stock || 0,
-      status: product?.status || 'Active',
-      branch: product?.branch || 'Ras Al Khaimah', // Use existing or default
+      branch: 'Ras Al Khaimah',
       discountedPrice,
       smallDescription: data.smallDescription || '',
       description: data.description || '',
@@ -559,9 +560,8 @@ export function ProductSheet({
                                                 </Tooltip>
                                             </div>
                                             <FormControl>
-                                            <Textarea
+                                            <Input
                                                 placeholder="A short, catchy line for your product."
-                                                rows={2}
                                                 {...field}
                                             />
                                             </FormControl>
