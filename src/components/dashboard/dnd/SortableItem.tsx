@@ -3,7 +3,7 @@ import { useSortable } from '@dnd-kit/sortable';
 import { useDroppable, UniqueIdentifier } from '@dnd-kit/core';
 import { CSS } from '@dnd-kit/utilities';
 import { Item as ItemComponent } from './Item';
-import type { Item as ItemData } from '@/app/dashboard/categories/page';
+import type { Item as ItemData } from '@/app/dashboard/categories/types';
 import React, { useMemo } from 'react';
 import {
   SortableContext,
@@ -18,12 +18,13 @@ type SortableItemProps = {
   item: ItemData;
   onItemClick: (item: ItemData) => void;
   onAddItem: (parentId: UniqueIdentifier) => void;
+  onDeleteItem: (itemId: UniqueIdentifier) => void;
   activeId: UniqueIdentifier | null;
   overId: UniqueIdentifier | null;
   depth?: number;
 };
 
-export function SortableItem({ item, onItemClick, onAddItem, activeId, overId, depth = 0 }: SortableItemProps) {
+export function SortableItem({ item, onItemClick, onAddItem, onDeleteItem, activeId, overId, depth = 0 }: SortableItemProps) {
   const {
     attributes,
     listeners,
@@ -64,7 +65,8 @@ export function SortableItem({ item, onItemClick, onAddItem, activeId, overId, d
             <ItemComponent 
                 id={item.id} 
                 name={item.name} 
-                onClick={() => onItemClick(item)} 
+                onClick={() => onItemClick(item)}
+                onDelete={() => onDeleteItem(item.id)}
                 isOver={isOverForNesting}
             />
         </div>
@@ -78,6 +80,7 @@ export function SortableItem({ item, onItemClick, onAddItem, activeId, overId, d
                             item={child} 
                             onItemClick={onItemClick}
                             onAddItem={onAddItem}
+                            onDeleteItem={onDeleteItem}
                             activeId={activeId}
                             overId={overId}
                             depth={depth + 1} 

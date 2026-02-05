@@ -4,18 +4,25 @@ import { useDroppable, UniqueIdentifier } from '@dnd-kit/core';
 import { CSS } from '@dnd-kit/utilities';
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '@/components/ui/card';
 import { SortableItem } from './SortableItem';
-import type { Item } from '@/app/dashboard/categories/page';
+import type { Item, Column } from '@/app/dashboard/categories/types';
 import { useMemo } from 'react';
 import { Button } from '@/components/ui/button';
-import { Plus } from 'lucide-react';
+import { Plus, MoreHorizontal, Trash } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 type ContainerProps = {
   id: UniqueIdentifier;
   label: string;
   items: Item[];
-  onItemClick: (item: Item) => void;
+  onItemClick: (item: Item | Column) => void;
   onAddItem: (containerId: UniqueIdentifier) => void;
+  onDeleteItem: (id: UniqueIdentifier, isColumn?: boolean) => void;
   activeId: UniqueIdentifier | null;
   overId: UniqueIdentifier | null;
 };
@@ -31,7 +38,7 @@ const getDescendantIds = (items: Item[]): UniqueIdentifier[] => {
     return ids;
 }
 
-export function Container({ id, label, items, onItemClick, onAddItem, activeId, overId }: ContainerProps) {
+export function Container({ id, label, items, onItemClick, onAddItem, onDeleteItem, activeId, overId }: ContainerProps) {
   const { setNodeRef: setSortableNodeRef, transform, transition } = useSortable({ id, data: { type: 'container' } });
   const { setNodeRef: setDroppableNodeRef, isOver } = useDroppable({
     id: id,
@@ -57,8 +64,21 @@ export function Container({ id, label, items, onItemClick, onAddItem, activeId, 
         ref={setDroppableNodeRef}
         className={cn("flex-grow flex flex-col transition-shadow", isOverContainer && "shadow-lg ring-2 ring-primary")}
         >
-            <CardHeader>
+            <CardHeader className="flex-row items-center justify-between">
                 <CardTitle>{label}</CardTitle>
+                <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon" className="h-8 w-8">
+                            <MoreHorizontal className="h-4 w-4" />
+                        </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={() => onDeleteItem(id, true)} className="text-destructive cursor-pointer">
+                            <Trash className="mr-2 h-4 w-4" />
+                            Delete Column
+                        </DropdownMenuItem>
+                    </DropdownMenuContent>
+                </DropdownMenu>
             </CardHeader>
             <CardContent className={cn("flex flex-col gap-2", items.length > 0 ? 'flex-grow' : 'p-0')}>
                 <SortableContext items={allItemIds} strategy={verticalListSortingStrategy}>
@@ -68,6 +88,7 @@ export function Container({ id, label, items, onItemClick, onAddItem, activeId, 
                     item={item} 
                     onItemClick={onItemClick}
                     onAddItem={onAddItem}
+                    onDeleteItem={onDeleteItem}
                     activeId={activeId}
                     overId={overId}
                     />

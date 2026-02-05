@@ -70,7 +70,7 @@ function findItemDeep(
       return null;
     };
     const found = search(column.items);
-    if (found) return found;
+    if (found) return { container: column.items, ...found };
   }
   return null;
 }
@@ -183,6 +183,25 @@ const AddCategoryDialog = ({
   );
 };
 
+const DeleteConfirmationDialog = ({ open, onOpenChange, onConfirm, name, isColumn }: { open: boolean, onOpenChange: (open: boolean) => void, onConfirm: () => void, name: string, isColumn: boolean }) => {
+    return (
+        <Dialog open={open} onOpenChange={onOpenChange}>
+            <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>Are you absolutely sure?</DialogTitle>
+                    <DialogDescription>
+                        This will permanently delete the {isColumn ? 'column' : 'category'} "{name}" and all its sub-categories. This action cannot be undone.
+                    </DialogDescription>
+                </DialogHeader>
+                <DialogFooter>
+                    <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
+                    <Button variant="destructive" onClick={onConfirm}>Delete</Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
+    );
+};
+
 export default function CategoriesPage() {
   const [board, setBoard] = useState<Column[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -195,6 +214,7 @@ export default function CategoriesPage() {
   const [addCategoryParent, setAddCategoryParent] = useState<
     UniqueIdentifier | 'none'
   >('none');
+  const [deleteTarget, setDeleteTarget] = useState<{ id: UniqueIdentifier; name: string; isColumn: boolean } | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -263,7 +283,7 @@ export default function CategoriesPage() {
         // Case 3: Reordering (dropping next to another item)
         const overItemData = findItemDeep(draft, overId);
         if (overItemData) {
-            const { container: overContainer, item: overItem } = overItemData;
+            const { container: overContainer } = overItemData;
             const overIndex = overContainer.findIndex(item => item.id === overId);
             
             if (overIndex !== -1) {
@@ -339,6 +359,53 @@ export default function CategoriesPage() {
     setAddCategoryParent(parentId);
     setIsAddCategoryDialogOpen(true);
   };
+  
+  const findName = (id: UniqueIdentifier): string => {
+    for (const col of board) {
+        if (col.id === id) return col.name;
+        
+        function findInItems(items: Item[]): string | null {
+            for (const item of items) {
+                if (item.id === id) return item.name;
+                if (item.children) {
+                    const foundName = findInItems(item.children);
+                    if (foundName) return foundName;
+                }
+            }
+            return null;
+        }
+
+        const name = findInItems(col.items);
+        if (name) return name;
+    }
+    return '';
+  }
+
+  const handleDeleteRequest = (id: UniqueIdentifier, isColumn: boolean = false) => {
+    const name = findName(id);
+    if (name) {
+        setDeleteTarget({ id, name, isColumn });
+    }
+  };
+
+  const handleConfirmDelete = () => {
+    if (!deleteTarget) return;
+    
+    if (deleteTarget.isColumn) {
+        setBoard(board => board.filter(col => col.id !== deleteTarget.id));
+    } else {
+        setBoard(board => produce(board, draft => {
+            findAndRemoveItem(draft, deleteTarget.id);
+        }));
+    }
+
+    toast({
+        title: `${deleteTarget.isColumn ? 'Column' : 'Category'} Deleted`,
+        description: `"${deleteTarget.name}" has been removed.`,
+    });
+
+    setDeleteTarget(null);
+  };
 
   if (isLoading) {
     return <CategoriesPageSkeleton view="gallery" />;
@@ -385,6 +452,7 @@ export default function CategoriesPage() {
                   items={column.items}
                   onItemClick={setSelectedCategory}
                   onAddItem={handleOpenAddDialog}
+                  onDeleteItem={handleDeleteRequest}
                   activeId={activeId}
                   overId={overId}
                 />
@@ -423,6 +491,13 @@ export default function CategoriesPage() {
         onAddCategory={handleAddCategoryFromDialog}
         board={board}
         initialParentId={addCategoryParent}
+      />
+      <DeleteConfirmationDialog 
+        open={!!deleteTarget}
+        onOpenChange={() => setDeleteTarget(null)}
+        onConfirm={handleConfirmDelete}
+        name={deleteTarget?.name ?? ''}
+        isColumn={deleteTarget?.isColumn ?? false}
       />
     </>
   );
