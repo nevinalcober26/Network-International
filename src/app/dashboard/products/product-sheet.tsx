@@ -61,6 +61,7 @@ import {
   Wand,
   RefreshCw,
   ChevronDown,
+  CheckCircle,
 } from 'lucide-react';
 import type { Product, Variation } from './types';
 import Image from 'next/image';
@@ -395,6 +396,7 @@ export function ProductSheet({
                       <div className="flex items-center gap-2">
                           {tabsConfig.map((tab, index) => {
                               const isActive = activeTab === tab.value;
+                              const isComplete = tab.isComplete;
                               return (
                                 <TabsTrigger
                                   key={tab.value}
@@ -404,22 +406,27 @@ export function ProductSheet({
                                     isActive ? "" : "rounded-lg hover:bg-muted/50"
                                   )}
                                 >
-                                  <div
-                                    className={cn(
-                                      'flex h-7 w-7 items-center justify-center rounded-md border text-sm font-bold',
-                                      'transition-colors',
-                                      isActive
-                                        ? 'bg-primary text-primary-foreground border-primary'
-                                        : 'bg-background text-muted-foreground',
-                                      !tab.isComplete && !isActive && 'border-destructive text-destructive'
-                                    )}
-                                  >
-                                    {index + 1}
-                                  </div>
+                                  {isComplete && !isActive ? (
+                                    <CheckCircle className="h-7 w-7 text-green-500" />
+                                  ) : (
+                                    <div
+                                        className={cn(
+                                        'flex h-7 w-7 items-center justify-center rounded-md border text-sm font-bold',
+                                        'transition-colors',
+                                        isActive
+                                            ? 'bg-primary text-primary-foreground border-primary'
+                                            : 'bg-background text-muted-foreground',
+                                        !isComplete && !isActive && 'border-destructive text-destructive'
+                                        )}
+                                    >
+                                        {index + 1}
+                                    </div>
+                                  )}
                                   <span
                                     className={cn(
                                       'font-medium transition-colors',
-                                      isActive ? 'text-foreground' : 'text-muted-foreground'
+                                      isActive ? 'text-foreground' : 'text-muted-foreground',
+                                      isComplete && !isActive && 'text-foreground'
                                     )}
                                   >
                                     {tab.label}
