@@ -165,7 +165,13 @@ export default function CategoriesPage() {
 
 
   const sensors = useSensors(
-    useSensor(PointerSensor),
+    useSensor(PointerSensor, {
+      // Require the mouse to move by 10 pixels before activating a drag.
+      // This prevents misinterpreting clicks on interactive elements as drags.
+      activationConstraint: {
+        distance: 10,
+      },
+    }),
     useSensor(KeyboardSensor, {
       coordinateGetter: sortableKeyboardCoordinates,
     })
@@ -519,7 +525,7 @@ export default function CategoriesPage() {
                                 </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end" onCloseAutoFocus={(e) => e.preventDefault()}>
-                                <DropdownMenuItem className="cursor-pointer" onSelect={(e) => e.preventDefault()}>
+                                <DropdownMenuItem className="cursor-pointer">
                                     <Clock className="mr-2 h-4 w-4" />
                                     Schedule
                                 </DropdownMenuItem>
