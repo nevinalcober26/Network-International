@@ -61,13 +61,15 @@ export function SortableItem({ item, onItemClick, onAddItem, onDeleteItem, activ
       style={style}
       className="flex flex-col gap-2"
     >
-        <div ref={setDroppableNodeRef} {...attributes} {...listeners}>
+        <div ref={setDroppableNodeRef}>
             <ItemComponent 
                 id={item.id} 
                 name={item.name} 
                 onClick={() => onItemClick(item)}
                 onDelete={() => onDeleteItem(item.id)}
                 isOver={isOverForNesting}
+                attributes={attributes}
+                listeners={listeners}
             />
         </div>
 
