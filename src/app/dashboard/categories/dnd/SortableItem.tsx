@@ -2,7 +2,7 @@
 import { useSortable } from '@dnd-kit/sortable';
 import { useDroppable, UniqueIdentifier } from '@dnd-kit/core';
 import { CSS } from '@dnd-kit/utilities';
-import { Item as ItemComponent } from './Item';
+import { Item as ItemComponent } from '@/components/dashboard/dnd/Item';
 import type { Item as ItemData } from '@/app/dashboard/categories/types';
 import React, { useMemo } from 'react';
 import {
