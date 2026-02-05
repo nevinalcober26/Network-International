@@ -37,19 +37,10 @@ import {
   DialogDescription,
   DialogFooter,
 } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+import { AddCategorySheet, type CategoryFormValues } from './add-category-sheet';
 import { Container } from '@/components/dashboard/dnd/Container';
 import { Item as ItemComponent } from '@/components/dashboard/dnd/Item';
 import { mockDataStore } from '@/lib/mock-data-store';
-import { getCategoryOptions } from './utils';
 import type { Item, Column } from './types';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 
@@ -103,88 +94,6 @@ function findAndRemoveItem(board: Column[], id: UniqueIdentifier): Item | null {
     return removedItem;
 }
 
-
-const AddCategoryDialog = ({
-  open,
-  onOpenChange,
-  onAddCategory,
-  board,
-  initialParentId = 'none',
-}: {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  onAddCategory: (name: string, parentId: UniqueIdentifier | 'none') => void;
-  board: Column[];
-  initialParentId?: UniqueIdentifier | 'none';
-}) => {
-  const [name, setName] = useState('');
-  const [parentId, setParentId] = useState<string>(initialParentId.toString());
-  const categoryOptions = useMemo(() => getCategoryOptions(board), [board]);
-
-  useEffect(() => {
-    if (open) {
-      setName('');
-      setParentId(initialParentId.toString());
-    }
-  }, [open, initialParentId]);
-
-  const handleSave = () => {
-    if (name.trim()) {
-      onAddCategory(name, parentId);
-      onOpenChange(false);
-    }
-  };
-
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Add New Category</DialogTitle>
-          <DialogDescription>
-            Enter a name and select a parent for your new category.
-          </DialogDescription>
-        </DialogHeader>
-        <div className="space-y-4 py-4">
-          <div className="space-y-2">
-            <Label htmlFor="new-category-name">Category Name</Label>
-            <Input
-              id="new-category-name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="e.g., Desserts"
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="parent">Parent</Label>
-            <Select value={parentId} onValueChange={setParentId}>
-              <SelectTrigger id="parent">
-                <SelectValue placeholder="Select a parent category" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="none">None (New Top-level Column)</SelectItem>
-                {categoryOptions.map((option) => (
-                  <SelectItem key={option.value} value={option.value}>
-                    <span style={{ paddingLeft: `${option.depth * 1.5}rem` }}>
-                      {option.depth > 0 && '↳ '}
-                      {option.label}
-                    </span>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Cancel
-          </Button>
-          <Button onClick={handleSave}>Save Category</Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-  );
-};
-
 const DeleteConfirmationDialog = ({ open, onOpenChange, onConfirm, name, isColumn }: { open: boolean, onOpenChange: (open: boolean) => void, onConfirm: () => void, name: string, isColumn: boolean }) => {
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
@@ -212,9 +121,9 @@ export default function CategoriesPage() {
   const [selectedCategory, setSelectedCategory] = useState<Column | Item | null>(
     null
   );
-  const [isAddCategoryDialogOpen, setIsAddCategoryDialogOpen] = useState(false);
+  const [isAddCategorySheetOpen, setIsAddCategorySheetOpen] = useState(false);
   const [addCategoryParent, setAddCategoryParent] = useState<
-    UniqueIdentifier | 'none'
+    UniqueIdentifier | 'none' | 'new-column'
   >('none');
   const [deleteTarget, setDeleteTarget] = useState<{ id: UniqueIdentifier; name: string; isColumn: boolean } | null>(null);
   const { toast } = useToast();
@@ -299,11 +208,9 @@ export default function CategoriesPage() {
     if (isDraggingColumn) {
         setBoard((board) => {
             const activeColumnIndex = board.findIndex((col) => col.id === active.id);
-            // The `over` element could be a column or an item within a column.
-            // Our helper function finds the correct parent column ID in either case.
             const overColumnId = findColumnForItemId(over.id);
             
-            if (!overColumnId) return board; // Dropped somewhere invalid
+            if (!overColumnId) return board;
             
             const overColumnIndex = board.findIndex((col) => col.id === overColumnId);
 
@@ -311,9 +218,9 @@ export default function CategoriesPage() {
               return arrayMove(board, activeColumnIndex, overColumnIndex);
             }
             
-            return board; // Return original board if something went wrong
+            return board;
         });
-        return; // Exit after handling column drag
+        return;
     }
 
     // --- Scenario 2: Moving an Item ---
@@ -322,7 +229,6 @@ export default function CategoriesPage() {
             const activeItem = findAndRemoveItem(draft, active.id);
             if (!activeItem) return;
 
-            // Case 2a: Dropping on an empty column area
             const overIsContainerDropZone = over.data.current?.type === 'container-drop-zone';
             if (overIsContainerDropZone) {
                 const overColumn = draft.find(c => c.id === over.id);
@@ -330,7 +236,6 @@ export default function CategoriesPage() {
                 return;
             }
             
-            // Case 2b: Dropping on another item to nest it
             const overIsItemDropZone = over.data.current?.type === 'item-drop-zone';
             if (overIsItemDropZone) {
                 const parentItemData = findItemDeep(draft, over.id);
@@ -341,7 +246,6 @@ export default function CategoriesPage() {
                 return;
             }
 
-            // Case 2c: Dropping near another item to reorder
             const overItemData = findItemDeep(draft, over.id);
             if (overItemData) {
                 const { container: overContainer } = overItemData;
@@ -377,10 +281,8 @@ export default function CategoriesPage() {
     return false;
   }
 
-  const handleAddCategoryFromDialog = (
-    name: string,
-    parentId: UniqueIdentifier | 'none'
-  ) => {
+  const handleAddCategory = (values: CategoryFormValues) => {
+    const { name, parentId } = values;
     const newItemId = `item-${Date.now()}`;
     const newCategory: Item = { id: newItemId, name, children: [] };
 
@@ -389,7 +291,7 @@ export default function CategoriesPage() {
         if (parentId === 'none' || parentId === 'new-column') {
           draft.push({
             id: `col-${Date.now()}`,
-            name: name,
+            name,
             items: [],
           });
         } else {
@@ -398,7 +300,6 @@ export default function CategoriesPage() {
             const parentColumn = draft.find((col) => col.id === parentId);
             parentColumn?.items.push(newCategory);
           } else {
-            // It's a nested item. Find it across all columns.
             for (const column of draft) {
                 if (addItemToParent(column.items, parentId, newCategory)) {
                     break;
@@ -414,9 +315,9 @@ export default function CategoriesPage() {
     });
   };
 
-  const handleOpenAddDialog = (parentId: UniqueIdentifier | 'none' = 'none') => {
+  const handleOpenAddSheet = (parentId: UniqueIdentifier | 'none' | 'new-column' = 'none') => {
     setAddCategoryParent(parentId);
-    setIsAddCategoryDialogOpen(true);
+    setIsAddCategorySheetOpen(true);
   };
   
   const findName = (id: UniqueIdentifier): string => {
@@ -485,7 +386,7 @@ export default function CategoriesPage() {
               </p>
             </div>
             <div className="flex items-center gap-4">
-              <Button onClick={() => handleOpenAddDialog('new-column')}>
+              <Button onClick={() => handleOpenAddSheet('new-column')}>
                 <Plus className="mr-2 h-4 w-4" /> Add Category Column
               </Button>
               <Button variant="secondary">PUBLISH</Button>
@@ -511,7 +412,7 @@ export default function CategoriesPage() {
                     label={column.name}
                     items={column.items}
                     onItemClick={setSelectedCategory}
-                    onAddItem={handleOpenAddDialog}
+                    onAddItem={handleOpenAddSheet}
                     onDeleteItem={handleDeleteRequest}
                     activeId={activeId}
                     overId={overId}
@@ -520,7 +421,7 @@ export default function CategoriesPage() {
                 ))}
                 <div className="w-80 flex-shrink-0">
                   <button
-                    onClick={() => handleOpenAddDialog('new-column')}
+                    onClick={() => handleOpenAddSheet('new-column')}
                     className="w-full h-full rounded-lg border-2 border-dashed border-muted-foreground/50 bg-card p-6 flex flex-col items-center justify-center gap-2 text-muted-foreground hover:border-primary hover:text-primary hover:bg-primary/5 transition-colors"
                   >
                     <Plus className="h-8 w-8" />
@@ -556,10 +457,10 @@ export default function CategoriesPage() {
         category={selectedCategory}
         board={board}
       />
-      <AddCategoryDialog
-        open={isAddCategoryDialogOpen}
-        onOpenChange={setIsAddCategoryDialogOpen}
-        onAddCategory={handleAddCategoryFromDialog}
+      <AddCategorySheet
+        open={isAddCategorySheetOpen}
+        onOpenChange={setIsAddCategorySheetOpen}
+        onAddCategory={handleAddCategory}
         board={board}
         initialParentId={addCategoryParent}
       />
