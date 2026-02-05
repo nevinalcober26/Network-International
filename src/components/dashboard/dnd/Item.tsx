@@ -40,7 +40,7 @@ export const Item = React.forwardRef<HTMLDivElement, ItemProps>(
           >
             <GripVertical className="h-5 w-5 text-muted-foreground" />
           </div>
-          <div>
+          <div className="cursor-pointer" onClick={onClick}>
             <p className="font-medium text-sm">{name}</p>
           </div>
         </div>
@@ -50,16 +50,14 @@ export const Item = React.forwardRef<HTMLDivElement, ItemProps>(
               variant="ghost"
               size="icon"
               className="h-8 w-8"
-              onClick={(e) => e.stopPropagation()}
             >
               <MoreHorizontal className="h-4 w-4" />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent
             align="end"
-            onCloseAutoFocus={(e) => e.preventDefault()}
           >
-            <DropdownMenuItem className="cursor-pointer" onSelect={(e) => e.preventDefault()}>
+            <DropdownMenuItem className="cursor-pointer">
               <Clock className="mr-2 h-4 w-4" />
               Schedule
             </DropdownMenuItem>
