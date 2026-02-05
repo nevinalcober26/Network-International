@@ -58,14 +58,20 @@ export const Item = React.forwardRef<HTMLDivElement, ItemProps>(
               Schedule
             </DropdownMenuItem>
             <DropdownMenuItem
-              onSelect={onClick}
+              onSelect={(e) => {
+                e.preventDefault();
+                onClick?.();
+              }}
               className="cursor-pointer"
             >
               <Edit className="mr-2 h-4 w-4" />
               Edit
             </DropdownMenuItem>
             <DropdownMenuItem
-              onSelect={onDelete}
+              onSelect={(e) => {
+                e.preventDefault();
+                onDelete?.();
+              }}
               className="text-destructive cursor-pointer"
             >
               <Trash className="mr-2 h-4 w-4" />

@@ -105,11 +105,11 @@ export function Container({ id, label, items, onItemClick, onAddItem, onDeleteIt
                             <Clock className="mr-2 h-4 w-4" />
                             Schedule
                         </DropdownMenuItem>
-                        <DropdownMenuItem onSelect={() => onItemClick({ id, name: label, items })} className="cursor-pointer">
+                        <DropdownMenuItem onSelect={(e) => { e.preventDefault(); onItemClick({ id, name: label, items }); }} className="cursor-pointer">
                             <Edit className="mr-2 h-4 w-4" />
                             Edit
                         </DropdownMenuItem>
-                        <DropdownMenuItem onSelect={() => onDeleteItem(id, true)} className="text-destructive cursor-pointer">
+                        <DropdownMenuItem onSelect={(e) => { e.preventDefault(); onDeleteItem(id, true); }} className="text-destructive cursor-pointer">
                             <Trash className="mr-2 h-4 w-4" />
                             Delete Column
                         </DropdownMenuItem>
