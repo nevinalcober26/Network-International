@@ -22,16 +22,19 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
-import { Upload, Image as ImageIcon } from 'lucide-react';
+import { Upload, Image as ImageIcon, LayoutGrid, List } from 'lucide-react';
 import { UniqueIdentifier } from '@dnd-kit/core';
 import { getCategoryOptions } from './utils';
 import type { Column, Item } from './types';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from '@/components/ui/form';
 import Image from 'next/image';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Label } from '@/components/ui/label';
+import { cn } from '@/lib/utils';
 
 
 const categorySchema = z.object({
@@ -225,7 +228,7 @@ export function CategorySheet({
                                     <CardTitle>Display & Appearance</CardTitle>
                                     <CardDescription>Customize how this category looks on the menu.</CardDescription>
                                 </CardHeader>
-                                <CardContent className="space-y-4 pt-6">
+                                <CardContent className="space-y-6 pt-6">
                                     <div className="space-y-2">
                                         <FormLabel>Image</FormLabel>
                                         <div className="flex items-center gap-6">
@@ -238,7 +241,55 @@ export function CategorySheet({
                                             </div>
                                         </div>
                                     </div>
-                                    <FormField control={form.control} name="viewFormat" render={({ field }) => (<FormItem><FormLabel>View Format</FormLabel><Select onValueChange={field.onChange} value={field.value}><FormControl><SelectTrigger><SelectValue placeholder="Select view format" /></SelectTrigger></FormControl><SelectContent><SelectItem value="grid_with_images">Grid with Images</SelectItem><SelectItem value="list">List View</SelectItem></SelectContent></Select></FormItem>)} />
+                                    <FormField
+                                        control={form.control}
+                                        name="viewFormat"
+                                        render={({ field }) => (
+                                            <FormItem className="space-y-2">
+                                            <FormLabel>View Format</FormLabel>
+                                            <FormDescription>How this category appears on the mobile menu.</FormDescription>
+                                            <FormControl>
+                                                <RadioGroup
+                                                onValueChange={field.onChange}
+                                                value={field.value}
+                                                className="grid grid-cols-2 gap-4 pt-2"
+                                                >
+                                                <div>
+                                                    <RadioGroupItem value="grid_with_images" id="edit-view-format-grid" className="sr-only" />
+                                                    <Label
+                                                    htmlFor="edit-view-format-grid"
+                                                    className={cn(
+                                                        "flex cursor-pointer flex-col items-center justify-center rounded-md border-2 p-4 transition-colors",
+                                                        field.value === 'grid_with_images'
+                                                        ? "border-primary bg-primary/5 text-primary"
+                                                        : "border-muted text-muted-foreground hover:border-accent-foreground/20 hover:bg-accent"
+                                                    )}
+                                                    >
+                                                    <LayoutGrid className="mb-2 h-7 w-7" />
+                                                    <span className="font-semibold text-center">Grid with Images</span>
+                                                    </Label>
+                                                </div>
+                                                <div>
+                                                    <RadioGroupItem value="list" id="edit-view-format-list" className="sr-only" />
+                                                    <Label
+                                                    htmlFor="edit-view-format-list"
+                                                    className={cn(
+                                                        "flex cursor-pointer flex-col items-center justify-center rounded-md border-2 p-4 transition-colors",
+                                                        field.value === 'list'
+                                                        ? "border-primary bg-primary/5 text-primary"
+                                                        : "border-muted text-muted-foreground hover:border-accent-foreground/20 hover:bg-accent"
+                                                    )}
+                                                    >
+                                                    <List className="mb-2 h-7 w-7" />
+                                                    <span className="font-semibold text-center">List View</span>
+                                                    </Label>
+                                                </div>
+                                                </RadioGroup>
+                                            </FormControl>
+                                            <FormMessage />
+                                            </FormItem>
+                                        )}
+                                        />
                                     <FormField control={form.control} name="displayFullwidth" render={({ field }) => (<FormItem className="flex items-center justify-between rounded-lg border p-3"><div className="space-y-0.5"><FormLabel>Display Fullwidth</FormLabel></div><FormControl><Switch checked={field.value} onCheckedChange={field.onChange} /></FormControl></FormItem>)} />
                                     <FormField control={form.control} name="hiddenTitle" render={({ field }) => (<FormItem className="flex items-center justify-between rounded-lg border p-3"><div className="space-y-0.5"><FormLabel>Hide Title on Menu</FormLabel></div><FormControl><Switch checked={field.value} onCheckedChange={field.onChange} /></FormControl></FormItem>)} />
                                     <FormField control={form.control} name="hiddenImage" render={({ field }) => (<FormItem className="flex items-center justify-between rounded-lg border p-3"><div className="space-y-0.5"><FormLabel>Hide Image on Menu</FormLabel></div><FormControl><Switch checked={field.value} onCheckedChange={field.onChange} /></FormControl></FormItem>)} />
