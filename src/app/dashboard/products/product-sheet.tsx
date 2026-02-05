@@ -407,11 +407,11 @@ export function ProductSheet({
                                   )}
                                 >
                                   {isComplete && !isActive ? (
-                                    <CheckCircle className="h-7 w-7 text-green-500" />
+                                    <CheckCircle className="h-5 w-5 text-green-500" />
                                   ) : (
                                     <div
                                         className={cn(
-                                        'flex h-7 w-7 items-center justify-center rounded-md border text-sm font-bold',
+                                        'flex h-5 w-5 items-center justify-center rounded-md border text-xs font-bold',
                                         'transition-colors',
                                         isActive
                                             ? 'bg-primary text-primary-foreground border-primary'
