@@ -25,10 +25,12 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
-import { X, AlertTriangle, CheckCircle } from 'lucide-react';
+import { X } from 'lucide-react';
 import type { Column, Item, ScheduleRule } from './types';
 import { UniqueIdentifier } from '@dnd-kit/core';
 import { useToast } from '@/hooks/use-toast';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { cn } from '@/lib/utils';
 
 const scheduleSchema = z.object({
   weekday: z.enum(['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday', 'Everyday']),
@@ -53,6 +55,13 @@ interface CategoryScheduleSheetProps {
 const weekdays: ScheduleFormValues['weekday'][] = [
     'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday', 'Everyday'
 ];
+
+const timeToMinutes = (timeStr: string): number => {
+    if (!timeStr || !timeStr.includes(':')) return 0;
+    const [hours, minutes] = timeStr.split(':').map(Number);
+    if (isNaN(hours) || isNaN(minutes)) return 0;
+    return hours * 60 + minutes;
+};
 
 export function CategoryScheduleSheet({
   open,
@@ -189,47 +198,65 @@ export function CategoryScheduleSheet({
                         <CardTitle className="text-primary text-lg">Menu - Display Hours</CardTitle>
                     </CardHeader>
                     <CardContent>
-                        <div className="space-y-4">
-                            {displayHours.map(({ day, schedules }) => (
-                            <div key={day} className="rounded-lg border bg-card p-4">
-                                <p className="font-semibold mb-3 text-card-foreground">{day}</p>
-                                {schedules.length === 0 ? (
-                                    <div className="flex items-center gap-3 p-3 rounded-md bg-green-50 text-sm border border-green-200">
-                                        <CheckCircle className="h-5 w-5 text-green-600" />
-                                        <span className="font-medium text-green-800">Available all day</span>
-                                    </div>
-                                ) : (
-                                    <div className="space-y-2">
-                                        {schedules.map((rule) => (
-                                        <div key={rule.id} className="flex items-start justify-between p-3 rounded-md bg-red-50 text-sm border border-red-200">
-                                            <div className="flex items-start gap-3">
-                                                <AlertTriangle className="h-5 w-5 text-red-500 mt-0.5" />
-                                                <div>
-                                                    <p className="font-medium text-red-800">
-                                                    {rule.allDay
-                                                        ? 'Unavailable all day'
-                                                        : `Unavailable: ${rule.from} - ${rule.to}`}
-                                                    </p>
-                                                    {rule.disableOrder && (
-                                                    <p className="text-xs text-red-700">Ordering will be disabled</p>
+                        <TooltipProvider>
+                            <div className="space-y-6">
+                                {displayHours.map(({ day, schedules }) => {
+                                    const allDayUnavailable = schedules.some(s => s.allDay);
+                                    
+                                    return (
+                                        <div key={day} className="space-y-2">
+                                            <div className="flex justify-between items-center">
+                                                <p className="font-semibold text-card-foreground">{day}</p>
+                                                {allDayUnavailable ? (
+                                                    <span className="text-xs font-medium text-red-600">Unavailable All Day</span>
+                                                ) : schedules.length === 0 ? (
+                                                    <span className="text-xs font-medium text-green-600">Available All Day</span>
+                                                ) : (
+                                                     <span className="text-xs font-medium text-yellow-600">Partially Available</span>
+                                                )}
+                                            </div>
+                                            <div className="relative w-full">
+                                                <div className="h-6 w-full rounded-full bg-green-100 overflow-hidden relative">
+                                                    {allDayUnavailable ? (
+                                                        <div className="absolute inset-0 bg-red-200" />
+                                                    ) : (
+                                                        schedules.map(rule => {
+                                                            if (!rule.from || !rule.to) return null;
+                                                            const fromMinutes = timeToMinutes(rule.from);
+                                                            const toMinutes = timeToMinutes(rule.to);
+                                                            const left = (fromMinutes / 1440) * 100;
+                                                            const width = Math.max(0, ((toMinutes - fromMinutes) / 1440) * 100);
+
+                                                            return (
+                                                                <Tooltip key={rule.id} delayDuration={100}>
+                                                                    <TooltipTrigger asChild>
+                                                                        <div
+                                                                            className={cn("absolute h-full", rule.disableOrder ? "bg-yellow-300" : "bg-red-300")}
+                                                                            style={{ left: `${left}%`, width: `${width}%` }}
+                                                                        />
+                                                                    </TooltipTrigger>
+                                                                    <TooltipContent>
+                                                                        <p className="font-semibold">Unavailable: {rule.from} - {rule.to}</p>
+                                                                        {rule.disableOrder && <p className="text-sm text-muted-foreground">Ordering will be disabled</p>}
+                                                                    </TooltipContent>
+                                                                </Tooltip>
+                                                            );
+                                                        })
                                                     )}
                                                 </div>
+                                                <div className="flex justify-between text-[10px] text-muted-foreground mt-1 -mx-1">
+                                                    <span>12am</span>
+                                                    <span>6am</span>
+                                                    <span>12pm</span>
+                                                    <span>6pm</span>
+                                                    <span>12am</span>
+                                                </div>
                                             </div>
-                                            <Button
-                                            variant="ghost"
-                                            size="icon"
-                                            className="h-7 w-7 text-muted-foreground hover:bg-red-100 hover:text-destructive -mr-1 -mt-1"
-                                            onClick={() => handleDeleteRule(rule.id)}
-                                            >
-                                            <X className="h-4 w-4" />
-                                            </Button>
                                         </div>
-                                        ))}
-                                    </div>
-                                )}
+                                    );
+                                })}
                             </div>
-                            ))}
-                        </div>
+                        </TooltipProvider>
                     </CardContent>
                 </Card>
             </div>
