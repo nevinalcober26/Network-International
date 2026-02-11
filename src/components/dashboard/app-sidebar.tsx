@@ -13,6 +13,7 @@ import {
   HelpCircle,
   ChevronDown,
   MapPin,
+  PlusCircle,
 } from 'lucide-react';
 import {
   Sidebar,
@@ -48,6 +49,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
+  DropdownMenuPortal,
 } from '@/components/ui/dropdown-menu';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
@@ -172,6 +174,7 @@ export function AppSidebar() {
   const pathname = usePathname();
   const [searchTerm, setSearchTerm] = useState('');
   const [activeMenus, setActiveMenu] = useState<string[]>(['settings']);
+  const [isBranchSwitcherOpen, setIsBranchSwitcherOpen] = useState(false);
 
   const handleMenuToggle = (menu: string) => {
     setActiveMenu((prev) => 
@@ -262,185 +265,204 @@ export function AppSidebar() {
   };
 
   return (
-    <Sidebar variant="sidebar" collapsible="icon" className="border-r">
-      <SidebarHeader className="relative flex h-auto flex-col items-center justify-center gap-4 p-4 pb-2">
-        <div className="flex w-full items-center justify-center">
+    <>
+      {/* Background Overlay for Branch Selection */}
+      <div 
+        className={cn(
+          "fixed inset-0 z-[45] bg-black/40 backdrop-blur-sm transition-opacity duration-300 ease-in-out pointer-events-none",
+          isBranchSwitcherOpen ? "opacity-100" : "opacity-0"
+        )} 
+      />
+
+      <Sidebar variant="sidebar" collapsible="icon" className="border-r">
+        <SidebarHeader className="relative flex h-auto flex-col items-center justify-center gap-4 p-4 pb-2">
+          <div className="flex w-full items-center justify-center">
+            <div className="group-data-[collapsible=icon]:hidden">
+              <EMenuIcon />
+            </div>
+            <div className="hidden group-data-[collapsible=icon]:block">
+              <LayoutDashboard className="h-6 w-6" />
+            </div>
+          </div>
+
+          <div className="relative w-full group-data-[collapsible=icon]:hidden">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              placeholder="Search menu..."
+              className="h-9 w-full rounded-lg bg-secondary pl-10"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
+        </SidebarHeader>
+
+        <SidebarContent className="p-0 pb-4">
+          <SidebarGroup>
+            <SidebarGroupLabel className="group-data-[collapsible=icon]:hidden uppercase tracking-wider text-[10px] font-bold">
+              Overview
+            </SidebarGroupLabel>
+            <SidebarMenu>
+              {OVERVIEW.map(renderSidebarItem)}
+            </SidebarMenu>
+          </SidebarGroup>
+
+          <SidebarSeparator className="mx-4 my-4 group-data-[collapsible=icon]:hidden opacity-50" />
+
+          <SidebarGroup>
+            <SidebarGroupLabel className="group-data-[collapsible=icon]:hidden uppercase tracking-wider text-[10px] font-bold">
+              Management
+            </SidebarGroupLabel>
+            <SidebarMenu>
+              {MANAGEMENT.map(renderSidebarItem)}
+            </SidebarMenu>
+          </SidebarGroup>
+
+          <SidebarSeparator className="mx-4 my-4 group-data-[collapsible=icon]:hidden opacity-50" />
+
+          <SidebarGroup>
+            <SidebarGroupLabel className="group-data-[collapsible=icon]:hidden uppercase tracking-wider text-[10px] font-bold">
+              Connections
+            </SidebarGroupLabel>
+            <SidebarMenu>
+              {CONNECTIONS.map(renderSidebarItem)}
+            </SidebarMenu>
+          </SidebarGroup>
+        </SidebarContent>
+
+        <SidebarFooter className="flex flex-col gap-2 p-4 bg-[#0a1414] rounded-tl-[24px] rounded-tr-[24px] relative z-[50]">
           <div className="group-data-[collapsible=icon]:hidden">
-            <EMenuIcon />
+            <DropdownMenu open={isBranchSwitcherOpen} onOpenChange={setIsBranchSwitcherOpen}>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  className="flex h-auto w-full items-center justify-between gap-2 rounded-xl bg-[#142424] p-3 text-left text-white hover:bg-[#1a2e2e] border border-white/5 transition-all shadow-xl"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="relative shrink-0">
+                      <div className="h-10 w-10 rounded-full bg-[#18B4A6]/20 p-0.5 border border-[#18B4A6]/30 flex items-center justify-center overflow-hidden">
+                        <Image
+                          src="https://picsum.photos/seed/brand/100/100"
+                          width={40}
+                          height={40}
+                          alt="Brand logo"
+                          className="rounded-full object-cover grayscale brightness-110"
+                        />
+                      </div>
+                      <span className="absolute -top-0.5 -right-0.5 flex h-3 w-3">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                        <span className="relative inline-flex rounded-full h-3 w-3 bg-green-500 border-2 border-[#142424]"></span>
+                      </span>
+                    </div>
+                    <div className="flex flex-col overflow-hidden">
+                      <span className="truncate text-[10px] font-black uppercase tracking-[0.15em] text-[#18B4A6]">
+                        Bloomsbury&apos;s
+                      </span>
+                      <h4 className="truncate text-[15px] font-black text-white tracking-tight leading-tight">
+                        Ras Al Khaimah
+                      </h4>
+                    </div>
+                  </div>
+                  <ChevronDown className={cn("h-4 w-4 text-white/40 transition-transform duration-200", isBranchSwitcherOpen && "rotate-180")} />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuPortal>
+                <DropdownMenuContent
+                  align="start"
+                  side="top"
+                  className="mb-4 w-[280px] border-gray-200 bg-white text-gray-900 p-0 overflow-hidden shadow-2xl rounded-2xl animate-in slide-in-from-bottom-2 duration-300"
+                >
+                  <div className="p-5 border-b bg-gray-50/50">
+                    <DropdownMenuLabel className="p-0 text-xl font-black tracking-tight text-gray-900">Select a Branch</DropdownMenuLabel>
+                  </div>
+                  
+                  <ScrollArea className="h-[220px]">
+                    <div className="p-2">
+                      {branches.map((branch) => (
+                        <DropdownMenuItem 
+                          key={branch.id} 
+                          className={cn(
+                            "cursor-pointer focus:bg-primary/5 p-3 rounded-xl flex items-center justify-between transition-all group mb-1",
+                            branch.name === "Ras Al Khaimah" ? "bg-primary/5 border border-primary/10" : "border border-transparent"
+                          )}
+                        >
+                          <div className="flex flex-col min-w-0">
+                            <span className="font-bold text-sm text-gray-900 truncate group-hover:text-primary transition-colors">{branch.name}</span>
+                            <span className="text-[10px] uppercase font-bold tracking-wider text-gray-400 truncate">{branch.type}</span>
+                          </div>
+                          {branch.name === "Ras Al Khaimah" && (
+                            <div className="h-2 w-2 rounded-full bg-primary shadow-[0_0_8px_rgba(24,180,166,0.5)]" />
+                          )}
+                        </DropdownMenuItem>
+                      ))}
+                    </div>
+                  </ScrollArea>
+
+                  <div className="p-2 bg-gray-50/80 border-t">
+                    <DropdownMenuItem className="cursor-pointer focus:bg-white p-3 rounded-xl flex items-center gap-3 text-primary font-black text-sm border border-transparent hover:border-primary/20 transition-all">
+                      <PlusCircle className="h-5 w-5" />
+                      <span>Add New Branch</span>
+                    </DropdownMenuItem>
+                  </div>
+                </DropdownMenuContent>
+              </DropdownMenuPortal>
+            </DropdownMenu>
           </div>
           <div className="hidden group-data-[collapsible=icon]:block">
-            <LayoutDashboard className="h-6 w-6" />
+            <NextLink href="#">
+              <div className="relative">
+                {restaurantLogo && (
+                  <Image
+                    src={restaurantLogo.imageUrl}
+                    width={32}
+                    height={32}
+                    alt="Restaurant logo"
+                    className="rounded-full bg-white p-0.5"
+                    data-ai-hint={restaurantLogo.imageHint}
+                  />
+                )}
+                <span className="absolute -top-0.5 -right-0.5 flex h-2 w-2">
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500 border border-gray-800"></span>
+                </span>
+              </div>
+            </NextLink>
           </div>
-        </div>
 
-        <div className="relative w-full group-data-[collapsible=icon]:hidden">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            placeholder="Search menu..."
-            className="h-9 w-full rounded-lg bg-secondary pl-10"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-        </div>
-      </SidebarHeader>
-
-      <SidebarContent className="p-0 pb-4">
-        <SidebarGroup>
-          <SidebarGroupLabel className="group-data-[collapsible=icon]:hidden uppercase tracking-wider text-[10px] font-bold">
-            Overview
-          </SidebarGroupLabel>
-          <SidebarMenu>
-            {OVERVIEW.map(renderSidebarItem)}
-          </SidebarMenu>
-        </SidebarGroup>
-
-        <SidebarSeparator className="mx-4 my-4 group-data-[collapsible=icon]:hidden opacity-50" />
-
-        <SidebarGroup>
-          <SidebarGroupLabel className="group-data-[collapsible=icon]:hidden uppercase tracking-wider text-[10px] font-bold">
-            Management
-          </SidebarGroupLabel>
-          <SidebarMenu>
-            {MANAGEMENT.map(renderSidebarItem)}
-          </SidebarMenu>
-        </SidebarGroup>
-
-        <SidebarSeparator className="mx-4 my-4 group-data-[collapsible=icon]:hidden opacity-50" />
-
-        <SidebarGroup>
-          <SidebarGroupLabel className="group-data-[collapsible=icon]:hidden uppercase tracking-wider text-[10px] font-bold">
-            Connections
-          </SidebarGroupLabel>
-          <SidebarMenu>
-            {CONNECTIONS.map(renderSidebarItem)}
-          </SidebarMenu>
-        </SidebarGroup>
-      </SidebarContent>
-
-      <SidebarFooter className="flex flex-col gap-2 p-4 bg-gray-900 rounded-tl-[24px] rounded-tr-[24px]">
-        <div className="group-data-[collapsible=icon]:hidden">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="ghost"
-                className="flex h-auto w-full items-center justify-between gap-2 rounded-xl bg-gray-800 p-3 text-left text-white hover:bg-gray-700 border border-white/10 transition-colors shadow-lg"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="relative shrink-0">
-                    <Image
-                      src="https://picsum.photos/seed/RAK/100/100"
-                      width={40}
-                      height={40}
-                      alt="Restaurant logo"
-                      className="rounded-full bg-white p-0.5 border border-white/20 h-10 w-10 object-cover"
-                    />
-                    <span className="absolute -top-0.5 -right-0.5 flex h-3 w-3">
-                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-                      <span className="relative inline-flex rounded-full h-3 w-3 bg-green-500 border-2 border-gray-800"></span>
+          <div className="group-data-[collapsible=icon]:hidden mt-2">
+            <SidebarMenu className="px-0">
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  asChild
+                  tooltip="Quickstart"
+                  size="sm"
+                  className="h-9 justify-start text-white hover:bg-gray-800 font-medium"
+                >
+                  <NextLink href="#">
+                    <Rocket className="h-4 w-4 text-gray-400" />
+                    <span className="group-data-[collapsible=icon]:hidden">
+                      Quickstart
                     </span>
-                  </div>
-                  <div className="flex flex-col overflow-hidden">
-                    <span className="truncate text-sm font-bold tracking-tight">
-                      Bloomsbury's
+                  </NextLink>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  asChild
+                  tooltip="Help"
+                  size="sm"
+                  className="h-9 justify-start text-white hover:bg-gray-800 font-medium"
+                >
+                  <NextLink href="#">
+                    <HelpCircle className="h-4 w-4 text-gray-400" />
+                    <span className="group-data-[collapsible=icon]:hidden">
+                      Help
                     </span>
-                    <span className="truncate text-xs font-medium text-white/60">
-                      Ras Al Khaimah
-                    </span>
-                  </div>
-                </div>
-                <ChevronDown className="h-4 w-4 text-white/40" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent
-              align="start"
-              className="mb-2 w-[260px] border-gray-200 bg-white text-gray-900 p-0 overflow-hidden shadow-2xl"
-            >
-              <div className="p-4">
-                <DropdownMenuLabel className="p-0 text-lg font-bold">Select a Branch</DropdownMenuLabel>
-              </div>
-              <DropdownMenuSeparator className="m-0" />
-              
-              <ScrollArea className="h-[180px]">
-                <div className="p-1">
-                  {branches.map((branch) => (
-                    <DropdownMenuItem 
-                      key={branch.id} 
-                      className="cursor-pointer focus:bg-gray-100 p-2.5 rounded-lg flex items-center gap-3 transition-colors"
-                    >
-                      <div className="flex flex-col min-w-0">
-                        <span className="font-bold text-sm text-gray-900 truncate">{branch.name}</span>
-                        <span className="text-xs text-gray-500 truncate">{branch.type}</span>
-                      </div>
-                    </DropdownMenuItem>
-                  ))}
-                </div>
-              </ScrollArea>
-
-              <DropdownMenuSeparator className="m-0" />
-              <div className="p-1">
-                <DropdownMenuItem className="cursor-pointer focus:bg-gray-100 p-2.5 rounded-lg flex items-center gap-3 text-gray-700 font-bold text-sm">
-                  <Plus className="h-4 w-4" />
-                  <span>Add New Branch</span>
-                </DropdownMenuItem>
-              </div>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
-        <div className="hidden group-data-[collapsible=icon]:block">
-          <NextLink href="#">
-            <div className="relative">
-              {restaurantLogo && (
-                <Image
-                  src={restaurantLogo.imageUrl}
-                  width={32}
-                  height={32}
-                  alt="Restaurant logo"
-                  className="rounded-full bg-white p-0.5"
-                  data-ai-hint={restaurantLogo.imageHint}
-                />
-              )}
-              <span className="absolute -top-0.5 -right-0.5 flex h-2 w-2">
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500 border border-gray-800"></span>
-              </span>
-            </div>
-          </NextLink>
-        </div>
-
-        <div className="group-data-[collapsible=icon]:hidden mt-2">
-          <SidebarMenu className="px-0">
-            <SidebarMenuItem>
-              <SidebarMenuButton
-                asChild
-                tooltip="Quickstart"
-                size="sm"
-                className="h-9 justify-start text-white hover:bg-gray-800 font-medium"
-              >
-                <NextLink href="#">
-                  <Rocket className="h-4 w-4 text-gray-400" />
-                  <span className="group-data-[collapsible=icon]:hidden">
-                    Quickstart
-                  </span>
-                </NextLink>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-            <SidebarMenuItem>
-              <SidebarMenuButton
-                asChild
-                tooltip="Help"
-                size="sm"
-                className="h-9 justify-start text-white hover:bg-gray-800 font-medium"
-              >
-                <NextLink href="#">
-                  <HelpCircle className="h-4 w-4 text-gray-400" />
-                  <span className="group-data-[collapsible=icon]:hidden">
-                    Help
-                  </span>
-                </NextLink>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          </SidebarMenu>
-        </div>
-      </SidebarFooter>
-    </Sidebar>
+                  </NextLink>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            </SidebarMenu>
+          </div>
+        </SidebarFooter>
+      </Sidebar>
+    </>
   );
 }
