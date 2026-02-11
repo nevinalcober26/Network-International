@@ -1,527 +1,229 @@
 
 'use client';
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import {
-  DndContext,
-  closestCenter,
-  MouseSensor,
-  TouchSensor,
-  useSensor,
-  useSensors,
-  DragStartEvent,
-  DragOverEvent,
-  DragEndEvent,
-  UniqueIdentifier,
-  KeyboardSensor,
-  DragOverlay,
-  DropAnimation,
-  defaultDropAnimationSideEffects,
-} from '@dnd-kit/core';
-import {
-  SortableContext,
-  sortableKeyboardCoordinates,
-  arrayMove,
-  horizontalListSortingStrategy,
-} from '@dnd-kit/sortable';
-import { produce } from 'immer';
 
+import React, { useState, useEffect, useMemo } from 'react';
+import Image from 'next/image';
 import { DashboardHeader } from '@/components/dashboard/header';
 import { Button } from '@/components/ui/button';
-import { Plus, GripVertical } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
-import { CategoriesPageSkeleton } from '@/components/dashboard/skeletons';
-import { CategorySheet } from './category-sheet';
+import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
+import { Card, CardContent, CardHeader, CardFooter } from '@/components/ui/card';
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-} from '@/components/ui/dialog';
-import { AddCategorySheet, type CategoryFormValues } from './add-category-sheet';
-import { Container } from './dnd/Container';
-import { mockDataStore } from '@/lib/mock-data-store';
-import type { Item, Column, ScheduleRule } from './types';
-import { Card, CardHeader, CardTitle } from '@/components/ui/card';
-import { CategoryScheduleSheet } from './schedule-sheet';
+  Plus,
+  Download,
+  Search,
+  SlidersHorizontal,
+  Star,
+  MapPin,
+  Users,
+  Calendar,
+  MoreHorizontal,
+  ArrowUpRight,
+  TrendingUp,
+  Store,
+  CheckCircle2,
+  Users2,
+  ChefHat,
+  ChevronLeft,
+  ChevronRight,
+  Settings,
+  ClipboardList,
+  Edit,
+} from 'lucide-react';
+import { PlaceHolderImages } from '@/lib/placeholder-images';
+import { cn } from '@/lib/utils';
+import { CategoriesPageSkeleton } from '@/components/dashboard/skeletons';
 
-// Helper functions for tree operations
-const findItem = (board: Column[], id: UniqueIdentifier): Item | null => {
-    for (const column of board) {
-        const findInItems = (items: Item[]): Item | null => {
-            for (const item of items) {
-                if (item.id === id) return item;
-                if (item.children) {
-                    const found = findInItems(item.children);
-                    if (found) return found;
-                }
-            }
-            return null;
-        }
-        const found = findInItems(column.items);
-        if (found) return found;
-    }
-    return null;
-};
+type RestaurantStatus = 'Open' | 'Closed';
 
-const findAndRemoveItem = (board: Column[], id: UniqueIdentifier): Item | null => {
-    let removedItem: Item | null = null;
-
-    function findAndRemove(items: Item[], itemId: UniqueIdentifier): boolean {
-        for (let i = 0; i < items.length; i++) {
-            if (items[i].id === itemId) {
-                removedItem = items.splice(i, 1)[0];
-                return true;
-            }
-            if (items[i].children) {
-                if (findAndRemove(items[i].children, itemId)) {
-                    return true;
-                }
-            }
-        }
-        return false;
-    }
-
-    for (const column of board) {
-        if (findAndRemove(column.items, id)) {
-            break;
-        }
-    }
-    return removedItem;
+interface Restaurant {
+  id: string;
+  name: string;
+  image: string;
+  status: RestaurantStatus;
+  rating: number;
+  type: string;
+  location: string;
+  address: string;
+  capacity: number;
+  todayReservations: number;
 }
 
-const DeleteConfirmationDialog = ({ open, onOpenChange, onConfirm, name, isColumn }: { open: boolean, onOpenChange: (open: boolean) => void, onConfirm: () => void, name: string, isColumn: boolean }) => {
-    return (
-        <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent>
-                <DialogHeader>
-                    <DialogTitle>Are you absolutely sure?</DialogTitle>
-                    <DialogDescription>
-                        This will permanently delete the {isColumn ? 'column' : 'category'} "{name}" and all its sub-categories. This action cannot be undone.
-                    </DialogDescription>
-                </DialogHeader>
-                <DialogFooter>
-                    <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
-                    <Button variant="destructive" onClick={onConfirm}>Delete</Button>
-                </DialogFooter>
-            </DialogContent>
-        </Dialog>
-    );
-};
+const mockRestaurants: Restaurant[] = [
+  {
+    id: '1',
+    name: 'The Elegant Table',
+    image: PlaceHolderImages.find(img => img.id === 'restaurant-1')?.imageUrl || '',
+    status: 'Open',
+    rating: 4.9,
+    type: 'Fine Dining',
+    location: 'Downtown',
+    address: '123 Main St, Downtown',
+    capacity: 48,
+    todayReservations: 24,
+  },
+  {
+    id: '2',
+    name: 'Urban Bites',
+    image: PlaceHolderImages.find(img => img.id === 'restaurant-2')?.imageUrl || '',
+    status: 'Open',
+    rating: 4.7,
+    type: 'Casual',
+    location: 'Uptown',
+    address: '123 Main St, Downtown',
+    capacity: 48,
+    todayReservations: 24,
+  },
+  {
+    id: '3',
+    name: 'Morning Brew',
+    image: PlaceHolderImages.find(img => img.id === 'restaurant-3')?.imageUrl || '',
+    status: 'Open',
+    rating: 4.8,
+    type: 'Café',
+    location: 'West Side',
+    address: '123 Main St, Downtown',
+    capacity: 48,
+    todayReservations: 24,
+  },
+  {
+    id: '4',
+    name: 'Bella Italia',
+    image: PlaceHolderImages.find(img => img.id === 'restaurant-4')?.imageUrl || '',
+    status: 'Open',
+    rating: 4.6,
+    type: 'Fine Dining',
+    location: 'Downtown',
+    address: '123 Main St, Downtown',
+    capacity: 48,
+    todayReservations: 24,
+  },
+  {
+    id: '5',
+    name: 'Sakura Sushi',
+    image: PlaceHolderImages.find(img => img.id === 'restaurant-5')?.imageUrl || '',
+    status: 'Open',
+    rating: 4.8,
+    type: 'Fine Dining',
+    location: 'East Side',
+    address: '123 Main St, Downtown',
+    capacity: 48,
+    todayReservations: 24,
+  },
+  {
+    id: '6',
+    name: 'Burger Haven',
+    image: PlaceHolderImages.find(img => img.id === 'restaurant-6')?.imageUrl || '',
+    status: 'Closed',
+    rating: 4.5,
+    type: 'Fast Food',
+    location: 'Uptown',
+    address: '123 Main St, Downtown',
+    capacity: 48,
+    todayReservations: 24,
+  },
+];
 
-const dropAnimation: DropAnimation = {
-  sideEffects: defaultDropAnimationSideEffects({
-    styles: {
-      active: {
-        opacity: '0.5',
-      },
-    },
-  }),
-};
+const StatCard = ({ title, value, icon: Icon, change, iconColor, bgIcon }: { title: string; value: string; icon: any; change?: string; iconColor: string; bgIcon: string }) => (
+  <Card className="border-0 shadow-sm">
+    <CardContent className="p-6 flex items-center gap-4">
+      <div className={cn("h-12 w-12 rounded-lg flex items-center justify-center shrink-0", bgIcon)}>
+        <Icon className={cn("h-6 w-6", iconColor)} />
+      </div>
+      <div>
+        <p className="text-sm font-medium text-muted-foreground">{title}</p>
+        <div className="flex items-baseline gap-2">
+          <h3 className="text-2xl font-bold">{value}</h3>
+          {change && (
+            <span className={cn("text-xs font-bold flex items-center gap-0.5", change.startsWith('+') || change.includes('↑') ? "text-green-600" : "text-red-600")}>
+              {change}
+            </span>
+          )}
+        </div>
+      </div>
+    </CardContent>
+  </Card>
+);
 
-export default function CategoriesPage() {
-  const [board, setBoard] = useState<Column[]>([]);
+const RestaurantCard = ({ restaurant }: { restaurant: Restaurant }) => (
+  <Card className="overflow-hidden group hover:shadow-md transition-shadow">
+    <div className="relative aspect-[16/9] w-full">
+      <Image
+        src={restaurant.image}
+        alt={restaurant.name}
+        fill
+        className="object-cover transition-transform group-hover:scale-105"
+        data-ai-hint="restaurant interior"
+      />
+      <div className="absolute top-3 left-3 flex gap-2">
+        <button className="h-8 w-8 rounded-full bg-black/40 text-white flex items-center justify-center hover:bg-black/60 backdrop-blur-sm">
+          <MoreHorizontal className="h-4 w-4" />
+        </button>
+      </div>
+      <Badge
+        className={cn(
+          "absolute top-3 right-3 border-0",
+          restaurant.status === 'Open' ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"
+        )}
+      >
+        {restaurant.status}
+      </Badge>
+    </div>
+    <CardHeader className="p-5 pb-2">
+      <div className="flex items-start justify-between">
+        <div>
+          <h3 className="text-lg font-bold leading-tight">{restaurant.name}</h3>
+          <p className="text-sm text-muted-foreground">
+            {restaurant.type} • {restaurant.location}
+          </p>
+        </div>
+        <div className="flex items-center gap-1 bg-yellow-50 text-yellow-700 px-2 py-1 rounded text-sm font-bold">
+          <Star className="h-3.5 w-3.5 fill-current" />
+          {restaurant.rating}
+        </div>
+      </div>
+    </CardHeader>
+    <CardContent className="p-5 pt-2 space-y-3">
+      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+        <MapPin className="h-4 w-4 shrink-0" />
+        <span className="truncate">{restaurant.address}</span>
+      </div>
+      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+        <Users className="h-4 w-4 shrink-0" />
+        <span>Capacity: {restaurant.capacity} seats</span>
+      </div>
+      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+        <Calendar className="h-4 w-4 shrink-0" />
+        <span>Today&apos;s Reservations: {restaurant.todayReservations}</span>
+      </div>
+    </CardContent>
+    <CardFooter className="p-5 pt-0 flex gap-2">
+      <Button variant="outline" size="sm" className="flex-1 font-semibold gap-2">
+        <Settings className="h-4 w-4" />
+        Settings
+      </Button>
+      <Button variant="outline" size="sm" className="flex-1 font-semibold gap-2">
+        <ClipboardList className="h-4 w-4" />
+        Reservations
+      </Button>
+      <Button size="sm" className="flex-1 font-semibold gap-2 bg-primary hover:bg-primary/90">
+        <Edit className="h-4 w-4" />
+        Edit
+      </Button>
+    </CardFooter>
+  </Card>
+);
+
+export default function ManageRestaurantPage() {
   const [isLoading, setIsLoading] = useState(true);
-  const [activeItem, setActiveItem] = useState<Item | Column | null>(null);
-  const [overId, setOverId] = useState<UniqueIdentifier | null>(null);
-  const [selectedCategory, setSelectedCategory] = useState<Column | Item | null>(null);
-  const [isAddCategorySheetOpen, setIsAddCategorySheetOpen] = useState(false);
-  const [isScheduleSheetOpen, setIsScheduleSheetOpen] = useState(false);
-  const [schedulingCategory, setSchedulingCategory] = useState<Item | Column | null>(null);
-  const [addCategoryParent, setAddCategoryParent] = useState<
-    UniqueIdentifier | 'none' | 'new-column'
-  >('none');
-  const [deleteTarget, setDeleteTarget] = useState<{ id: UniqueIdentifier; name: string; isColumn: boolean } | null>(null);
-  const { toast } = useToast();
+  const [search, setSearch] = useState('');
 
   useEffect(() => {
     const timer = setTimeout(() => {
-      try {
-        const storedBoard = localStorage.getItem('category-board');
-        if (storedBoard) {
-          setBoard(JSON.parse(storedBoard));
-        } else {
-          setBoard(mockDataStore.categories);
-        }
-      } catch (error) {
-        console.error("Could not load categories from localStorage", error);
-        setBoard(mockDataStore.categories);
-      } finally {
-        setIsLoading(false);
-      }
+      setIsLoading(false);
     }, 1000);
     return () => clearTimeout(timer);
   }, []);
-
-  useEffect(() => {
-    if (!isLoading) {
-      try {
-        localStorage.setItem('category-board', JSON.stringify(board));
-      } catch (error) {
-        console.error("Could not save categories to localStorage", error);
-      }
-    }
-  }, [board, isLoading]);
-
-
-  const isAnyDrawerOpen = useMemo(() => isAddCategorySheetOpen || isScheduleSheetOpen || !!selectedCategory, [isAddCategorySheetOpen, isScheduleSheetOpen, selectedCategory]);
-
-  const sensors = useSensors(
-    useSensor(MouseSensor, {
-      activationConstraint: {
-        distance: 10,
-      },
-      enabled: !isAnyDrawerOpen,
-    }),
-    useSensor(TouchSensor, {
-      activationConstraint: {
-        delay: 250,
-        tolerance: 5,
-      },
-      enabled: !isAnyDrawerOpen,
-    }),
-    useSensor(KeyboardSensor, {
-      coordinateGetter: sortableKeyboardCoordinates,
-      enabled: !isAnyDrawerOpen,
-    })
-  );
-
-  const columnIds = useMemo(() => board.map((c) => c.id), [board]);
-
-  const handleDragStart = useCallback((event: DragStartEvent) => {
-    setActiveItem(event.active.data.current?.item as Item | Column | null);
-    setOverId(event.over?.id ?? null);
-  }, []);
-  
-  const handleDragOver = useCallback((event: DragOverEvent) => {
-    setOverId(event.over?.id ?? null);
-  }, []);
-
-  const handleDragEnd = useCallback(
-    (event: DragEndEvent) => {
-      setActiveItem(null);
-      setOverId(null);
-      const { active, over } = event;
-      if (!over) return;
-  
-      const isDraggingColumn = active.data.current?.type === 'container';
-      
-      if (isDraggingColumn) {
-        const { id: activeId } = active;
-        const { id: overId } = over;
-
-        if (activeId === overId) {
-            return;
-        }
-
-        setBoard((currentBoard) => {
-            const activeColumnIndex = currentBoard.findIndex((col) => col.id === activeId);
-            
-            const isDescendant = (items: Item[], id: UniqueIdentifier): boolean => {
-                for (const item of items) {
-                    if (item.id === id) return true;
-                    if (item.children && isDescendant(item.children, id)) return true;
-                }
-                return false;
-            };
-
-            const overColumn = currentBoard.find(col => col.id === overId || isDescendant(col.items, overId));
-            
-            if (!overColumn) {
-                return currentBoard;
-            }
-
-            const overColumnIndex = currentBoard.findIndex((col) => col.id === overColumn.id);
-
-            if (activeColumnIndex !== -1 && overColumnIndex !== -1) {
-                return arrayMove(currentBoard, activeColumnIndex, overColumnIndex);
-            }
-
-            return currentBoard;
-        });
-        return;
-      }
-      
-      const isDraggingItem = active.data.current?.type === 'item';
-
-      if (isDraggingItem) {
-          const overIsContainer = over.data.current?.type === 'container-drop-zone';
-          const overIsItem = over.data.current?.type === 'item-drop-zone';
-          
-          setBoard(board => produce(board, draft => {
-              const activeItem = findAndRemoveItem(draft, active.id);
-              if (!activeItem) return;
-
-              if (overIsContainer) {
-                  const overColumn = draft.find(c => c.id === over.id);
-                  overColumn?.items.push(activeItem);
-                  return;
-              }
-
-              if (overIsItem) {
-                  const findParentAndPush = (items: Item[]): boolean => {
-                    for (const item of items) {
-                        if (item.id === over.id) {
-                            item.children = item.children ?? [];
-                            item.children.unshift(activeItem);
-                            return true;
-                        }
-                        if (item.children) {
-                            if (findParentAndPush(item.children)) return true;
-                        }
-                    }
-                    return false;
-                  }
-                  for (const column of draft) {
-                    if (findParentAndPush(column.items)) return;
-                  }
-                  return;
-              }
-
-              const findOverAndInsert = (items: Item[]): boolean => {
-                for (let i = 0; i < items.length; i++) {
-                    if (items[i].id === over.id) {
-                        items.splice(i, 0, activeItem);
-                        return true;
-                    }
-                    if (items[i].children) {
-                        if (findOverAndInsert(items[i].children)) return true;
-                    }
-                }
-                return false;
-              }
-               for (const column of draft) {
-                if (findOverAndInsert(column.items)) return;
-              }
-          }));
-      }
-    },
-    []
-  );
-  
-  const handleDragCancel = useCallback(() => {
-    setActiveItem(null);
-    setOverId(null);
-  }, []);
-
-  const addItemToParent = (items: Item[], parentId: UniqueIdentifier, newItem: Item): boolean => {
-    for(const item of items) {
-        if(item.id === parentId) {
-            if (!item.children) item.children = [];
-            item.children.push(newItem);
-            return true;
-        }
-        if (item.children) {
-            if (addItemToParent(item.children, parentId, newItem)) {
-                return true;
-            }
-        }
-    }
-    return false;
-  }
-
-  const handleAddCategory = (values: CategoryFormValues) => {
-    const { name, parentId, ...rest } = values;
-    
-    setBoard(
-      produce((draft) => {
-        if (parentId === 'none' || parentId === 'new-column') {
-          const newColumn: Column = {
-              id: `col-${Date.now()}`,
-              name,
-              items: [],
-              ...rest,
-              children: [], // to satisfy type, not used
-          };
-          draft.push(newColumn);
-        } else {
-            const newItem: Item = { 
-                id: `item-${Date.now()}`, 
-                name,
-                ...rest,
-                children: []
-            };
-          const isColumn = draft.some(col => col.id === parentId);
-          if (isColumn) {
-            const parentColumn = draft.find((col) => col.id === parentId);
-            parentColumn?.items.push(newItem);
-          } else {
-            for (const column of draft) {
-                if (addItemToParent(column.items, parentId, newItem)) {
-                    break;
-                }
-            }
-          }
-        }
-      })
-    );
-    toast({
-      title: 'Category Added',
-      description: `"${name}" has been successfully added.`,
-    });
-  };
-
-  const handleUpdateCategory = (id: UniqueIdentifier, values: CategoryFormValues) => {
-    const { parentId, ...rest } = values;
-    setBoard(
-      produce((draft) => {
-        
-        let currentItem = findAndRemoveItem(draft, id);
-        let currentColumn: Column | null = null;
-        const columnIndex = draft.findIndex(c => c.id === id);
-        
-        if (columnIndex !== -1) {
-            currentColumn = draft.splice(columnIndex, 1)[0];
-        }
-
-        if (currentColumn) {
-             Object.assign(currentColumn, rest);
-             draft.splice(columnIndex, 0, currentColumn); // put it back
-            return;
-        }
-        
-        if (currentItem) {
-            Object.assign(currentItem, rest);
-
-            const isNewParentColumn = draft.some(c => c.id === parentId);
-
-            if (parentId === 'none') {
-                 draft.push({
-                    id: currentItem.id,
-                    name: currentItem.name,
-                    items: currentItem.children || [],
-                    ...rest
-                 });
-            } else if (isNewParentColumn) {
-                const targetColumn = draft.find(c => c.id === parentId);
-                targetColumn?.items.push(currentItem);
-            } else {
-                let parentFound = false;
-                for (const column of draft) {
-                    if(addItemToParent(column.items, parentId, currentItem)) {
-                        parentFound = true;
-                        break;
-                    }
-                }
-                if (!parentFound) { // Fallback if parent somehow not found
-                    const firstCol = draft[0];
-                    if (firstCol) {
-                        firstCol.items.push(currentItem);
-                    } else { // No columns exist
-                        draft.push({ id: `col-${Date.now()}`, name: currentItem.name, items: [currentItem] });
-                    }
-                }
-            }
-        }
-      })
-    );
-
-    toast({
-      title: 'Category Updated',
-      description: `"${values.name}" has been successfully updated.`,
-    });
-  };
-  
-  const handleUpdateColumn = (id: UniqueIdentifier, newName: string) => {
-    setBoard(
-      produce((draft) => {
-        const column = draft.find((col) => col.id === id);
-        if (column) {
-          column.name = newName;
-        }
-      })
-    );
-    toast({
-      title: 'Column Updated',
-      description: `Column name has been updated to "${newName}".`,
-    });
-  };
-
-  const handleOpenAddSheet = (parentId: UniqueIdentifier | 'none' | 'new-column' = 'none') => {
-    setAddCategoryParent(parentId);
-    setIsAddCategorySheetOpen(true);
-  };
-  
-  const findName = (id: UniqueIdentifier): string => {
-    for (const col of board) {
-        if (col.id === id) return col.name;
-        
-        function findInItems(items: Item[]): string | null {
-            for (const item of items) {
-                if (item.id === id) return item.name;
-                if (item.children) {
-                    const foundName = findInItems(item.children);
-                    if (foundName) return foundName;
-                }
-            }
-            return null;
-        }
-
-        const name = findInItems(col.items);
-        if (name) return name;
-    }
-    return '';
-  }
-
-  const handleDeleteRequest = (id: UniqueIdentifier, isColumn: boolean = false) => {
-    const name = findName(id);
-    if (name) {
-        setDeleteTarget({ id, name, isColumn });
-    }
-  };
-
-  const handleConfirmDelete = () => {
-    if (!deleteTarget) return;
-    
-    if (deleteTarget.isColumn) {
-        setBoard(board => board.filter(col => col.id !== deleteTarget.id));
-    } else {
-        setBoard(board => produce(board, draft => {
-            findAndRemoveItem(draft, deleteTarget.id);
-        }));
-    }
-
-    toast({
-        title: `${deleteTarget.isColumn ? 'Column' : 'Category'} Deleted`,
-        description: `"${deleteTarget.name}" has been removed.`,
-    });
-
-    setDeleteTarget(null);
-  };
-  
-  const handleEditClick = (itemOrColumn: Item | Column) => {
-    setSelectedCategory(itemOrColumn);
-  }
-
-  const handleOpenScheduleSheet = (category: Item | Column) => {
-    setSchedulingCategory(category);
-    setIsScheduleSheetOpen(true);
-  };
-
-  const handleSaveSchedule = (id: UniqueIdentifier, schedules: ScheduleRule[]) => {
-    setBoard(
-        produce((draft) => {
-            let category: Item | Column | null = null;
-            const colIndex = draft.findIndex(c => c.id === id);
-            if (colIndex !== -1) {
-                category = draft[colIndex];
-            } else {
-                category = findItem(draft, id);
-            }
-            
-            if (category) {
-                category.schedules = schedules;
-            }
-        })
-    );
-    toast({
-        title: "Schedule Saved",
-        description: "The display schedule has been updated.",
-    });
-  };
-
-  const activeElementType = activeItem ? (columnIds.includes(activeItem.id) ? 'container' : 'item') : undefined;
 
   if (isLoading) {
     return <CategoriesPageSkeleton view="gallery" />;
@@ -530,121 +232,109 @@ export default function CategoriesPage() {
   return (
     <>
       <DashboardHeader />
-      <div className="flex flex-col h-[calc(100vh-4rem)]">
-        <div className="p-4 sm:p-6 lg:p-8 border-b bg-background z-10 sticky top-16">
-          <div className="flex items-center justify-between">
+      <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 bg-muted/30">
+        <div className="max-w-7xl mx-auto space-y-8">
+          {/* Header */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
-              <h1 className="text-2xl font-bold">
-                Category Builder
-              </h1>
-              <p className="text-sm text-muted-foreground">
-                Organize your menu by creating and managing product categories.
+              <h1 className="text-3xl font-extrabold tracking-tight text-foreground">Manage Restaurant</h1>
+              <p className="text-muted-foreground mt-1">
+                Manage all your restaurant table reservations in one place
               </p>
             </div>
-            <div className="flex items-center gap-4">
-              <Button onClick={() => handleOpenAddSheet('new-column')}>
-                <Plus className="mr-2 h-4 w-4" /> Add Category Column
+            <div className="flex items-center gap-3">
+              <Button variant="outline" className="gap-2 font-semibold">
+                <Download className="h-4 w-4" />
+                Export
               </Button>
-              <Button variant="secondary">PUBLISH</Button>
+              <Button className="gap-2 font-bold bg-primary hover:bg-primary/90">
+                <Plus className="h-5 w-5" />
+                New Restaurant
+              </Button>
+            </div>
+          </div>
+
+          {/* Stats Overview */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            <StatCard
+              title="Total Restaurants"
+              value="18"
+              change="↑ 2"
+              icon={Store}
+              iconColor="text-orange-600"
+              bgIcon="bg-orange-50"
+            />
+            <StatCard
+              title="Total Reservations"
+              value="1,284"
+              change="↑ 8%"
+              icon={CheckCircle2}
+              iconColor="text-green-600"
+              bgIcon="bg-green-50"
+            />
+            <StatCard
+              title="Total Capacity"
+              value="456"
+              change="seats"
+              icon={Users2}
+              iconColor="text-blue-600"
+              bgIcon="bg-blue-50"
+            />
+            <StatCard
+              title="Avg. Rating"
+              value="4.7"
+              change="↑ 0.2"
+              icon={Star}
+              iconColor="text-purple-600"
+              bgIcon="bg-purple-50"
+            />
+          </div>
+
+          {/* Filters and Search */}
+          <div className="flex items-center gap-4 bg-background p-4 rounded-xl border shadow-sm">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search restaurant name"
+                className="pl-10 border-0 bg-transparent focus-visible:ring-0 text-base"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
+            </div>
+            <Button variant="outline" className="gap-2 font-semibold border-muted">
+              <SlidersHorizontal className="h-4 w-4" />
+              Sort
+            </Button>
+          </div>
+
+          {/* Restaurants Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {mockRestaurants.map((restaurant) => (
+              <RestaurantCard key={restaurant.id} restaurant={restaurant} />
+            ))}
+          </div>
+
+          {/* Pagination */}
+          <div className="pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 border-t">
+            <p className="text-sm text-muted-foreground">
+              Showing <strong>1 to 6</strong> of <strong>124</strong> results
+            </p>
+            <div className="flex items-center gap-1">
+              <Button variant="ghost" size="icon" className="h-9 w-9">
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+              <Button size="sm" className="h-9 w-9 bg-primary text-primary-foreground font-bold">1</Button>
+              <Button variant="ghost" size="sm" className="h-9 w-9 font-medium">2</Button>
+              <Button variant="ghost" size="sm" className="h-9 w-9 font-medium">3</Button>
+              <span className="px-2 text-muted-foreground">...</span>
+              <Button variant="ghost" size="sm" className="h-9 w-9 font-medium">21</Button>
+              <Button variant="ghost" size="icon" className="h-9 w-9">
+                <ChevronRight className="h-4 w-4" />
+              </Button>
             </div>
           </div>
         </div>
-
-        <div className="flex-grow p-4 sm:p-6 lg:p-8 overflow-x-auto">
-          <DndContext
-            sensors={sensors}
-            collisionDetection={closestCenter}
-            onDragStart={handleDragStart}
-            onDragOver={handleDragOver}
-            onDragEnd={handleDragEnd}
-            onDragCancel={handleDragCancel}
-          >
-            <SortableContext items={columnIds} strategy={horizontalListSortingStrategy}>
-              <div className="flex items-start gap-6 pb-4">
-                {board.map((column) => (
-                  <Container
-                    key={column.id}
-                    id={column.id}
-                    label={column.name}
-                    items={column.items}
-                    columnData={column}
-                    onEditClick={handleEditClick}
-                    onScheduleClick={handleOpenScheduleSheet}
-                    onAddItem={handleOpenAddSheet}
-                    onDeleteItem={handleDeleteRequest}
-                    onUpdateColumn={handleUpdateColumn}
-                    activeId={activeItem?.id ?? null}
-                    overId={overId}
-                    activeElementType={activeElementType}
-                    isAnyDrawerOpen={isAnyDrawerOpen}
-                  />
-                ))}
-                <div className="w-80 flex-shrink-0">
-                  <button
-                    onClick={() => handleOpenAddSheet('new-column')}
-                    className="w-full h-full rounded-lg border-2 border-dashed border-muted-foreground/50 bg-card p-6 flex flex-col items-center justify-center gap-2 text-muted-foreground hover:border-primary hover:text-primary hover:bg-primary/5 transition-colors"
-                  >
-                    <Plus className="h-8 w-8" />
-                    <span className="font-semibold">Add Category Column</span>
-                  </button>
-                </div>
-              </div>
-            </SortableContext>
-            <DragOverlay dropAnimation={dropAnimation}>
-                {activeItem ? (
-                    'items' in activeItem ? (
-                        <Card className="w-80 shadow-lg opacity-75">
-                            <CardHeader className="flex-row items-center justify-between">
-                                <div className="flex items-center gap-2 flex-grow min-w-0">
-                                    <GripVertical className="h-5 w-5 text-muted-foreground" />
-                                    <CardTitle className="truncate">{activeItem.name}</CardTitle>
-                                </div>
-                            </CardHeader>
-                        </Card>
-                    ) : (
-                        <Card className="p-3 flex items-center justify-between w-[304px] shadow-lg bg-card opacity-75">
-                            <div className="flex items-center gap-2">
-                                <GripVertical className="h-5 w-5 text-muted-foreground" />
-                                <p className="font-medium text-sm">{activeItem.name}</p>
-                            </div>
-                        </Card>
-                    )
-                ) : null}
-            </DragOverlay>
-          </DndContext>
-        </div>
-      </div>
-      <CategorySheet
-        open={!!selectedCategory}
-        onOpenChange={(isOpen) => {
-          if (!isOpen) {
-            setSelectedCategory(null);
-          }
-        }}
-        category={selectedCategory}
-        board={board}
-        onUpdateCategory={handleUpdateCategory}
-      />
-      <AddCategorySheet
-        open={isAddCategorySheetOpen}
-        onOpenChange={setIsAddCategorySheetOpen}
-        onAddCategory={handleAddCategory}
-        board={board}
-        initialParentId={addCategoryParent}
-      />
-       <CategoryScheduleSheet
-        open={isScheduleSheetOpen}
-        onOpenChange={setIsScheduleSheetOpen}
-        category={schedulingCategory}
-        onSave={handleSaveSchedule}
-      />
-      <DeleteConfirmationDialog 
-        open={!!deleteTarget}
-        onOpenChange={() => setDeleteTarget(null)}
-        onConfirm={handleConfirmDelete}
-        name={deleteTarget?.name ?? ''}
-        isColumn={deleteTarget?.isColumn ?? false}
-      />
+      </main>
     </>
   );
 }
