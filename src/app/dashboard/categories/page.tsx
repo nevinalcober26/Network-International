@@ -14,18 +14,15 @@ import {
   SlidersHorizontal,
   Star,
   MapPin,
-  Users,
-  Calendar,
+  Package,
+  QrCode,
   MoreHorizontal,
   Settings,
-  ClipboardList,
   Edit,
   ChevronLeft,
   ChevronRight,
   Store,
-  QrCode,
   TrendingUp,
-  Smartphone,
 } from 'lucide-react';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { cn } from '@/lib/utils';
@@ -43,8 +40,8 @@ interface Restaurant {
   type: string;
   location: string;
   address: string;
-  capacity: number;
-  todayReservations: number;
+  menuItems: number;
+  scansToday: number;
 }
 
 const DEFAULT_RESTAURANT_IMAGE = 'https://picsum.photos/seed/restaurant/600/400';
@@ -59,8 +56,8 @@ const mockRestaurants: Restaurant[] = [
     type: 'Fine Dining',
     location: 'Downtown',
     address: '123 Main St, Downtown',
-    capacity: 48,
-    todayReservations: 24,
+    menuItems: 142,
+    scansToday: 284,
   },
   {
     id: '2',
@@ -70,9 +67,9 @@ const mockRestaurants: Restaurant[] = [
     rating: 4.7,
     type: 'Casual',
     location: 'Uptown',
-    address: '123 Main St, Downtown',
-    capacity: 48,
-    todayReservations: 24,
+    address: '456 Oak Rd, Uptown',
+    menuItems: 86,
+    scansToday: 512,
   },
   {
     id: '3',
@@ -82,9 +79,9 @@ const mockRestaurants: Restaurant[] = [
     rating: 4.8,
     type: 'Café',
     location: 'West Side',
-    address: '123 Main St, Downtown',
-    capacity: 48,
-    todayReservations: 24,
+    address: '789 Pine Ln, West Side',
+    menuItems: 64,
+    scansToday: 890,
   },
   {
     id: '4',
@@ -94,9 +91,9 @@ const mockRestaurants: Restaurant[] = [
     rating: 4.6,
     type: 'Fine Dining',
     location: 'Downtown',
-    address: '123 Main St, Downtown',
-    capacity: 48,
-    todayReservations: 24,
+    address: '321 Maple Dr, Downtown',
+    menuItems: 110,
+    scansToday: 156,
   },
   {
     id: '5',
@@ -106,9 +103,9 @@ const mockRestaurants: Restaurant[] = [
     rating: 4.8,
     type: 'Fine Dining',
     location: 'East Side',
-    address: '123 Main St, Downtown',
-    capacity: 48,
-    todayReservations: 24,
+    address: '654 Cedar Ct, East Side',
+    menuItems: 95,
+    scansToday: 420,
   },
   {
     id: '6',
@@ -118,9 +115,9 @@ const mockRestaurants: Restaurant[] = [
     rating: 4.5,
     type: 'Fast Food',
     location: 'Uptown',
-    address: '123 Main St, Downtown',
-    capacity: 48,
-    todayReservations: 24,
+    address: '987 Birch Way, Uptown',
+    menuItems: 52,
+    scansToday: 310,
   },
 ];
 
@@ -174,12 +171,12 @@ const RestaurantCard = ({ restaurant }: { restaurant: Restaurant }) => (
         <span className="truncate">{restaurant.address}</span>
       </div>
       <div className="flex items-center gap-2 text-sm text-muted-foreground">
-        <Users className="h-4 w-4 shrink-0" />
-        <span>Capacity: {restaurant.capacity} seats</span>
+        <Package className="h-4 w-4 shrink-0" />
+        <span>Menu Items: {restaurant.menuItems}</span>
       </div>
       <div className="flex items-center gap-2 text-sm text-muted-foreground">
-        <Calendar className="h-4 w-4 shrink-0" />
-        <span>Today&apos;s Reservations: {restaurant.todayReservations}</span>
+        <QrCode className="h-4 w-4 shrink-0" />
+        <span>Scans Today: {restaurant.scansToday}</span>
       </div>
     </CardContent>
     <CardFooter className="p-5 pt-0 flex gap-2">
@@ -187,7 +184,7 @@ const RestaurantCard = ({ restaurant }: { restaurant: Restaurant }) => (
         <Settings className="h-4 w-4" />
         Settings
       </Button>
-      <Button size="sm" className="flex-1 font-semibold gap-2 bg-primary hover:bg-primary/90">
+      <Button size="sm" className="flex-1 font-semibold gap-2 bg-primary hover:bg-primary/90 text-primary-foreground">
         <Edit className="h-4 w-4" />
         Edit
       </Button>
@@ -267,7 +264,7 @@ export default function ManageRestaurantPage() {
                 <Download className="h-4 w-4" />
                 Export
               </Button>
-              <Button className="gap-2 font-bold bg-primary hover:bg-primary/90">
+              <Button className="gap-2 font-bold bg-primary hover:bg-primary/90 text-primary-foreground">
                 <Plus className="h-5 w-5" />
                 New Restaurant
               </Button>
