@@ -1,11 +1,9 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   Sheet,
   SheetContent,
-  SheetHeader,
-  SheetTitle,
 } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -28,23 +26,19 @@ import {
 import { Card, CardContent } from '@/components/ui/card';
 import {
   Info,
-  Users,
   Image as ImageIcon,
   Clock,
   CalendarCheck,
   Palette,
   Upload,
   ArrowLeft,
-  Globe,
   MapPin,
   ExternalLink,
   Edit2,
-  Check,
   Save,
   Rocket
 } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
-import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 
 interface BranchConfigSheetProps {
@@ -74,7 +68,7 @@ export function BranchConfigSheet({
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent className="sm:max-w-5xl w-full p-0 flex flex-col overflow-hidden bg-background shadow-2xl border-l">
-        {/* Custom Header matching the design */}
+        {/* Header */}
         <div className="flex items-center justify-between p-4 border-b bg-background sticky top-0 z-30">
           <div className="flex items-center gap-4">
             <Button variant="ghost" size="icon" onClick={() => onOpenChange(false)}>
@@ -82,7 +76,7 @@ export function BranchConfigSheet({
             </Button>
             <div>
               <h2 className="text-xl font-bold">Restaurant Configuration</h2>
-              <p className="text-sm text-muted-foreground">Manage your restaurant details and reservation settings</p>
+              <p className="text-sm text-muted-foreground">Manage your restaurant details and operating hours</p>
             </div>
           </div>
           <div className="flex items-center gap-3">
@@ -97,7 +91,7 @@ export function BranchConfigSheet({
           </div>
         </div>
 
-        <div className="flex-1 overflow-y-auto bg-muted/5">
+        <div className="flex-1 overflow-y-auto bg-background">
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
             <TabsList className="w-full justify-start rounded-none border-b bg-background px-6 h-14 sticky top-0 z-20">
               <TabsTrigger 
@@ -106,19 +100,10 @@ export function BranchConfigSheet({
               >
                 <Info className="h-4 w-4" /> Basic Information
               </TabsTrigger>
-              <TabsTrigger value="seating" className="rounded-none h-full gap-2 text-xs font-bold uppercase tracking-wider">
-                <Users className="h-4 w-4" /> Seating & Capacity
-              </TabsTrigger>
-              <TabsTrigger value="photos" className="rounded-none h-full gap-2 text-xs font-bold uppercase tracking-wider">
-                <ImageIcon className="h-4 w-4" /> Photos & Gallery
-              </TabsTrigger>
-              <TabsTrigger value="hours" className="rounded-none h-full gap-2 text-xs font-bold uppercase tracking-wider">
+              <TabsTrigger value="hours" className="data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:bg-transparent rounded-none h-full gap-2 text-xs font-bold uppercase tracking-wider">
                 <Clock className="h-4 w-4" /> Opening Hours
               </TabsTrigger>
-              <TabsTrigger value="reservations" className="rounded-none h-full gap-2 text-xs font-bold uppercase tracking-wider">
-                <CalendarCheck className="h-4 w-4" /> Reservation Settings
-              </TabsTrigger>
-              <TabsTrigger value="customization" className="rounded-none h-full gap-2 text-xs font-bold uppercase tracking-wider">
+              <TabsTrigger value="customization" className="data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:bg-transparent rounded-none h-full gap-2 text-xs font-bold uppercase tracking-wider">
                 <Palette className="h-4 w-4" /> Customization
               </TabsTrigger>
             </TabsList>
@@ -306,18 +291,16 @@ export function BranchConfigSheet({
               </section>
             </TabsContent>
 
-            {/* Placeholder Tabs */}
-            {['seating', 'photos', 'reservations', 'customization'].map(tab => (
-              <TabsContent key={tab} value={tab} className="p-20 text-center space-y-4 focus-visible:ring-0 mt-0">
-                <div className="mx-auto w-16 h-16 rounded-full bg-muted flex items-center justify-center">
-                  <Edit2 className="h-8 w-8 text-muted-foreground opacity-20" />
-                </div>
-                <div>
-                  <h3 className="text-xl font-bold capitalize">{tab.replace('-', ' ')}</h3>
-                  <p className="text-muted-foreground">This section is currently under development.</p>
-                </div>
-              </TabsContent>
-            ))}
+            {/* Customization Tab */}
+            <TabsContent value="customization" className="p-20 text-center space-y-4 focus-visible:ring-0 mt-0">
+              <div className="mx-auto w-16 h-16 rounded-full bg-muted flex items-center justify-center">
+                <Palette className="h-8 w-8 text-muted-foreground opacity-20" />
+              </div>
+              <div>
+                <h3 className="text-xl font-bold capitalize">Customization</h3>
+                <p className="text-muted-foreground">This section is currently under development.</p>
+              </div>
+            </TabsContent>
           </Tabs>
         </div>
 
