@@ -2,28 +2,30 @@
 import { MapPin } from 'lucide-react';
 
 /**
- * An innovative floating context indicator that informs the user
- * exactly which restaurant branch they are managing.
+ * A highly visible, top-center floating "Management Island" indicator.
+ * This location is innovative, avoids corner conflicts, and is extremely 
+ * easy for any user to identify the current branch context.
  */
 export function BranchIndicator() {
   return (
-    <div className="fixed bottom-8 right-8 z-[100] group pointer-events-none">
-      <div className="pointer-events-auto bg-white dark:bg-gray-900 border-2 border-primary/20 shadow-[0_20px_50px_rgba(0,0,0,0.2)] rounded-3xl p-4 flex items-center gap-4 transition-all hover:scale-105 hover:shadow-[0_25px_60px_rgba(0,0,0,0.3)] cursor-default">
-        <div className="relative">
-          <div className="h-12 w-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary">
-            <MapPin className="h-6 w-6" />
+    <div className="fixed top-[72px] left-1/2 -translate-x-1/2 z-[40] pointer-events-none flex justify-center w-full max-w-xs px-4">
+      <div className="pointer-events-auto flex items-center gap-4 bg-gray-900/95 backdrop-blur-md border border-white/10 shadow-[0_10px_40px_rgba(0,0,0,0.3)] rounded-2xl px-5 py-2.5 transition-all hover:scale-105 group border-b-primary/30">
+        <div className="relative flex items-center justify-center shrink-0">
+          <div className="h-9 w-9 rounded-xl bg-primary/20 flex items-center justify-center text-primary border border-primary/30">
+            <MapPin className="h-5 w-5" />
           </div>
-          <div className="absolute -top-1 -right-1 flex h-4 w-4">
+          <span className="absolute -top-1 -right-1 flex h-3 w-3">
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-            <span className="relative inline-flex rounded-full h-4 w-4 bg-green-500 border-2 border-white dark:border-gray-900"></span>
-          </div>
+            <span className="relative inline-flex rounded-full h-3 w-3 bg-green-500 border-2 border-gray-900"></span>
+          </span>
         </div>
-        <div>
-          <div className="flex items-center gap-2">
-            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-primary">Live Management Context</span>
+        <div className="flex flex-col min-w-0">
+          <div className="flex items-center gap-2 overflow-hidden">
+            <span className="text-[10px] font-black uppercase tracking-[0.15em] text-primary/90 whitespace-nowrap">Live Context</span>
+            <span className="h-1 w-1 rounded-full bg-white/20 shrink-0" />
+            <span className="text-[10px] font-bold uppercase tracking-[0.1em] text-white/40 truncate">Bloomsbury&apos;s</span>
           </div>
-          <h4 className="text-xl font-black tracking-tighter text-foreground leading-none">Ras Al Khaimah</h4>
-          <p className="text-xs font-bold text-muted-foreground mt-1">Bloomsbury&apos;s Outlet</p>
+          <h4 className="text-base font-black text-white tracking-tight leading-none mt-1 truncate">Ras Al Khaimah</h4>
         </div>
       </div>
     </div>
