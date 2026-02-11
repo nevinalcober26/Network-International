@@ -4,6 +4,9 @@ import React, { useState } from 'react';
 import {
   Sheet,
   SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetDescription,
 } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -68,7 +71,13 @@ export function BranchConfigSheet({
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent className="sm:max-w-5xl w-full p-0 flex flex-col overflow-hidden bg-background shadow-2xl border-l">
-        {/* Header */}
+        {/* Accessibility Requirements */}
+        <SheetHeader className="sr-only">
+          <SheetTitle>Restaurant Configuration</SheetTitle>
+          <SheetDescription>Manage your restaurant details and operating hours</SheetDescription>
+        </SheetHeader>
+
+        {/* Visual Header */}
         <div className="flex items-center justify-between p-4 border-b bg-background sticky top-0 z-30">
           <div className="flex items-center gap-4">
             <Button variant="ghost" size="icon" onClick={() => onOpenChange(false)}>
