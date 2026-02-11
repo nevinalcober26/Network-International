@@ -12,6 +12,7 @@ import {
   Rocket,
   HelpCircle,
   ChevronDown,
+  MapPin,
 } from 'lucide-react';
 import {
   Sidebar,
@@ -55,12 +56,12 @@ const restaurantLogo = PlaceHolderImages.find(
 );
 
 const branches = [
-  { id: '1', name: "Ras Al Khaimah", type: 'Boutique Café', image: 'https://picsum.photos/seed/res1/100/100' },
-  { id: '2', name: "Dubai Mall", type: 'Signature Store', image: 'https://picsum.photos/seed/res2/100/100' },
-  { id: '3', name: "Al Ain", type: 'Boutique Café', image: 'https://picsum.photos/seed/res3/100/100' },
-  { id: '4', name: "Abu Dhabi", type: 'Boutique Café', image: 'https://picsum.photos/seed/res4/100/100' },
-  { id: '5', name: "Sharjah", type: 'Boutique Café', image: 'https://picsum.photos/seed/res5/100/100' },
-  { id: '6', name: "Ajman", type: 'Boutique Café', image: 'https://picsum.photos/seed/res6/100/100' },
+  { id: '1', name: "Ras Al Khaimah", type: 'Boutique Café' },
+  { id: '2', name: "Dubai Mall", type: 'Signature Store' },
+  { id: '3', name: "Al Ain", type: 'Boutique Café' },
+  { id: '4', name: "Abu Dhabi", type: 'Boutique Café' },
+  { id: '5', name: "Sharjah", type: 'Boutique Café' },
+  { id: '6', name: "Ajman", type: 'Boutique Café' },
 ];
 
 export const EMenuIcon = () => (
@@ -359,22 +360,13 @@ export function AppSidebar() {
               </div>
               <DropdownMenuSeparator className="m-0" />
               
-              <ScrollArea className="h-[200px]">
+              <ScrollArea className="h-[180px]">
                 <div className="p-1">
                   {branches.map((branch) => (
                     <DropdownMenuItem 
                       key={branch.id} 
-                      className="cursor-pointer focus:bg-gray-100 p-3 rounded-lg flex items-center gap-3 transition-colors"
+                      className="cursor-pointer focus:bg-gray-100 p-2.5 rounded-lg flex items-center gap-3 transition-colors"
                     >
-                      <div className="shrink-0">
-                        <Image
-                          src={branch.image}
-                          width={40}
-                          height={40}
-                          alt={branch.name}
-                          className="rounded-full border border-gray-200 object-cover h-10 w-10"
-                        />
-                      </div>
                       <div className="flex flex-col min-w-0">
                         <span className="font-bold text-sm text-gray-900 truncate">{branch.name}</span>
                         <span className="text-xs text-gray-500 truncate">{branch.type}</span>
@@ -386,11 +378,9 @@ export function AppSidebar() {
 
               <DropdownMenuSeparator className="m-0" />
               <div className="p-1">
-                <DropdownMenuItem className="cursor-pointer focus:bg-gray-100 p-3 rounded-lg flex items-center gap-3 text-gray-700">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-100 border border-gray-200">
-                    <Plus className="h-5 w-5" />
-                  </div>
-                  <span className="font-bold text-sm">Add New Branch</span>
+                <DropdownMenuItem className="cursor-pointer focus:bg-gray-100 p-2.5 rounded-lg flex items-center gap-3 text-gray-700 font-bold text-sm">
+                  <Plus className="h-4 w-4" />
+                  <span>Add New Branch</span>
                 </DropdownMenuItem>
               </div>
             </DropdownMenuContent>
