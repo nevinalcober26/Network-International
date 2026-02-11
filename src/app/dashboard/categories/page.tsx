@@ -29,6 +29,7 @@ import { cn } from '@/lib/utils';
 import { CategoriesPageSkeleton } from '@/components/dashboard/skeletons';
 import { StatCards, type StatCardData } from '@/components/dashboard/stat-cards';
 import { QuickSettingsSheet } from './quick-settings-sheet';
+import { BranchConfigSheet } from './branch-config-sheet';
 
 type RestaurantStatus = 'Open' | 'Closed';
 
@@ -124,10 +125,12 @@ const mockRestaurants: Restaurant[] = [
 
 const RestaurantCard = ({ 
   restaurant, 
-  onQuickSettings 
+  onQuickSettings,
+  onEdit
 }: { 
   restaurant: Restaurant;
   onQuickSettings: (r: Restaurant) => void;
+  onEdit: (r: Restaurant) => void;
 }) => (
   <Card className="overflow-hidden group hover:shadow-md transition-shadow">
     <div className="relative aspect-[16/9] w-full bg-muted">
@@ -196,7 +199,11 @@ const RestaurantCard = ({
         <Settings className="h-4 w-4" />
         Settings
       </Button>
-      <Button size="sm" className="flex-1 font-semibold gap-2 bg-primary hover:bg-primary/90 text-primary-foreground">
+      <Button 
+        size="sm" 
+        className="flex-1 font-semibold gap-2 bg-primary hover:bg-primary/90 text-primary-foreground"
+        onClick={() => onEdit(restaurant)}
+      >
         <Edit className="h-4 w-4" />
         Edit Branch
       </Button>
@@ -209,6 +216,7 @@ export default function ManageRestaurantPage() {
   const [search, setSearch] = useState('');
   const [selectedBranch, setSelectedBranch] = useState<Restaurant | null>(null);
   const [isQuickSettingsOpen, setIsQuickSettingsOpen] = useState(false);
+  const [isBranchConfigOpen, setIsBranchConfigOpen] = useState(false);
 
   const kpiCards: StatCardData[] = useMemo(() => [
     {
@@ -261,6 +269,16 @@ export default function ManageRestaurantPage() {
     setIsQuickSettingsOpen(true);
   };
 
+  const handleEditBranch = (restaurant: Restaurant) => {
+    setSelectedBranch(restaurant);
+    setIsBranchConfigOpen(true);
+  };
+
+  const handleAddNewBranch = () => {
+    setSelectedBranch(null);
+    setIsBranchConfigOpen(true);
+  };
+
   if (isLoading) {
     return <CategoriesPageSkeleton view="gallery" />;
   }
@@ -283,7 +301,10 @@ export default function ManageRestaurantPage() {
                 <Download className="h-4 w-4" />
                 Export Data
               </Button>
-              <Button className="gap-2 font-bold bg-primary hover:bg-primary/90 text-primary-foreground">
+              <Button 
+                className="gap-2 font-bold bg-primary hover:bg-primary/90 text-primary-foreground"
+                onClick={handleAddNewBranch}
+              >
                 <Plus className="h-5 w-5" />
                 Add New Branch
               </Button>
@@ -317,6 +338,7 @@ export default function ManageRestaurantPage() {
                 key={restaurant.id} 
                 restaurant={restaurant} 
                 onQuickSettings={handleOpenQuickSettings}
+                onEdit={handleEditBranch}
               />
             ))}
           </div>
@@ -345,6 +367,12 @@ export default function ManageRestaurantPage() {
         open={isQuickSettingsOpen} 
         onOpenChange={setIsQuickSettingsOpen}
         restaurant={selectedBranch}
+      />
+
+      <BranchConfigSheet
+        open={isBranchConfigOpen}
+        onOpenChange={setIsBranchConfigOpen}
+        branch={selectedBranch}
       />
     </>
   );
