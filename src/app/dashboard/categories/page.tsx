@@ -23,8 +23,9 @@ import {
   ChevronLeft,
   ChevronRight,
   Store,
-  CheckCircle2,
-  Users2,
+  QrCode,
+  TrendingUp,
+  Smartphone,
 } from 'lucide-react';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { cn } from '@/lib/utils';
@@ -204,33 +205,34 @@ export default function ManageRestaurantPage() {
 
   const kpiCards: StatCardData[] = useMemo(() => [
     {
-      title: 'Total Restaurants',
+      title: 'Managed Outlets',
       value: '18',
       change: '+2',
       changeDescription: 'new this month',
       icon: Store,
       color: 'orange',
-      tooltipText: 'Total number of restaurant branches managed.',
+      tooltipText: 'Total number of restaurant branches managed across the network.',
     },
     {
-      title: 'Total Reservations',
+      title: 'Digital Orders',
       value: '1,284',
       change: '+8%',
       changeDescription: 'vs last month',
-      icon: CheckCircle2,
+      icon: TrendingUp,
       color: 'green',
-      tooltipText: 'Total number of completed table reservations today.',
+      tooltipText: 'Total volume of orders placed via digital menus today.',
     },
     {
-      title: 'Total Capacity',
-      value: '456',
-      changeDescription: 'total seats',
-      icon: Users2,
+      title: 'QR Menu Scans',
+      value: '4,562',
+      change: '+12%',
+      changeDescription: 'vs yesterday',
+      icon: QrCode,
       color: 'blue',
-      tooltipText: 'Total seating capacity across all branches.',
+      tooltipText: 'Number of times digital menu QR codes were scanned across all outlets.',
     },
     {
-      title: 'Avg. Rating',
+      title: 'Avg. Satisfaction',
       value: '4.7',
       change: '+0.2',
       changeDescription: 'vs last month',
@@ -261,7 +263,7 @@ export default function ManageRestaurantPage() {
             <div>
               <h1 className="text-3xl font-extrabold tracking-tight text-foreground">Manage Restaurant</h1>
               <p className="text-muted-foreground mt-1">
-                Manage all your restaurant table reservations in one place
+                Overview and configuration for all your digital menu outlets
               </p>
             </div>
             <div className="flex items-center gap-3">
