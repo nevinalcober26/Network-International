@@ -27,7 +27,6 @@ import {
   Info,
   Image as ImageIcon,
   Clock,
-  Palette,
   Upload,
   ExternalLink,
   Save,
@@ -107,9 +106,6 @@ export default function AddNewBranchPage() {
                 </TabsTrigger>
                 <TabsTrigger value="hours" className="data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:bg-transparent rounded-none h-full gap-2 text-xs font-bold uppercase tracking-wider">
                   <Clock className="h-4 w-4" /> Opening Hours
-                </TabsTrigger>
-                <TabsTrigger value="customization" className="data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:bg-transparent rounded-none h-full gap-2 text-xs font-bold uppercase tracking-wider">
-                  <Palette className="h-4 w-4" /> Customization
                 </TabsTrigger>
               </TabsList>
 
@@ -229,16 +225,6 @@ export default function AddNewBranchPage() {
                       </CardContent>
                     </Card>
                   ))}
-                </div>
-              </TabsContent>
-
-              <TabsContent value="customization" className="p-20 text-center space-y-4 focus-visible:ring-0 mt-0 bg-background">
-                <div className="mx-auto w-16 h-16 rounded-full bg-muted flex items-center justify-center">
-                  <Palette className="h-8 w-8 text-muted-foreground opacity-20" />
-                </div>
-                <div>
-                  <h3 className="text-xl font-bold capitalize">Customization</h3>
-                  <p className="text-muted-foreground">Tailor the look and feel of this specific branch.</p>
                 </div>
               </TabsContent>
             </Tabs>
