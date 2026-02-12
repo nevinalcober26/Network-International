@@ -1229,7 +1229,7 @@ export default function PosIntegrationPage() {
       </Dialog>
 
       <Dialog open={showSuccessDialog} onOpenChange={setShowSuccessDialog}>
-        <DialogContent className="sm:max-w-md p-10 border-0 shadow-2xl overflow-hidden bg-white text-center text-left">
+        <DialogContent className="sm:max-w-md p-10 border-0 shadow-2xl overflow-hidden bg-white text-center">
           <div className="absolute -top-10 -right-10 p-8 opacity-10 pointer-events-none rotate-12">
             <Database className="h-48 w-48 text-primary" />
           </div>
