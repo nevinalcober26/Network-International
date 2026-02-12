@@ -22,7 +22,8 @@ import {
   CheckCircle2,
   Printer,
   ChevronRight,
-  FileText
+  FileText,
+  TicketPercent
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -39,6 +40,7 @@ export default function QrCodePage() {
   const [fileType, setFileType] = useState('PNG');
   const [qrType, setQrType] = useState('NORMAL QR');
   const [isHighErrorCorrection, setIsHighErrorCorrection] = useState(false);
+  const [coupon, setCoupon] = useState('none');
 
   const breadcrumbItems = [
     { label: 'Operations' },
@@ -81,13 +83,13 @@ export default function QrCodePage() {
                       1
                     </div>
                     <div>
-                      <CardTitle className="text-lg">Destination</CardTitle>
-                      <CardDescription>Select the target for your QR code.</CardDescription>
+                      <CardTitle className="text-lg">Destination & Offers</CardTitle>
+                      <CardDescription>Select where the QR leads and auto-apply deals.</CardDescription>
                     </div>
                   </div>
                 </CardHeader>
                 <CardContent className="space-y-6">
-                  <div className="max-w-sm">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-2">
                       <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">QR Type</Label>
                       <Select value={qrType} onValueChange={setQrType}>
@@ -102,6 +104,24 @@ export default function QrCodePage() {
                         </SelectContent>
                       </Select>
                     </div>
+
+                    <div className="space-y-2">
+                      <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Auto Apply Coupon</Label>
+                      <Select value={coupon} onValueChange={setCoupon}>
+                        <SelectTrigger className="h-11">
+                          <SelectValue placeholder="Select a coupon" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="none">---------</SelectItem>
+                          <SelectItem value="welcome10">WELCOME10 - 10% Off</SelectItem>
+                          <SelectItem value="summer25">SUMMER25 - 25% Off</SelectItem>
+                          <SelectItem value="free_drink">FREEDRINK - Free Beverage</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <p className="text-[11px] text-muted-foreground leading-tight">
+                        Select a coupon that you'd like to auto apply when using the QR code.
+                      </p>
+                    </div>
                   </div>
                 </CardContent>
               </Card>
@@ -115,7 +135,7 @@ export default function QrCodePage() {
                     </div>
                     <div>
                       <CardTitle className="text-lg">Style & Quality</CardTitle>
-                      <CardDescription>Customize the appearance and resolution.</CardDescription>
+                      <CardDescription>Customize the appearance and resolution durability.</CardDescription>
                     </div>
                   </div>
                 </CardHeader>
@@ -166,8 +186,8 @@ export default function QrCodePage() {
                           <Printer className="h-4 w-4" />
                         </div>
                         <div>
-                          <p className="text-sm font-semibold">Print Quality</p>
-                          <p className="text-[10px] text-muted-foreground font-medium uppercase">300 DPI Rendering</p>
+                          <p className="text-sm font-semibold">High Error Correction</p>
+                          <p className="text-[10px] text-muted-foreground font-medium uppercase">Maximum Durability</p>
                         </div>
                       </div>
                       <Switch checked={isHighErrorCorrection} />
@@ -243,7 +263,7 @@ export default function QrCodePage() {
                       <div className="flex items-center bg-muted/50 rounded-lg border px-4 h-11">
                         <ExternalLink className="h-4 w-4 text-primary shrink-0 mr-3" />
                         <p className="text-xs font-semibold truncate text-muted-foreground">
-                          bloomsburys.menu/table/rak-05
+                          bloomsburys.menu/table/rak-05{coupon !== 'none' ? `?c=${coupon}` : ''}
                         </p>
                       </div>
                     </div>
@@ -257,7 +277,7 @@ export default function QrCodePage() {
                   <div className="space-y-1">
                     <p className="text-xs font-bold text-foreground">Pro Tip</p>
                     <p className="text-[11px] leading-relaxed text-muted-foreground">
-                      Use **SVG format** for professional printing on table stands or menu cards to ensure infinite scalability.
+                      Use **High Error Correction** for stickers or tabletop displays that may experience wear and tear over time.
                     </p>
                   </div>
                 </div>
