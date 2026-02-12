@@ -34,7 +34,8 @@ import {
   Maximize2,
   Minimize2,
   X,
-  ListFilter
+  ListFilter,
+  Tag
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -169,6 +170,7 @@ export default function PosIntegrationPage() {
   ]);
 
   // Connection Flow States
+  const [terminalLabel, setTerminalLabel] = useState('');
   const [locationValue, setLocationValue] = useState<string | null>(null);
   const [revenueCenterValue, setRevenueCenterValue] = useState<string | null>(null);
   const [isSyncing, setIsSyncing] = useState(false);
@@ -282,12 +284,19 @@ export default function PosIntegrationPage() {
   const handleFinishSync = () => {
     // Determine provider and location names for the display card
     const providerName = SUPPORTED_POS.find(p => p.id === selectedProvider)?.name || 'New POS';
-    const locationName = locationValue === 'main' ? 'Main Outlet' : locationValue === 'annex' ? 'Annex Lounge' : 'Terminal';
+    
+    // Logic for the label: Use provided name or auto-generate one
+    let finalLabel = terminalLabel.trim();
+    if (!finalLabel) {
+      const locationName = locationValue === 'main' ? 'Main Outlet' : locationValue === 'annex' ? 'Annex Lounge' : 'Terminal';
+      const centerName = revenueCenterValue === 'food' ? 'Food' : revenueCenterValue === 'bar' ? 'Bar' : '';
+      finalLabel = centerName ? `${locationName} - ${centerName}` : locationName;
+    }
     
     const newConnection: PosConnection = {
       id: Date.now().toString(),
       brand: providerName,
-      label: `${locationName} Hub`,
+      label: finalLabel,
       status: 'active',
       lastSync: 'just now',
       terminalId: `${selectedProvider?.substring(0, 3).toUpperCase()}-${Math.floor(1000 + Math.random() * 9000)}`
@@ -307,6 +316,7 @@ export default function PosIntegrationPage() {
   const resetWorkflow = () => {
     setSelectedProvider(null);
     setCurrentStep(1);
+    setTerminalLabel('');
     setLocationValue(null);
     setRevenueCenterValue(null);
     setIsSyncComplete(false);
@@ -451,6 +461,19 @@ export default function PosIntegrationPage() {
                         <div className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-300">
                           <div className="rounded-2xl border border-muted-foreground/10 bg-card p-8 shadow-sm space-y-8">
                             <div className="grid grid-cols-1 gap-8">
+                              <div className="space-y-2">
+                                <Label className="text-sm font-bold flex items-center gap-2">
+                                  <Tag className="h-3.5 w-3.5 text-muted-foreground" /> Terminal Label
+                                </Label>
+                                <Input 
+                                  placeholder="e.g. Main Kitchen, Bar Hub" 
+                                  value={terminalLabel}
+                                  onChange={(e) => setTerminalLabel(e.target.value)}
+                                  className="h-11 bg-background"
+                                />
+                                <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider">How this terminal appears on your integration grid.</p>
+                              </div>
+
                               <div className="space-y-2">
                                 <Label className="text-sm font-bold">Location</Label>
                                 <Select 
