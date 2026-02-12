@@ -379,11 +379,11 @@ export default function PosIntegrationPage() {
           </div>
 
           {connections.length === 0 ? (
-            <div className="flex flex-col items-start justify-start py-24 bg-background rounded-3xl border-2 border-dashed border-muted-foreground/20 space-y-8 animate-in fade-in zoom-in duration-500 w-full pl-12">
+            <div className="flex flex-col items-center justify-center py-32 bg-background rounded-3xl border-2 border-dashed border-muted-foreground/20 space-y-8 animate-in fade-in zoom-in duration-500 w-full text-center px-6">
                <div className="h-24 w-24 rounded-[2rem] bg-muted/50 flex items-center justify-center">
                   <Monitor className="h-12 w-12 text-muted-foreground opacity-30" />
                </div>
-               <div className="text-left space-y-3 max-w-md">
+               <div className="space-y-3 max-w-md">
                   <h3 className="text-2xl font-bold tracking-tight">No POS Connected</h3>
                   <p className="text-muted-foreground text-base font-medium leading-relaxed">
                     Your digital menu is currently static. Connect your physical terminal to unlock real-time pricing and automated stock management.
