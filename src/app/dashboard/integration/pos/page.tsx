@@ -149,25 +149,8 @@ export default function PosIntegrationPage() {
   const [selectedProvider, setSelectedProvider] = useState<string | null>(null);
   const [currentStep, setCurrentStep] = useState(1);
   
-  // Connections Grid State
-  const [connections, setConnections] = useState<PosConnection[]>([
-    { 
-      id: '1', 
-      brand: 'Oracle Micros Simphony', 
-      label: 'Main Kitchen Hub', 
-      status: 'active', 
-      lastSync: 'just now',
-      terminalId: 'ORCL-SYMPH-01'
-    },
-    { 
-      id: '2', 
-      brand: 'Square', 
-      label: 'Express Bar', 
-      status: 'error', 
-      lastSync: '1 hour ago',
-      terminalId: 'SQ-BAR-99'
-    },
-  ]);
+  // Only 1 connection allowed
+  const [connections, setConnections] = useState<PosConnection[]>([]);
 
   // Connection Flow States
   const [terminalLabel, setTerminalLabel] = useState('');
@@ -282,10 +265,8 @@ export default function PosIntegrationPage() {
   };
 
   const handleFinishSync = () => {
-    // Determine provider and location names for the display card
     const providerName = SUPPORTED_POS.find(p => p.id === selectedProvider)?.name || 'New POS';
     
-    // Logic for the label: Use provided name or auto-generate one
     let finalLabel = terminalLabel.trim();
     if (!finalLabel) {
       const locationName = locationValue === 'main' ? 'Main Outlet' : locationValue === 'annex' ? 'Annex Lounge' : 'Terminal';
@@ -302,14 +283,11 @@ export default function PosIntegrationPage() {
       terminalId: `${selectedProvider?.substring(0, 3).toUpperCase()}-${Math.floor(1000 + Math.random() * 9000)}`
     };
 
-    // Add to dynamic list
-    setConnections(prev => [newConnection, ...prev]);
+    // Replace existing connection (Single POS limit)
+    setConnections([newConnection]);
 
-    // Close verification modal and show final success
     setIsVerificationModalOpen(false);
     setShowSuccessDialog(true);
-
-    // Reset workflow states for future additions
     resetWorkflow();
   };
 
@@ -337,7 +315,7 @@ export default function PosIntegrationPage() {
   };
 
   const handleDeleteConnection = (id: string) => {
-    setConnections(prev => prev.filter(c => c.id !== id));
+    setConnections([]);
     toast({
       title: "Connection Removed",
       description: "The POS terminal has been disconnected."
@@ -353,18 +331,34 @@ export default function PosIntegrationPage() {
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div className="space-y-1">
               <h1 className="text-3xl font-bold tracking-tight text-foreground">POS Integration</h1>
-              <p className="text-muted-foreground text-sm font-medium">Manage your venue terminals and real-time menu synchronization.</p>
+              <p className="text-muted-foreground text-sm font-medium">Link your physical terminal to automate your digital menu.</p>
             </div>
-            <div className="flex items-center gap-3">
-              <Button variant="outline" className="gap-2 font-semibold shadow-sm" onClick={() => toast({ title: "Sync Initiated", description: "Global manual refresh started." })}>
-                <RefreshCw className="h-4 w-4" />
-                Sync All
-              </Button>
-              <Sheet open={isConnectDrawerOpen} onOpenChange={setIsConnectDrawerOpen}>
+            {connections.length > 0 && (
+              <div className="flex items-center gap-3">
+                <Button variant="outline" className="gap-2 font-semibold shadow-sm" onClick={() => toast({ title: "Sync Initiated", description: "Global manual refresh started." })}>
+                  <RefreshCw className="h-4 w-4" />
+                  Sync All
+                </Button>
+              </div>
+            )}
+          </div>
+
+          {connections.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-24 bg-background rounded-3xl border-2 border-dashed border-muted-foreground/20 space-y-8 animate-in fade-in zoom-in duration-500">
+               <div className="h-24 w-24 rounded-[2rem] bg-muted/50 flex items-center justify-center">
+                  <Monitor className="h-12 w-12 text-muted-foreground opacity-30" />
+               </div>
+               <div className="text-center space-y-3 max-w-md px-6">
+                  <h3 className="text-2xl font-bold tracking-tight">No POS Connected</h3>
+                  <p className="text-muted-foreground text-base font-medium leading-relaxed">
+                    Connect your physical store terminal to sync your menu and prices in real-time. This eliminates manual updates and ensures price accuracy across all digital channels.
+                  </p>
+               </div>
+               <Sheet open={isConnectDrawerOpen} onOpenChange={setIsConnectDrawerOpen}>
                 <SheetTrigger asChild>
-                  <Button className="gap-2 font-bold bg-primary hover:bg-primary/90 shadow-md">
+                  <Button className="gap-2 font-bold bg-primary hover:bg-primary/90 shadow-xl px-10 h-14 rounded-2xl text-base">
                     <Plus className="h-5 w-5" />
-                    Connect New POS
+                    Connect Your POS
                   </Button>
                 </SheetTrigger>
                 <SheetContent className="sm:max-w-xl p-0 overflow-hidden flex flex-col border-l shadow-2xl bg-white">
@@ -568,85 +562,72 @@ export default function PosIntegrationPage() {
                 </SheetContent>
               </Sheet>
             </div>
-          </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+              {connections.map((conn) => (
+                <Card key={conn.id} className={cn(
+                  "overflow-hidden border-2 transition-all hover:shadow-xl rounded-3xl",
+                  conn.status === 'error' ? "border-destructive/20" : "border-border"
+                )}>
+                  <CardHeader className="pb-4 bg-muted/10 border-b">
+                    <div className="flex items-start justify-between">
+                      <div className="flex items-center gap-4">
+                        <div className="h-12 w-12 rounded-2xl bg-white shadow-md border flex items-center justify-center">
+                          <Monitor className="h-6 w-6 text-primary" />
+                        </div>
+                        <div className="min-w-0">
+                          <CardTitle className="text-xl font-bold truncate">{conn.label}</CardTitle>
+                          <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-[0.1em]">{conn.brand}</p>
+                        </div>
+                      </div>
+                      {getStatusBadge(conn.status)}
+                    </div>
+                  </CardHeader>
+                  <CardContent className="pt-8 space-y-6">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="p-4 rounded-2xl bg-muted/30 border space-y-1">
+                        <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest leading-none">Operational</p>
+                        <p className="text-sm font-bold capitalize">{conn.status}</p>
+                      </div>
+                      <div className="p-4 rounded-2xl bg-muted/30 border space-y-1">
+                        <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest leading-none">Last Data Sync</p>
+                        <p className="text-sm font-bold">{conn.lastSync}</p>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-center justify-between text-xs text-muted-foreground border-t pt-6 px-1">
+                      <span className="font-semibold uppercase tracking-wider">Machine Identifier</span>
+                      <span className="font-mono font-bold text-foreground bg-muted px-2 py-0.5 rounded">{conn.terminalId}</span>
+                    </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {connections.map((conn) => (
-              <Card key={conn.id} className={cn(
-                "overflow-hidden border-2 transition-all hover:shadow-md",
-                conn.status === 'error' ? "border-destructive/20" : "border-border"
-              )}>
-                <CardHeader className="pb-4 bg-muted/10 border-b">
-                  <div className="flex items-start justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="h-10 w-10 rounded-xl bg-white shadow-sm border flex items-center justify-center">
-                        <Monitor className="h-5 w-5 text-primary" />
+                    {conn.status === 'error' && (
+                      <div className="p-4 rounded-2xl bg-destructive/5 border border-destructive/20 flex items-start gap-3 animate-in fade-in zoom-in duration-300">
+                        <AlertCircle className="h-4 w-4 text-destructive shrink-0 mt-0.5" />
+                        <div className="space-y-1">
+                          <p className="text-xs font-bold text-destructive">Connection Failed</p>
+                          <p className="text-[10px] leading-tight text-destructive/80 font-medium">Credentials for this terminal have expired. Re-authentication is required to restore sync.</p>
+                        </div>
                       </div>
-                      <div className="min-w-0">
-                        <CardTitle className="text-lg font-bold truncate">{conn.label}</CardTitle>
-                        <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-[0.1em]">{conn.brand}</p>
-                      </div>
+                    )}
+                  </CardContent>
+                  <CardFooter className="bg-muted/20 border-t p-4 flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Button variant="ghost" size="icon" className="h-10 w-10 text-muted-foreground hover:text-foreground rounded-xl">
+                        <Settings className="h-5 w-5" />
+                      </Button>
+                      <Button variant="ghost" size="icon" className="h-10 w-10 text-destructive hover:bg-destructive/10 rounded-xl" onClick={() => handleDeleteConnection(conn.id)}>
+                        <Trash2 className="h-5 w-5" />
+                      </Button>
                     </div>
-                    {getStatusBadge(conn.status)}
-                  </div>
-                </CardHeader>
-                <CardContent className="pt-6 space-y-5">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="p-3 rounded-xl bg-muted/30 border space-y-1">
-                      <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest leading-none">Status</p>
-                      <p className="text-xs font-bold capitalize">{conn.status}</p>
-                    </div>
-                    <div className="p-3 rounded-xl bg-muted/30 border space-y-1">
-                      <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest leading-none">Last Sync</p>
-                      <p className="text-xs font-bold">{conn.lastSync}</p>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-center justify-between text-[11px] text-muted-foreground border-t pt-4 px-1">
-                    <span className="font-semibold uppercase tracking-wider">Terminal Identifier</span>
-                    <span className="font-mono font-bold text-foreground">{conn.terminalId}</span>
-                  </div>
-
-                  {conn.status === 'error' && (
-                    <div className="p-4 rounded-xl bg-destructive/5 border border-destructive/20 flex items-start gap-3 animate-in fade-in zoom-in duration-300">
-                      <AlertCircle className="h-4 w-4 text-destructive shrink-0 mt-0.5" />
-                      <div className="space-y-1">
-                        <p className="text-xs font-bold text-destructive">Connection Failed</p>
-                        <p className="text-[10px] leading-tight text-destructive/80 font-medium">Credentials for this terminal have expired. Re-authentication is required to restore sync.</p>
-                      </div>
-                    </div>
-                  )}
-                </CardContent>
-                <CardFooter className="bg-muted/20 border-t p-3 flex items-center justify-between">
-                  <div className="flex items-center gap-1">
-                    <Button variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground hover:text-foreground rounded-lg">
-                      <Settings className="h-4 w-4" />
+                    <Button variant="outline" size="sm" className="h-10 text-[10px] font-bold uppercase tracking-widest px-6 gap-2 border-muted-foreground/20 rounded-xl bg-background hover:bg-muted" onClick={() => toast({ title: "Manual Refresh", description: `Updating ${conn.label} data...` })}>
+                      <RefreshCw className="h-4 w-4" />
+                      Manual Refresh
                     </Button>
-                    <Button variant="ghost" size="icon" className="h-9 w-9 text-destructive hover:bg-destructive/10 rounded-lg" onClick={() => handleDeleteConnection(conn.id)}>
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                  <Button variant="outline" size="sm" className="h-9 text-[10px] font-bold uppercase tracking-widest px-4 gap-2 border-muted-foreground/20 rounded-lg" onClick={() => toast({ title: "Manual Refresh", description: `Updating ${conn.label} data...` })}>
-                    <RefreshCw className="h-3.5 w-3.5" />
-                    Manual Refresh
-                  </Button>
-                </CardFooter>
-              </Card>
-            ))}
-
-            <button 
-              onClick={() => setIsConnectDrawerOpen(true)}
-              className="h-full min-h-[280px] rounded-2xl border-2 border-dashed border-muted-foreground/20 flex flex-col items-center justify-center gap-5 hover:bg-muted/10 hover:border-primary/30 transition-all group relative overflow-hidden"
-            >
-              <div className="h-16 w-16 rounded-2xl bg-muted/50 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                <Plus className="h-8 w-8 text-muted-foreground group-hover:text-primary transition-colors" />
-              </div>
-              <div className="text-center px-8">
-                <p className="font-bold text-base text-foreground">Add Terminal</p>
-                <p className="text-xs text-muted-foreground mt-1 leading-relaxed font-medium">Connect another POS machine to your digital management hub.</p>
-              </div>
-            </button>
-          </div>
+                  </CardFooter>
+                </Card>
+              ))}
+            </div>
+          )}
         </div>
       </main>
 
@@ -704,7 +685,7 @@ export default function PosIntegrationPage() {
         </DialogContent>
       </Dialog>
 
-      {/* BIG Center Verification Modal - LIGHT THEME */}
+      {/* BIG Center Verification Modal */}
       <Dialog open={isVerificationModalOpen} onOpenChange={setIsVerificationModalOpen}>
         <DialogContent 
           className={cn(
@@ -712,11 +693,9 @@ export default function PosIntegrationPage() {
             isExpanded ? "max-w-full w-[100vw] h-[100vh] rounded-none m-0" : "max-w-7xl w-[95vw] h-[90vh]"
           )}
         >
-          {/* Accessibility Requirements */}
           <DialogTitle className="sr-only">POS Menu Review</DialogTitle>
           <DialogDescription className="sr-only">Verify and manage menu items imported from your connected POS machine.</DialogDescription>
 
-          {/* Custom Modern Header - LIGHT */}
           <div className="bg-white border-b p-6 shrink-0 flex items-center justify-between">
             <div className="flex items-center gap-5">
               <div className="h-12 w-12 rounded-2xl bg-primary/10 flex items-center justify-center border border-primary/20">
@@ -747,7 +726,6 @@ export default function PosIntegrationPage() {
             </div>
           </div>
 
-          {/* Search & Bulk Actions - LIGHT */}
           <div className="p-4 border-b bg-muted/20 flex flex-col sm:flex-row items-center gap-4 justify-between">
             <div className="flex items-center gap-4 flex-1 w-full sm:max-w-2xl">
               <div className="relative flex-1">
@@ -768,7 +746,6 @@ export default function PosIntegrationPage() {
                 )}
               </div>
 
-              {/* Status Filter Dropdown */}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="outline" className={cn(
@@ -790,7 +767,6 @@ export default function PosIntegrationPage() {
                 </DropdownMenuContent>
               </DropdownMenu>
 
-              {/* Category Filter Dropdown */}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="outline" className={cn(
@@ -833,7 +809,6 @@ export default function PosIntegrationPage() {
             ) : null}
           </div>
 
-          {/* The Large Table - LIGHT */}
           <div className="flex-1 overflow-hidden flex flex-col bg-white">
             <ScrollArea className="flex-1">
               <Table>
@@ -854,7 +829,6 @@ export default function PosIntegrationPage() {
                 
                 {Object.entries(itemsByCategory).map(([category, subCats]) => (
                   <TableBody key={category} className="border-t-0">
-                    {/* CATEGORY LEVEL HEADER - OPAQUE & STICKY WITHIN TBODY */}
                     <TableRow className="bg-[#f4fbf9] hover:bg-[#ebf7f5] border-y sticky top-[48px] z-30 transition-colors">
                       <TableCell colSpan={5} className="py-4 px-6">
                         <div className="flex items-center justify-between">
@@ -876,7 +850,6 @@ export default function PosIntegrationPage() {
 
                     {Object.entries(subCats).map(([subCat, subItems]) => (
                       <React.Fragment key={subCat}>
-                        {/* SUBCATEGORY LEVEL HEADER */}
                         <TableRow className="bg-muted/10 hover:bg-muted/20 border-b border-muted/30">
                           <TableCell colSpan={5} className="py-3 pl-16 pr-6">
                             <div className="flex items-center gap-3">
@@ -886,7 +859,6 @@ export default function PosIntegrationPage() {
                           </TableCell>
                         </TableRow>
 
-                        {/* ITEM ROWS */}
                         {subItems.map((item) => (
                           <TableRow key={item.id} className={cn(
                             "group transition-colors border-b last:border-0",
@@ -951,7 +923,6 @@ export default function PosIntegrationPage() {
             </ScrollArea>
           </div>
 
-          {/* Verification Footer - LIGHT */}
           <div className="p-6 bg-muted/10 border-t shrink-0 flex items-center justify-between">
             <div className="flex items-center gap-8">
               <div className="flex flex-col">
@@ -976,7 +947,6 @@ export default function PosIntegrationPage() {
         </DialogContent>
       </Dialog>
 
-      {/* Success Dialog - Celebratory */}
       <Dialog open={showSuccessDialog} onOpenChange={setShowSuccessDialog}>
         <DialogContent className="sm:max-w-md p-10 border-0 shadow-2xl overflow-hidden bg-white text-center">
           <div className="absolute -top-10 -right-10 p-8 opacity-10 pointer-events-none rotate-12">
