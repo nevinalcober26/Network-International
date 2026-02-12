@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { DashboardHeader } from '@/components/dashboard/header';
@@ -25,105 +25,13 @@ import {
   Store,
   TrendingUp,
 } from 'lucide-react';
-import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { cn } from '@/lib/utils';
 import { CategoriesPageSkeleton } from '@/components/dashboard/skeletons';
 import { StatCards, type StatCardData } from '@/components/dashboard/stat-cards';
 import { QuickSettingsSheet } from './quick-settings-sheet';
 import { useToast } from '@/hooks/use-toast';
+import { mockDataStore, type Branch } from '@/lib/mock-data-store';
 import gsap from 'gsap';
-
-type RestaurantStatus = 'Open' | 'Closed';
-
-interface Restaurant {
-  id: string;
-  name: string;
-  image: string;
-  status: RestaurantStatus;
-  rating: number;
-  type: string;
-  location: string;
-  address: string;
-  menuItems: number;
-  scansToday: number;
-}
-
-const DEFAULT_RESTAURANT_IMAGE = 'https://picsum.photos/seed/bloomsbury/600/400';
-
-const mockRestaurants: Restaurant[] = [
-  {
-    id: '1',
-    name: "Bloomsbury's - Ras Al Khaimah",
-    image: PlaceHolderImages.find(img => img.id === 'restaurant-1')?.imageUrl || DEFAULT_RESTAURANT_IMAGE,
-    status: 'Open',
-    rating: 4.9,
-    type: 'Boutique Café',
-    location: 'RAK Mall',
-    address: 'Level 1, RAK Mall, Ras Al Khaimah',
-    menuItems: 142,
-    scansToday: 284,
-  },
-  {
-    id: '2',
-    name: "Bloomsbury's - Dubai Mall",
-    image: PlaceHolderImages.find(img => img.id === 'restaurant-2')?.imageUrl || DEFAULT_RESTAURANT_IMAGE,
-    status: 'Open',
-    rating: 4.8,
-    type: 'Signature Store',
-    location: 'Downtown',
-    address: 'Lower Ground, Dubai Mall, Dubai',
-    menuItems: 156,
-    scansToday: 1240,
-  },
-  {
-    id: '3',
-    name: "Bloomsbury's - Al Ain",
-    image: PlaceHolderImages.find(img => img.id === 'restaurant-3')?.imageUrl || DEFAULT_RESTAURANT_IMAGE,
-    status: 'Open',
-    rating: 4.7,
-    type: 'Boutique Café',
-    location: 'Al Ain Mall',
-    address: 'Ground Floor, Al Ain Mall, Al Ain',
-    menuItems: 98,
-    scansToday: 412,
-  },
-  {
-    id: '4',
-    name: "Bloomsbury's - Abu Dhabi",
-    image: PlaceHolderImages.find(img => img.id === 'restaurant-4')?.imageUrl || DEFAULT_RESTAURANT_IMAGE,
-    status: 'Open',
-    rating: 4.8,
-    type: 'Boutique Café',
-    location: 'Al Mushrif',
-    address: 'Al Mushrif Mall, Abu Dhabi',
-    menuItems: 110,
-    scansToday: 650,
-  },
-  {
-    id: '5',
-    name: "Bloomsbury's - Sharjah",
-    image: PlaceHolderImages.find(img => img.id === 'restaurant-5')?.imageUrl || DEFAULT_RESTAURANT_IMAGE,
-    status: 'Open',
-    rating: 4.6,
-    type: 'Boutique Café',
-    location: 'Zero 6 Mall',
-    address: 'Zero 6 Mall, Sharjah',
-    menuItems: 85,
-    scansToday: 320,
-  },
-  {
-    id: '6',
-    name: "Bloomsbury's - Ajman",
-    image: PlaceHolderImages.find(img => img.id === 'restaurant-6')?.imageUrl || DEFAULT_RESTAURANT_IMAGE,
-    status: 'Closed',
-    rating: 4.5,
-    type: 'Boutique Café',
-    location: 'City Centre',
-    address: 'City Centre Ajman, Ajman',
-    menuItems: 72,
-    scansToday: 180,
-  },
-];
 
 const RestaurantCard = ({ 
   restaurant, 
@@ -132,11 +40,11 @@ const RestaurantCard = ({
   isActive,
   onSelect
 }: { 
-  restaurant: Restaurant;
-  onQuickSettings: (r: Restaurant) => void;
-  onEdit: (r: Restaurant) => void;
+  restaurant: Branch;
+  onQuickSettings: (r: Branch) => void;
+  onEdit: (r: Branch) => void;
   isActive: boolean;
-  onSelect: (r: Restaurant) => void;
+  onSelect: (r: Branch) => void;
 }) => (
   <Card 
     className={cn(
@@ -250,12 +158,11 @@ export default function ManageRestaurantPage() {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(true);
   const [search, setSearch] = useState('');
-  const [selectedBranch, setSelectedBranch] = useState<Restaurant | null>(null);
+  const [selectedBranch, setSelectedBranch] = useState<Branch | null>(null);
   const [isQuickSettingsOpen, setIsQuickSettingsOpen] = useState(false);
   const [activeBranchId, setActiveBranchId] = useState<string>('1');
 
   useEffect(() => {
-    // Initial sync from localStorage
     const savedBranch = localStorage.getItem('activeBranch');
     if (savedBranch) {
       try {
@@ -272,7 +179,6 @@ export default function ManageRestaurantPage() {
     return () => clearTimeout(timer);
   }, []);
 
-  // GSAP Shine Animation Effect
   useEffect(() => {
     if (!isLoading && activeBranchId) {
       const sweepAnimation = () => {
@@ -295,12 +201,12 @@ export default function ManageRestaurantPage() {
     };
   }, [isLoading, activeBranchId]);
 
-  const handleOpenQuickSettings = (restaurant: Restaurant) => {
+  const handleOpenQuickSettings = (restaurant: Branch) => {
     setSelectedBranch(restaurant);
     setIsQuickSettingsOpen(true);
   };
 
-  const handleEditBranch = (restaurant: Restaurant) => {
+  const handleEditBranch = (restaurant: Branch) => {
     router.push(`/dashboard/categories/edit/${restaurant.id}`);
   };
 
@@ -308,19 +214,17 @@ export default function ManageRestaurantPage() {
     router.push('/dashboard/categories/new');
   };
 
-  const handleSelectBranch = (restaurant: Restaurant) => {
+  const handleSelectBranch = (restaurant: Branch) => {
     if (activeBranchId === restaurant.id) return;
     
     setActiveBranchId(restaurant.id);
     
-    // Update local storage for cross-component sync
     localStorage.setItem('activeBranch', JSON.stringify({
       id: restaurant.id,
       name: restaurant.name.replace("Bloomsbury's - ", ""),
       type: restaurant.type
     }));
 
-    // Trigger custom event for sidebar sync
     window.dispatchEvent(new CustomEvent('branch-changed'));
 
     toast({
@@ -328,6 +232,13 @@ export default function ManageRestaurantPage() {
       description: `Now managing: ${restaurant.name}`,
     });
   };
+
+  const filteredRestaurants = useMemo(() => {
+    return mockDataStore.branches.filter(r => 
+      r.name.toLowerCase().includes(search.toLowerCase()) || 
+      r.location.toLowerCase().includes(search.toLowerCase())
+    );
+  }, [search]);
 
   const kpiCards: StatCardData[] = useMemo(() => [
     {
@@ -377,7 +288,6 @@ export default function ManageRestaurantPage() {
       <DashboardHeader />
       <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 bg-muted/30">
         <div className="max-w-7xl mx-auto space-y-8">
-          {/* Header */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div className="text-left">
               <h1 className="text-3xl font-extrabold tracking-tight text-foreground">Manage Branches</h1>
@@ -400,10 +310,8 @@ export default function ManageRestaurantPage() {
             </div>
           </div>
 
-          {/* Stats Overview */}
           <StatCards cards={kpiCards} />
 
-          {/* Filters and Search */}
           <div className="flex items-center gap-4 bg-background p-4 rounded-xl border shadow-sm">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -420,9 +328,8 @@ export default function ManageRestaurantPage() {
             </Button>
           </div>
 
-          {/* Restaurants Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {mockRestaurants.map((restaurant) => (
+            {filteredRestaurants.map((restaurant) => (
               <RestaurantCard 
                 key={restaurant.id} 
                 restaurant={restaurant} 
@@ -434,10 +341,9 @@ export default function ManageRestaurantPage() {
             ))}
           </div>
 
-          {/* Pagination */}
           <div className="pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 border-t">
             <p className="text-sm text-muted-foreground">
-              Showing <strong>1 to 6</strong> of <strong>18</strong> branches
+              Showing <strong>1 to {filteredRestaurants.length}</strong> of <strong>{mockDataStore.branches.length}</strong> branches
             </p>
             <div className="flex items-center gap-1">
               <Button variant="ghost" size="icon" className="h-9 w-9">
@@ -457,7 +363,7 @@ export default function ManageRestaurantPage() {
       <QuickSettingsSheet 
         open={isQuickSettingsOpen} 
         onOpenChange={setIsQuickSettingsOpen}
-        restaurant={selectedBranch}
+        restaurant={selectedBranch ? { id: selectedBranch.id, name: selectedBranch.name, status: selectedBranch.status } : null}
       />
     </>
   );

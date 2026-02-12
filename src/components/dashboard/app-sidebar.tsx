@@ -11,11 +11,8 @@ import {
   Search,
   Rocket,
   CircleHelp,
-  HelpCircle,
   ChevronDown,
-  MapPin,
   PlusCircle,
-  QrCode,
   Loader2,
 } from 'lucide-react';
 import {
@@ -49,7 +46,6 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
   DropdownMenuPortal,
 } from '@/components/ui/dropdown-menu';
@@ -60,15 +56,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
-
-const branches = [
-  { id: '1', name: "Ras Al Khaimah", type: 'Boutique Café' },
-  { id: '2', name: "Dubai Mall", type: 'Signature Store' },
-  { id: '3', name: "Al Ain", type: 'Boutique Café' },
-  { id: '4', name: "Abu Dhabi", type: 'Boutique Café' },
-  { id: '5', name: "Sharjah", type: 'Boutique Café' },
-  { id: '6', name: "Ajman", type: 'Boutique Café' },
-];
+import { mockDataStore, type Branch } from '@/lib/mock-data-store';
 
 export const EMenuIcon = () => (
   <svg
@@ -203,7 +191,7 @@ export function AppSidebar() {
   const [isBranchSwitcherOpen, setIsBranchSwitcherOpen] = useState(false);
   const [isBranchSearching, setIsBranchSearching] = useState(false);
   const [branchSearchQuery, setBranchSearchQuery] = useState('');
-  const [activeBranch, setActiveBranch] = useState(branches[0]);
+  const [activeBranch, setActiveBranch] = useState(mockDataStore.branches[0]);
   const [isBranchLoading, setIsBranchLoading] = useState(false);
 
   useEffect(() => {
@@ -212,7 +200,7 @@ export function AppSidebar() {
     if (savedBranch) {
       try {
         const branchData = JSON.parse(savedBranch);
-        const match = branches.find(b => b.id === branchData.id);
+        const match = mockDataStore.branches.find(b => b.id === branchData.id);
         if (match) setActiveBranch(match);
       } catch (e) {
         // Fallback to default
@@ -226,7 +214,7 @@ export function AppSidebar() {
       if (updatedBranch) {
         try {
           const branchData = JSON.parse(updatedBranch);
-          const match = branches.find(b => b.id === branchData.id);
+          const match = mockDataStore.branches.find(b => b.id === branchData.id);
           if (match) setActiveBranch(match);
         } catch (e) {}
       }
@@ -254,7 +242,7 @@ export function AppSidebar() {
   };
 
   const filteredBranches = useMemo(() => {
-    return branches.filter((branch) =>
+    return mockDataStore.branches.filter((branch) =>
       branch.name.toLowerCase().includes(branchSearchQuery.toLowerCase()) ||
       branch.type.toLowerCase().includes(branchSearchQuery.toLowerCase())
     );
@@ -465,7 +453,7 @@ export function AppSidebar() {
                         BLOOMSBURY&apos;S
                       </span>
                       <h4 className="truncate text-[17px] font-black text-white tracking-tight leading-tight">
-                        {isBranchLoading ? "Loading..." : activeBranch.name}
+                        {isBranchLoading ? "Loading..." : activeBranch.name.replace("Bloomsbury's - ", "")}
                       </h4>
                     </div>
                   </div>
@@ -526,7 +514,7 @@ export function AppSidebar() {
                               setIsBranchSwitcherOpen(false);
                               localStorage.setItem('activeBranch', JSON.stringify({
                                 id: branch.id,
-                                name: branch.name,
+                                name: branch.name.replace("Bloomsbury's - ", ""),
                                 type: branch.type
                               }));
                               window.dispatchEvent(new CustomEvent('branch-changed'));

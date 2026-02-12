@@ -23,7 +23,7 @@ export type Customer = {
 
 export type Order = {
   orderId: string;
-  branch: 'Ras Al Khaimah' | 'Dubai Mall';
+  branch: string;
   table: string;
   orderType: 'Post-Paid' | 'Prepaid';
   orderStatus: 'Draft' | 'Open' | 'Paid' | 'Cancelled' | 'Refunded' | 'Completed';

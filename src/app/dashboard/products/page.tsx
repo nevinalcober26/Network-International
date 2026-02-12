@@ -353,7 +353,6 @@ export default function ProductsPage() {
 
   const handleEditFromInfoSheet = (product: Product) => {
     setIsInfoSheetOpen(false);
-    // A slight delay to allow the sheet to close before opening the new one, preventing UI jank
     setTimeout(() => {
       handleEditProduct(product);
     }, 150);
@@ -464,8 +463,9 @@ export default function ProductsPage() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">All Branches</SelectItem>
-                    <SelectItem value="Ras Al Khaimah">Ras Al Khaimah</SelectItem>
-                    <SelectItem value="Dubai Mall">Dubai Mall</SelectItem>
+                    {mockDataStore.branches.map(branch => (
+                      <SelectItem key={branch.id} value={branch.name}>{branch.name}</SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
                 <Select

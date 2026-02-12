@@ -5,8 +5,100 @@ import type { Customer, Visit, Payment as CustomerPayment } from '@/app/dashboar
 import type { Order, OrderItem, Payment as OrderPayment } from '@/app/dashboard/orders/types';
 import { format, subDays, subHours, endOfDay, setHours, setMinutes, subMinutes, formatDistanceToNow } from 'date-fns';
 import type { Column } from '@/app/dashboard/categories/types';
+import { PlaceHolderImages } from '@/lib/placeholder-images';
 
 export const mockComboGroups = ['Lunch Special', 'Family Deal', 'Dinner for Two', 'Breakfast Combo'];
+
+// --- Branch/Restaurant Source of Truth ---
+export interface Branch {
+  id: string;
+  name: string;
+  image: string;
+  status: 'Open' | 'Closed';
+  rating: number;
+  type: string;
+  location: string;
+  address: string;
+  menuItems: number;
+  scansToday: number;
+}
+
+const DEFAULT_RESTAURANT_IMAGE = 'https://picsum.photos/seed/bloomsbury/600/400';
+
+export const mockBranches: Branch[] = [
+  {
+    id: '1',
+    name: "Bloomsbury's - Ras Al Khaimah",
+    image: PlaceHolderImages.find(img => img.id === 'restaurant-1')?.imageUrl || DEFAULT_RESTAURANT_IMAGE,
+    status: 'Open',
+    rating: 4.9,
+    type: 'Boutique Café',
+    location: 'RAK Mall',
+    address: 'Level 1, RAK Mall, Ras Al Khaimah',
+    menuItems: 142,
+    scansToday: 284,
+  },
+  {
+    id: '2',
+    name: "Bloomsbury's - Dubai Mall",
+    image: PlaceHolderImages.find(img => img.id === 'restaurant-2')?.imageUrl || DEFAULT_RESTAURANT_IMAGE,
+    status: 'Open',
+    rating: 4.8,
+    type: 'Signature Store',
+    location: 'Downtown',
+    address: 'Lower Ground, Dubai Mall, Dubai',
+    menuItems: 156,
+    scansToday: 1240,
+  },
+  {
+    id: '3',
+    name: "Bloomsbury's - Al Ain",
+    image: PlaceHolderImages.find(img => img.id === 'restaurant-3')?.imageUrl || DEFAULT_RESTAURANT_IMAGE,
+    status: 'Open',
+    rating: 4.7,
+    type: 'Boutique Café',
+    location: 'Al Ain Mall',
+    address: 'Ground Floor, Al Ain Mall, Al Ain',
+    menuItems: 98,
+    scansToday: 412,
+  },
+  {
+    id: '4',
+    name: "Bloomsbury's - Abu Dhabi",
+    image: PlaceHolderImages.find(img => img.id === 'restaurant-4')?.imageUrl || DEFAULT_RESTAURANT_IMAGE,
+    status: 'Open',
+    rating: 4.8,
+    type: 'Boutique Café',
+    location: 'Al Mushrif',
+    address: 'Al Mushrif Mall, Abu Dhabi',
+    menuItems: 110,
+    scansToday: 650,
+  },
+  {
+    id: '5',
+    name: "Bloomsbury's - Sharjah",
+    image: PlaceHolderImages.find(img => img.id === 'restaurant-5')?.imageUrl || DEFAULT_RESTAURANT_IMAGE,
+    status: 'Open',
+    rating: 4.6,
+    type: 'Boutique Café',
+    location: 'Zero 6 Mall',
+    address: 'Zero 6 Mall, Sharjah',
+    menuItems: 85,
+    scansToday: 320,
+  },
+  {
+    id: '6',
+    name: "Bloomsbury's - Ajman",
+    image: PlaceHolderImages.find(img => img.id === 'restaurant-6')?.imageUrl || DEFAULT_RESTAURANT_IMAGE,
+    status: 'Closed',
+    rating: 4.5,
+    type: 'Boutique Café',
+    location: 'City Centre',
+    address: 'City Centre Ajman, Ajman',
+    menuItems: 72,
+    scansToday: 180,
+  },
+];
 
 // --- Product Generation ---
 const productNames = [
@@ -17,10 +109,10 @@ const productNames = [
 ];
 const categories = ['Burgers', 'Sides', 'Desserts', 'Mains', 'Salads', 'Breakfast', 'Beverages'];
 const productStatuses: Product['status'][] = ['Active', 'Draft', 'Archived', 'Out of Stock'];
-const branches: ('Ras Al Khaimah' | 'Dubai Mall')[] = ['Ras Al Khaimah', 'Dubai Mall'];
 
 const generateMockProducts = (count: number): Product[] => {
     const products: Product[] = [];
+    const branchNames = mockBranches.map(b => b.name);
     for (let i = 0; i < count; i++) {
         const name = productNames[i % productNames.length];
         const status = productStatuses[i % productStatuses.length];
@@ -34,7 +126,7 @@ const generateMockProducts = (count: number): Product[] => {
             id: `prod_${i}`,
             name: `${name} ${i < productNames.length ? '' : `#${Math.floor(i / productNames.length)}`}`,
             category: categories[i % categories.length],
-            branch: branches[i % branches.length],
+            branch: branchNames[i % branchNames.length],
             price,
             stock: status === 'Out of Stock' ? 0 : Math.floor(Math.random() * 100),
             status,
@@ -57,6 +149,7 @@ const comments = ['Customer requested extra napkins.', 'Allergy alert: No nuts.'
 const generateRelatedMockData = (customerCount: number, orderCount: number, products: Product[]) => {
     const customers: Customer[] = [];
     const orders: Order[] = [];
+    const branchNames = mockBranches.map(b => b.name);
 
     // Generate Customers
     for (let i = 0; i < customerCount; i++) {
@@ -187,7 +280,7 @@ const generateRelatedMockData = (customerCount: number, orderCount: number, prod
         
         const order: Order = {
             orderId: `#${3210 + i}`,
-            branch: branches[i % branches.length],
+            branch: branchNames[i % branchNames.length],
             table: `T${(i % 24) + 1}`,
             orderType: i % 2 === 0 ? 'Post-Paid' : 'Prepaid',
             orderStatus,
@@ -244,8 +337,10 @@ class MockDataStore {
     public customers: Customer[];
     public orders: Order[];
     public categories: Column[];
+    public branches: Branch[];
 
     constructor() {
+        this.branches = mockBranches;
         this.products = generateMockProducts(30);
         const { customers, orders } = generateRelatedMockData(45, 124, this.products);
         this.customers = customers;

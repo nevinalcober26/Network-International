@@ -121,7 +121,7 @@ const PaymentStatusBadge = ({ status, splitType }: { status: Order['paymentState
             icon = <Hourglass className="mr-1.5 h-3 w-3" />;
             className = 'bg-yellow-100 text-yellow-700';
             if (splitType === 'byItem') text = 'Partial (by Item)';
-            if (splitType === 'equally') text = 'Partial (Equally)';
+            if (splitType === 'equally' text = 'Partial (Equally)';
             break;
         case 'Unpaid':
             icon = <X className="mr-1.5 h-3 w-3" />;
@@ -438,8 +438,9 @@ export default function OrdersPage() {
                     </SelectTrigger>
                     <SelectContent>
                         <SelectItem value="all">All Branches</SelectItem>
-                        <SelectItem value="Ras Al Khaimah">Sushi Restaurant</SelectItem>
-                        <SelectItem value="Dubai Mall">Dubai Mall</SelectItem>
+                        {mockDataStore.branches.map(branch => (
+                          <SelectItem key={branch.id} value={branch.name}>{branch.name}</SelectItem>
+                        ))}
                     </SelectContent>
                     </Select>
                     

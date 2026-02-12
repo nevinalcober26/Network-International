@@ -13,7 +13,7 @@ export type Product = {
   name: string;
   category: string;
   properties?: string;
-  branch: 'Ras Al Khaimah' | 'Dubai Mall';
+  branch: string;
   price: number;
   stock: number;
   status: 'Active' | 'Draft' | 'Archived' | 'Out of Stock';
