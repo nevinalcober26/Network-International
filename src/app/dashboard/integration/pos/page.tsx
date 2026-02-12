@@ -674,7 +674,7 @@ export default function PosIntegrationPage() {
                       onClick={() => setIsVerificationModalOpen(true)}
                     >
                       <Database className="h-4 w-4" />
-                      Manage Menu
+                      Manage Sync Menu
                     </Button>
                   </CardFooter>
                 </Card>
@@ -884,7 +884,7 @@ export default function PosIntegrationPage() {
                 <Database className="h-6 w-6 text-primary" />
               </div>
               <div className="space-y-0.5">
-                <h2 className="text-2xl font-bold tracking-tight text-foreground">Manage Menu</h2>
+                <h2 className="text-2xl font-bold tracking-tight text-foreground">Manage Sync Menu</h2>
                 <div className="flex items-center gap-2 text-muted-foreground font-medium text-xs">
                   <Badge variant="outline" className="text-[10px] font-bold uppercase tracking-widest py-0.5">Machine Active</Badge>
                   <span>{SUPPORTED_POS.find(p => p.id === selectedProvider)?.name || 'Machine Connection'}</span>
