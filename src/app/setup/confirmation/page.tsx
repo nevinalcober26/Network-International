@@ -74,7 +74,7 @@ export default function ActivationConfirmationPage() {
         <div className="relative z-10 w-full max-w-[800px] space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
           
           {/* Success Banner */}
-          <div className="animated-gradient-border relative rounded-[24px] bg-white p-8 shadow-xl flex items-start gap-6 border border-[#18B4A6]/20">
+          <div className="animated-gradient-border relative rounded-[24px] bg-white p-8 shadow-confirmation flex items-start gap-6 border border-[#18B4A6]/20">
             <div className="h-14 w-14 rounded-full bg-[#18B4A6] flex items-center justify-center shrink-0 shadow-lg shadow-[#18B4A6]/20">
               <Check className="h-8 w-8 text-white" strokeWidth={4} />
             </div>
@@ -93,7 +93,7 @@ export default function ActivationConfirmationPage() {
           </div>
 
           {/* License Details */}
-          <Card className="border-0 shadow-xl rounded-[32px] overflow-hidden bg-white/90 backdrop-blur-xl">
+          <Card className="border-0 shadow-confirmation rounded-[32px] overflow-hidden bg-white/90 backdrop-blur-xl">
             <div className="p-8 border-b border-gray-100 bg-gray-50/50">
               <h2 className="text-xl font-black text-[#142424]">License Details</h2>
               <p className="text-[13px] font-medium text-gray-400 mt-1">Review your subscription details below</p>
@@ -177,7 +177,7 @@ export default function ActivationConfirmationPage() {
                 { title: 'Invite Staff Users', icon: Users, step: 'Step 2', desc: 'Add team members and assign roles with specific permissions.' },
                 { title: 'Configure Floor Plans', icon: LayoutGrid, step: 'Step 3', desc: 'Create floors and add tables to manage your restaurant layout.' },
               ].map((item, i) => (
-                <Card key={i} className="border-0 shadow-md rounded-[24px] bg-white group hover:scale-[1.05] transition-all duration-300">
+                <Card key={i} className="border-0 shadow-confirmation rounded-[24px] bg-white group hover:scale-[1.05] transition-all duration-300">
                   <CardContent className="p-6 space-y-4">
                     <div className="h-10 w-10 rounded-xl bg-[#18B4A6]/10 flex items-center justify-center">
                       <item.icon className="h-5 w-5 text-[#18B4A6]" />
@@ -198,7 +198,7 @@ export default function ActivationConfirmationPage() {
             <Button 
               onClick={handleGoToDashboard}
               disabled={isLoading}
-              className="h-14 px-12 bg-[#18B4A6] hover:bg-[#149d94] text-white font-black text-[16px] rounded-2xl shadow-2xl shadow-[#18B4A6]/30 transition-all active:scale-[0.98] group"
+              className="h-14 px-12 bg-[#18B4A6] hover:bg-[#149d94] text-white font-black text-[16px] rounded-2xl shadow-confirmation transition-all active:scale-[0.98] group"
             >
               {isLoading ? (
                 <>
@@ -224,7 +224,7 @@ export default function ActivationConfirmationPage() {
           <div className="pt-16 space-y-8">
             <h3 className="text-[20px] font-black text-center text-[#142424]">Resources to Help You Get Started</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              <Card className="border-0 shadow-lg rounded-[24px] bg-white overflow-hidden group">
+              <Card className="border-0 shadow-confirmation rounded-[24px] bg-white overflow-hidden group">
                 <CardContent className="p-8 flex items-start gap-6">
                   <div className="h-12 w-12 rounded-2xl bg-blue-50 flex items-center justify-center shrink-0">
                     <BookOpen className="h-6 w-6 text-blue-500" />
@@ -241,7 +241,7 @@ export default function ActivationConfirmationPage() {
                 </CardContent>
               </Card>
 
-              <Card className="border-0 shadow-lg rounded-[24px] bg-white overflow-hidden group">
+              <Card className="border-0 shadow-confirmation rounded-[24px] bg-white overflow-hidden group">
                 <CardContent className="p-8 flex items-start gap-6">
                   <div className="h-12 w-12 rounded-2xl bg-orange-50 flex items-center justify-center shrink-0">
                     <PlayCircle className="h-6 w-6 text-orange-500" />

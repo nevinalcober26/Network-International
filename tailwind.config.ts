@@ -62,6 +62,7 @@ export default {
     extend: {
       boxShadow: {
         'smooth': '0px 4px 1px rgba(185, 190, 203, 0.08), 1px 15px 4px rgba(185, 190, 203, 0.08), 2px 34px 9px rgba(185, 190, 203, 0.08), 3px 60px 15px rgba(185, 190, 203, 0.08), 5px 94px 24px rgba(185, 190, 203, 0.08)',
+        'confirmation': '0px 3px 4px rgba(198, 202, 215, 0.02), 0px 14px 17px rgba(198, 202, 215, 0.03), 0px 31px 39px rgba(198, 202, 215, 0.05), 0px 56px 70px rgba(198, 202, 215, 0.06), 0px 87px 109px rgba(198, 202, 215, 0.08)',
       },
       fontFamily: {
         body: ['PT Sans', 'sans-serif'],
