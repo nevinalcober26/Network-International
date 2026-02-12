@@ -777,7 +777,7 @@ export default function PosIntegrationPage() {
             <ScrollArea className="flex-1">
               <Table>
                 <TableHeader className="sticky top-0 z-40 bg-white shadow-sm border-b">
-                  <TableRow className="hover:bg-transparent border-0">
+                  <TableRow className="hover:bg-transparent border-0 h-12">
                     <TableHead className="w-12 px-6">
                       <Checkbox 
                         checked={selectedItemIds.size === filteredItems.length && filteredItems.length > 0}
@@ -790,94 +790,93 @@ export default function PosIntegrationPage() {
                     <TableHead className="text-[10px] font-bold uppercase tracking-[0.15em] text-muted-foreground text-right py-4 pr-10">Status</TableHead>
                   </TableRow>
                 </TableHeader>
-                <TableBody>
-                  {Object.entries(itemsByCategory).map(([category, subCats]) => (
-                    <React.Fragment key={category}>
-                      {/* CATEGORY LEVEL HEADER - LIGHT & MODERN */}
-                      <TableRow className="bg-primary/5 hover:bg-primary/[0.08] border-y sticky top-[48px] z-30 transition-colors">
-                        <TableCell colSpan={5} className="py-4 px-6">
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-4">
-                              <div className="h-9 w-9 rounded-xl bg-white border border-primary/20 flex items-center justify-center shadow-sm">
-                                <ChevronDown className="h-4 w-4 text-primary" />
-                              </div>
-                              <div className="flex flex-col">
-                                <span className="text-[9px] font-bold uppercase tracking-[0.2em] text-primary/70 leading-none mb-1">Section</span>
-                                <span className="text-base font-bold text-foreground leading-none">{category}</span>
-                              </div>
+                
+                {Object.entries(itemsByCategory).map(([category, subCats]) => (
+                  <TableBody key={category} className="border-t-0">
+                    {/* CATEGORY LEVEL HEADER - OPAQUE & STICKY WITHIN TBODY */}
+                    <TableRow className="bg-[#f4fbf9] hover:bg-[#ebf7f5] border-y sticky top-[48px] z-30 transition-colors">
+                      <TableCell colSpan={5} className="py-4 px-6">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-4">
+                            <div className="h-9 w-9 rounded-xl bg-white border border-primary/20 flex items-center justify-center shadow-sm">
+                              <ChevronDown className="h-4 w-4 text-primary" />
                             </div>
-                            <Badge variant="outline" className="font-bold text-[9px] px-3 bg-white/50 border-primary/10">
-                              {Object.values(subCats).flat().length} PRODUCTS
-                            </Badge>
+                            <div className="flex flex-col">
+                              <span className="text-[9px] font-bold uppercase tracking-[0.2em] text-primary/70 leading-none mb-1">Section</span>
+                              <span className="text-base font-bold text-foreground leading-none">{category}</span>
+                            </div>
                           </div>
-                        </TableCell>
-                      </TableRow>
+                          <Badge variant="outline" className="font-bold text-[9px] px-3 bg-white/50 border-primary/10">
+                            {Object.values(subCats).flat().length} PRODUCTS
+                          </Badge>
+                        </div>
+                      </TableCell>
+                    </TableRow>
 
-                      {Object.entries(subCats).map(([subCat, subItems]) => (
-                        <React.Fragment key={subCat}>
-                          {/* SUBCATEGORY LEVEL HEADER */}
-                          <TableRow className="bg-muted/10 hover:bg-muted/20 border-b border-muted/30">
-                            <TableCell colSpan={5} className="py-3 pl-16 pr-6">
-                              <div className="flex items-center gap-3">
-                                <div className="h-4 w-[2px] bg-primary/40 rounded-full" />
-                                <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-[0.15em]">{subCat}</span>
+                    {Object.entries(subCats).map(([subCat, subItems]) => (
+                      <React.Fragment key={subCat}>
+                        {/* SUBCATEGORY LEVEL HEADER */}
+                        <TableRow className="bg-muted/10 hover:bg-muted/20 border-b border-muted/30">
+                          <TableCell colSpan={5} className="py-3 pl-16 pr-6">
+                            <div className="flex items-center gap-3">
+                              <div className="h-4 w-[2px] bg-primary/40 rounded-full" />
+                              <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-[0.15em]">{subCat}</span>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+
+                        {/* ITEM ROWS */}
+                        {subItems.map((item) => (
+                          <TableRow key={item.id} className={cn(
+                            "group transition-colors border-b last:border-0",
+                            selectedItemIds.has(item.id) ? "bg-primary/[0.02] hover:bg-primary/[0.04]" : "hover:bg-muted/5",
+                            !item.enabled && "opacity-60 grayscale-[0.5]"
+                          )}>
+                            <TableCell className="px-6">
+                              <Checkbox 
+                                checked={selectedItemIds.has(item.id)}
+                                onCheckedChange={() => toggleItemSelection(item.id)}
+                              />
+                            </TableCell>
+                            <TableCell className="pl-16">
+                              <div className="flex flex-col py-2">
+                                <span className="font-bold text-sm text-foreground group-hover:text-primary transition-colors">{item.name}</span>
+                                <span className="text-[10px] text-muted-foreground font-medium uppercase tracking-tight flex items-center gap-1.5 mt-0.5">
+                                  <CheckCircle2 className="h-3 w-3 text-green-500/60" /> Direct from your machine
+                                </span>
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              <code className="bg-muted px-2 py-1 rounded text-[10px] font-bold text-muted-foreground border shadow-inner">
+                                {item.posId}
+                              </code>
+                            </TableCell>
+                            <TableCell className="text-right font-bold font-mono text-sm text-foreground">
+                              {item.price}
+                            </TableCell>
+                            <TableCell className="text-right pr-10">
+                              <div className="flex justify-end items-center gap-4">
+                                <span className={cn(
+                                  "text-[9px] font-bold uppercase tracking-widest",
+                                  item.enabled ? "text-primary" : "text-muted-foreground"
+                                )}>
+                                  {item.enabled ? 'Visible' : 'Hidden'}
+                                </span>
+                                <Switch 
+                                  checked={item.enabled} 
+                                  onCheckedChange={(checked) => {
+                                    const newItems = items.map(i => i.id === item.id ? { ...i, enabled: checked } : i);
+                                    setItems(newItems);
+                                  }} 
+                                />
                               </div>
                             </TableCell>
                           </TableRow>
-
-                          {/* ITEM ROWS */}
-                          {subItems.map((item) => (
-                            <TableRow key={item.id} className={cn(
-                              "group transition-colors border-b last:border-0",
-                              selectedItemIds.has(item.id) ? "bg-primary/[0.02] hover:bg-primary/[0.04]" : "hover:bg-muted/5",
-                              !item.enabled && "opacity-60 grayscale-[0.5]"
-                            )}>
-                              <TableCell className="px-6">
-                                <Checkbox 
-                                  checked={selectedItemIds.has(item.id)}
-                                  onCheckedChange={() => toggleItemSelection(item.id)}
-                                />
-                              </TableCell>
-                              <TableCell className="pl-16">
-                                <div className="flex flex-col py-2">
-                                  <span className="font-bold text-sm text-foreground group-hover:text-primary transition-colors">{item.name}</span>
-                                  <span className="text-[10px] text-muted-foreground font-medium uppercase tracking-tight flex items-center gap-1.5 mt-0.5">
-                                    <CheckCircle2 className="h-3 w-3 text-green-500/60" /> Direct from your machine
-                                  </span>
-                                </div>
-                              </TableCell>
-                              <TableCell>
-                                <code className="bg-muted px-2 py-1 rounded text-[10px] font-bold text-muted-foreground border shadow-inner">
-                                  {item.posId}
-                                </code>
-                              </TableCell>
-                              <TableCell className="text-right font-bold font-mono text-sm text-foreground">
-                                {item.price}
-                              </TableCell>
-                              <TableCell className="text-right pr-10">
-                                <div className="flex justify-end items-center gap-4">
-                                  <span className={cn(
-                                    "text-[9px] font-bold uppercase tracking-widest",
-                                    item.enabled ? "text-primary" : "text-muted-foreground"
-                                  )}>
-                                    {item.enabled ? 'Visible' : 'Hidden'}
-                                  </span>
-                                  <Switch 
-                                    checked={item.enabled} 
-                                    onCheckedChange={(checked) => {
-                                      const newItems = items.map(i => i.id === item.id ? { ...i, enabled: checked } : i);
-                                      setItems(newItems);
-                                    }} 
-                                  />
-                                </div>
-                              </TableCell>
-                            </TableRow>
-                          ))}
-                        </React.Fragment>
-                      ))}
-                    </React.Fragment>
-                  ))}
-                </TableBody>
+                        ))}
+                      </React.Fragment>
+                    ))}
+                  </TableBody>
+                ))}
               </Table>
               {filteredItems.length === 0 && (
                 <div className="py-32 text-center">
