@@ -310,11 +310,6 @@ export default function PaymentGatewayPage() {
                           </p>
                         </div>
                       </div>
-                      
-                      <div className="flex items-center justify-between text-xs text-muted-foreground border-t pt-6 px-1">
-                        <span className="font-semibold uppercase tracking-wider">Merchant Identifier</span>
-                        <span className="font-mono font-bold text-foreground bg-muted px-2 py-0.5 rounded">{conn.merchantId}</span>
-                      </div>
                     </CardContent>
                     <CardFooter className="bg-muted/20 border-t p-4 flex items-center justify-between gap-4">
                       <div className="flex items-center gap-1">
