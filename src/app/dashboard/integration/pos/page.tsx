@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
@@ -18,14 +17,7 @@ import {
   Trash2, 
   CheckCircle2, 
   AlertCircle, 
-  Info,
   Monitor,
-  ArrowRight,
-  Database,
-  Lock,
-  Globe,
-  User,
-  Hash,
   ArrowLeft,
   ChevronRight,
   Loader2,
@@ -34,11 +26,16 @@ import {
   PartyPopper,
   Search,
   CheckSquare,
-  Square,
-  Filter,
-  MoreVertical,
   XCircle,
-  Zap
+  Globe,
+  Lock,
+  User,
+  Hash,
+  ArrowRight,
+  Database,
+  ListFilter,
+  Layers,
+  ChevronDown
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -57,7 +54,6 @@ import {
   DialogHeader,
   DialogTitle,
   DialogDescription,
-  DialogFooter,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -102,7 +98,6 @@ const SUPPORTED_POS = [
   { id: 'clover', name: 'Clover', description: 'Integrated merchant services' },
 ];
 
-// Generate 500 mock items across categories for the high-volume demo
 const generateMockItems = () => {
   const categories = ['Main Courses', 'Appetizers', 'Beverages', 'Sides', 'Desserts', 'Breakfast'];
   const subCategories: Record<string, string[]> = {
@@ -119,7 +114,7 @@ const generateMockItems = () => {
 
   for (const cat of categories) {
     for (const sub of subCategories[cat]) {
-      const numItems = Math.floor(Math.random() * 15) + 10; // 10-25 items per subcat
+      const numItems = Math.floor(Math.random() * 15) + 10;
       for (let i = 0; i < numItems; i++) {
         items.push({
           id: `item-${id}`,
@@ -151,7 +146,7 @@ export default function PosIntegrationPage() {
   const [isSyncing, setIsSyncing] = useState(false);
   const [syncProgress, setSyncProgress] = useState(0);
   const [isSyncComplete, setIsSyncComplete] = useState(false);
-  const [showVerification, setShowVerification] = useState(false);
+  const [isVerificationModalOpen, setIsVerificationModalOpen] = useState(false);
   const [showSuccessDialog, setShowSuccessDialog] = useState(false);
   
   // Verification List States
@@ -178,19 +173,6 @@ export default function PosIntegrationPage() {
     });
     return groups;
   }, [filteredItems]);
-
-  useEffect(() => {
-    if (!isConnectDrawerOpen) {
-      setCurrentStep(1);
-      setSelectedProvider(null);
-      setLocationValue(null);
-      setRevenueCenterValue(null);
-      setShowVerification(false);
-      setIsSyncComplete(false);
-      setSyncProgress(0);
-      setSelectedItems(new Set());
-    }
-  }, [isConnectDrawerOpen]);
 
   const toggleItemSelection = (id: string) => {
     const newSelection = new Set(selectedItemIds);
@@ -222,7 +204,7 @@ export default function PosIntegrationPage() {
     setSelectedItems(new Set());
   };
 
-  const [connections, setConnections] = useState<PosConnection[]>([
+  const [connections] = useState<PosConnection[]>([
     { 
       id: '1', 
       brand: 'Oracle Micros Simphony', 
@@ -259,11 +241,12 @@ export default function PosIntegrationPage() {
 
   const handleReviewMenu = () => {
     setIsSyncing(false);
-    setShowVerification(true);
+    setIsConnectDrawerOpen(false);
+    setIsVerificationModalOpen(true);
   };
 
   const handleFinishSync = () => {
-    setIsConnectDrawerOpen(false);
+    setIsVerificationModalOpen(false);
     setShowSuccessDialog(true);
   };
 
@@ -303,21 +286,17 @@ export default function PosIntegrationPage() {
                     Connect New POS
                   </Button>
                 </SheetTrigger>
-                <SheetContent className="sm:max-w-4xl p-0 overflow-hidden flex flex-col border-l shadow-2xl">
-                  <div className="bg-[#142424] p-8 text-white shrink-0 relative">
+                <SheetContent className="sm:max-w-xl p-0 overflow-hidden flex flex-col border-l shadow-2xl">
+                  <div className="bg-[#142424] p-8 text-white shrink-0">
                     <SheetHeader className="text-left space-y-2">
-                      <SheetTitle className="text-2xl font-bold text-white">
-                        {showVerification ? "POS Menu Verification" : "Add POS Connection"}
-                      </SheetTitle>
+                      <SheetTitle className="text-2xl font-bold text-white">Add POS Connection</SheetTitle>
                       <SheetDescription className="text-white/60 font-medium">
-                        {showVerification 
-                          ? `Reviewing ${items.length} items imported from Oracle Simphony. Grouped by category.` 
-                          : currentStep === 1 
-                            ? "Select a provider and enter your technical handshake credentials." 
-                            : "Map your technical connection to your venue locations and centers."}
+                        {currentStep === 1 
+                          ? "Select a provider and enter your technical handshake credentials." 
+                          : "Map your technical connection to your venue locations and centers."}
                       </SheetDescription>
                     </SheetHeader>
-                    {!showVerification && selectedProvider === 'oracle-simphony' && (
+                    {selectedProvider === 'oracle-simphony' && (
                       <div className="mt-6 flex items-center gap-2">
                         <div className={cn("h-1 flex-1 rounded-full transition-colors", currentStep >= 1 ? "bg-primary" : "bg-white/10")} />
                         <div className={cn("h-1 flex-1 rounded-full transition-colors", currentStep >= 2 ? "bg-primary" : "bg-white/10")} />
@@ -325,306 +304,148 @@ export default function PosIntegrationPage() {
                     )}
                   </div>
                   
-                  {showVerification ? (
-                    <div className="flex-1 flex flex-col overflow-hidden bg-background">
-                      {/* Search and Bulk Action Bar */}
-                      <div className="p-4 border-b space-y-4 bg-muted/10">
-                        <div className="flex items-center justify-between gap-4">
-                          <div className="relative flex-1">
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                            <Input 
-                              placeholder="Search item name, category or POS ID..." 
-                              className="pl-10 h-11 bg-background border-muted-foreground/20"
-                              value={searchQuery}
-                              onChange={(e) => setSearchQuery(e.target.value)}
-                            />
-                          </div>
-                          <Button variant="outline" className="gap-2 font-semibold border-muted-foreground/20">
-                            <Edit3 className="h-4 w-4" />
-                            Enable Editing
-                          </Button>
-                        </div>
-
-                        {selectedItemIds.size > 0 && (
-                          <div className="flex items-center justify-between p-3 rounded-xl bg-primary/5 border border-primary/20 animate-in slide-in-from-top-2">
-                            <div className="flex items-center gap-3">
-                              <Badge className="bg-primary text-primary-foreground font-black px-2 py-0.5 rounded-md">
-                                {selectedItemIds.size}
-                              </Badge>
-                              <span className="text-sm font-bold text-primary">Items Selected</span>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <Button size="sm" variant="outline" className="gap-2 font-bold text-xs uppercase" onClick={() => handleBulkAction('enable')}>
-                                <CheckSquare className="h-3.5 w-3.5" />
-                                Activate
-                              </Button>
-                              <Button size="sm" variant="outline" className="gap-2 font-bold text-xs uppercase text-destructive" onClick={() => handleBulkAction('disable')}>
-                                <XCircle className="h-3.5 w-3.5" />
-                                Deactivate
-                              </Button>
-                            </div>
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Hierarchical Table */}
-                      <ScrollArea className="flex-1">
-                        <Table className="relative">
-                          <TableHeader className="sticky top-0 z-20 bg-background shadow-sm">
-                            <TableRow>
-                              <TableHead className="w-12">
-                                <Checkbox 
-                                  checked={selectedItemIds.size === filteredItems.length && filteredItems.length > 0}
-                                  onCheckedChange={toggleAllVisible}
-                                />
-                              </TableHead>
-                              <TableHead className="text-[10px] font-black uppercase tracking-widest">Imported Item Name</TableHead>
-                              <TableHead className="text-[10px] font-black uppercase tracking-widest">POS Source ID</TableHead>
-                              <TableHead className="text-[10px] font-black uppercase tracking-widest text-right">Base Price</TableHead>
-                              <TableHead className="text-[10px] font-black uppercase tracking-widest text-right">Import Status</TableHead>
-                            </TableRow>
-                          </TableHeader>
-                          <TableBody>
-                            {Object.entries(itemsByCategory).map(([category, subCats]) => (
-                              <React.Fragment key={category}>
-                                {/* Category Header */}
-                                <TableRow className="bg-muted/30 hover:bg-muted/30">
-                                  <TableCell colSpan={5} className="py-2 px-4">
-                                    <div className="flex items-center gap-2">
-                                      <div className="h-6 w-1 bg-primary rounded-full" />
-                                      <span className="text-xs font-black uppercase tracking-[0.15em] text-foreground">{category}</span>
-                                      <Badge variant="outline" className="text-[9px] font-bold opacity-60">
-                                        {Object.values(subCats).flat().length} Total
-                                      </Badge>
+                  <ScrollArea className="flex-1">
+                    <div className="p-8 space-y-8">
+                      {currentStep === 1 ? (
+                        <div className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-300">
+                          <div className="space-y-2">
+                            <Label className="text-[10px] font-black uppercase tracking-[0.15em] text-muted-foreground">Select Provider</Label>
+                            <Select value={selectedProvider || ""} onValueChange={setSelectedProvider}>
+                              <SelectTrigger className="h-12 text-base font-bold bg-background">
+                                <SelectValue placeholder="Choose POS brand" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {SUPPORTED_POS.map(pos => (
+                                  <SelectItem key={pos.id} value={pos.id}>
+                                    <div className="flex flex-col py-1">
+                                      <span className="font-bold">{pos.name}</span>
+                                      <span className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">{pos.description}</span>
                                     </div>
-                                  </TableCell>
-                                </TableRow>
-
-                                {Object.entries(subCats).map(([subCat, subItems]) => (
-                                  <React.Fragment key={subCat}>
-                                    {/* Subcategory Subheader */}
-                                    <TableRow className="hover:bg-transparent">
-                                      <TableCell colSpan={5} className="py-1 px-8">
-                                        <div className="flex items-center gap-2 border-b border-muted py-1">
-                                          <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{subCat}</span>
-                                        </div>
-                                      </TableCell>
-                                    </TableRow>
-
-                                    {/* Item Rows */}
-                                    {subItems.map((item) => (
-                                      <TableRow key={item.id} className={cn(
-                                        "group transition-colors",
-                                        selectedItemIds.has(item.id) ? "bg-primary/5 hover:bg-primary/10" : "hover:bg-muted/20",
-                                        !item.enabled && "opacity-50 grayscale"
-                                      )}>
-                                        <TableCell className="px-4">
-                                          <Checkbox 
-                                            checked={selectedItemIds.has(item.id)}
-                                            onCheckedChange={() => toggleItemSelection(item.id)}
-                                          />
-                                        </TableCell>
-                                        <TableCell>
-                                          <div className="flex flex-col">
-                                            <span className="font-bold text-sm text-foreground">{item.name}</span>
-                                            <span className="text-[10px] text-muted-foreground font-medium">{item.category} / {item.subCategory}</span>
-                                          </div>
-                                        </TableCell>
-                                        <TableCell className="font-mono text-[11px] font-bold text-muted-foreground">
-                                          {item.posId}
-                                        </TableCell>
-                                        <TableCell className="text-right font-bold font-mono text-sm">
-                                          {item.price}
-                                        </TableCell>
-                                        <TableCell className="text-right">
-                                          <div className="flex justify-end items-center gap-3">
-                                            <span className="text-[9px] font-black uppercase tracking-wider text-muted-foreground">
-                                              {item.enabled ? 'ACTIVE' : 'LOCKED'}
-                                            </span>
-                                            <Switch 
-                                              checked={item.enabled} 
-                                              onCheckedChange={(checked) => {
-                                                const newItems = items.map(i => i.id === item.id ? { ...i, enabled: checked } : i);
-                                                setItems(newItems);
-                                              }} 
-                                            />
-                                          </div>
-                                        </TableCell>
-                                      </TableRow>
-                                    ))}
-                                  </React.Fragment>
+                                  </SelectItem>
                                 ))}
-                              </React.Fragment>
-                            ))}
-                          </TableBody>
-                        </Table>
-                        {filteredItems.length === 0 && (
-                          <div className="py-20 text-center">
-                            <XCircle className="h-12 w-12 text-muted-foreground/20 mx-auto mb-4" />
-                            <p className="text-sm font-bold text-muted-foreground">No menu items found matching your search.</p>
+                              </SelectContent>
+                            </Select>
                           </div>
-                        )}
-                      </ScrollArea>
+
+                          {selectedProvider === 'oracle-simphony' && (
+                            <div className="space-y-6">
+                              <div className="grid gap-6">
+                                <div className="space-y-2">
+                                  <Label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
+                                    <Globe className="h-3.5 w-3.5" /> OIDC URL
+                                  </Label>
+                                  <Input placeholder="https://act-omra-idm.oracleindustry.com" className="h-11 font-medium bg-background border-muted-foreground/20" />
+                                </div>
+
+                                <div className="space-y-2">
+                                  <Label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
+                                    <Globe className="h-3.5 w-3.5" /> STS URL
+                                  </Label>
+                                  <Input placeholder="https://act-sts.oraclecloud.com" className="h-11 font-medium bg-background border-muted-foreground/20" />
+                                </div>
+
+                                <div className="space-y-2">
+                                  <Label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
+                                    <Lock className="h-3.5 w-3.5" /> Client ID
+                                  </Label>
+                                  <Input placeholder="Enter your Client ID..." className="h-11 font-mono text-sm bg-background border-muted-foreground/20" />
+                                </div>
+
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                  <div className="space-y-2">
+                                    <Label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
+                                      <User className="h-3.5 w-3.5" /> Username
+                                    </Label>
+                                    <Input placeholder="KPTAC" className="h-11 font-medium bg-background border-muted-foreground/20" />
+                                  </div>
+                                  <div className="space-y-2">
+                                    <Label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
+                                      <Lock className="h-3.5 w-3.5" /> Password
+                                    </Label>
+                                    <Input type="password" placeholder="••••••••••••" className="h-11 font-medium bg-background border-muted-foreground/20" />
+                                  </div>
+                                </div>
+
+                                <div className="space-y-2">
+                                  <Label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
+                                    <Hash className="h-3.5 w-3.5" /> Org Short Name
+                                  </Label>
+                                  <Input placeholder="ACT" className="h-11 font-medium bg-background border-muted-foreground/20" />
+                                </div>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      ) : (
+                        <div className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-300">
+                          <div className="rounded-2xl border border-muted-foreground/10 bg-card p-8 shadow-sm space-y-8">
+                            <div className="grid grid-cols-1 gap-8">
+                              <div className="space-y-2">
+                                <Label className="text-sm font-bold">Location</Label>
+                                <Select 
+                                  value={locationValue || ""} 
+                                  onValueChange={(val) => {
+                                    setLocationValue(val);
+                                    setRevenueCenterValue(null);
+                                  }}
+                                >
+                                  <SelectTrigger className="h-11 bg-background">
+                                    <SelectValue placeholder="Select a location" />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="main">Main Outlet</SelectItem>
+                                    <SelectItem value="annex">Annex Lounge</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                              </div>
+
+                              <div className="space-y-2">
+                                <Label className={cn("text-sm font-bold transition-opacity", !locationValue && "opacity-50")}>Revenue Center</Label>
+                                <Select 
+                                  disabled={!locationValue}
+                                  value={revenueCenterValue || ""}
+                                  onValueChange={setRevenueCenterValue}
+                                >
+                                  <SelectTrigger className={cn("h-11 transition-colors", !locationValue ? "bg-muted cursor-not-allowed" : "bg-background")}>
+                                    <SelectValue placeholder={!locationValue ? "Select location first" : "Select Revenue Center"} />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="food">Dine-in Food</SelectItem>
+                                    <SelectItem value="bar">Bar Revenue</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                              </div>
+
+                              <div className="space-y-2">
+                                <Label className={cn("text-sm font-bold transition-opacity", !revenueCenterValue && "opacity-50")}>Tender</Label>
+                                <Select disabled={!revenueCenterValue}>
+                                  <SelectTrigger className={cn("h-11 transition-colors", !revenueCenterValue ? "bg-muted cursor-not-allowed" : "bg-background")}>
+                                    <SelectValue placeholder={!revenueCenterValue ? "Select center first" : "Select Tender"} />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="visa">Visa/Mastercard</SelectItem>
+                                    <SelectItem value="cash">Cash Tender</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                              </div>
+
+                              <div className="space-y-2">
+                                <Label className={cn("text-sm font-bold transition-opacity", !revenueCenterValue && "opacity-50")}>Employee ID</Label>
+                                <Input 
+                                  disabled={!revenueCenterValue}
+                                  placeholder="Enter Employee's ID" 
+                                  className={cn("h-11 transition-colors", !revenueCenterValue ? "bg-muted cursor-not-allowed" : "bg-background")} 
+                                />
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      )}
                     </div>
-                  ) : (
-                    <ScrollArea className="flex-1">
-                      <div className="p-8 space-y-8">
-                        {currentStep === 1 ? (
-                          <div className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-300">
-                            <div className="space-y-2">
-                              <Label className="text-[10px] font-black uppercase tracking-[0.15em] text-muted-foreground">Select Provider</Label>
-                              <Select value={selectedProvider || ""} onValueChange={setSelectedProvider}>
-                                <SelectTrigger className="h-12 text-base font-bold bg-background">
-                                  <SelectValue placeholder="Choose POS brand" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  {SUPPORTED_POS.map(pos => (
-                                    <SelectItem key={pos.id} value={pos.id}>
-                                      <div className="flex flex-col py-1">
-                                        <span className="font-bold">{pos.name}</span>
-                                        <span className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">{pos.description}</span>
-                                      </div>
-                                    </SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
-                            </div>
-
-                            {selectedProvider === 'oracle-simphony' && (
-                              <div className="space-y-6">
-                                <div className="flex items-center gap-2 mb-4">
-                                  <div className="h-px flex-1 bg-border" />
-                                  <span className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground px-2 whitespace-nowrap">Enterprise Credentials</span>
-                                  <div className="h-px flex-1 bg-border" />
-                                </div>
-                                
-                                <div className="grid gap-6">
-                                  <div className="space-y-2">
-                                    <Label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
-                                      <Globe className="h-3.5 w-3.5" /> OIDC URL
-                                    </Label>
-                                    <Input placeholder="https://act-omra-idm.oracleindustry.com" className="h-11 font-medium bg-background border-muted-foreground/20" />
-                                  </div>
-
-                                  <div className="space-y-2">
-                                    <Label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
-                                      <Globe className="h-3.5 w-3.5" /> STS URL
-                                    </Label>
-                                    <Input placeholder="https://act-sts.oraclecloud.com" className="h-11 font-medium bg-background border-muted-foreground/20" />
-                                  </div>
-
-                                  <div className="space-y-2">
-                                    <Label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
-                                      <Lock className="h-3.5 w-3.5" /> Client ID
-                                    </Label>
-                                    <Input placeholder="Enter your Client ID..." className="h-11 font-mono text-sm bg-background border-muted-foreground/20" />
-                                  </div>
-
-                                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    <div className="space-y-2">
-                                      <Label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
-                                        <User className="h-3.5 w-3.5" /> Username
-                                      </Label>
-                                      <Input placeholder="KPTAC" className="h-11 font-medium bg-background border-muted-foreground/20" />
-                                    </div>
-                                    <div className="space-y-2">
-                                      <Label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
-                                        <Lock className="h-3.5 w-3.5" /> Password
-                                      </Label>
-                                      <Input type="password" placeholder="••••••••••••" className="h-11 font-medium bg-background border-muted-foreground/20" />
-                                    </div>
-                                  </div>
-
-                                  <div className="space-y-2">
-                                    <Label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
-                                      <Hash className="h-3.5 w-3.5" /> Org Short Name
-                                    </Label>
-                                    <Input placeholder="ACT" className="h-11 font-medium bg-background border-muted-foreground/20" />
-                                  </div>
-                                </div>
-                              </div>
-                            )}
-                          </div>
-                        ) : (
-                          <div className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-300">
-                            <div className="rounded-2xl border border-muted-foreground/10 bg-card p-8 shadow-sm space-y-8">
-                              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                                <div className="space-y-2">
-                                  <Label className="text-sm font-bold">Location</Label>
-                                  <Select 
-                                    value={locationValue || ""} 
-                                    onValueChange={(val) => {
-                                      setLocationValue(val);
-                                      setRevenueCenterValue(null);
-                                    }}
-                                  >
-                                    <SelectTrigger className="h-11 bg-background">
-                                      <SelectValue placeholder="Select a location" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                      <SelectItem value="main">Main Outlet</SelectItem>
-                                      <SelectItem value="annex">Annex Lounge</SelectItem>
-                                    </SelectContent>
-                                  </Select>
-                                </div>
-
-                                <div className="space-y-2">
-                                  <Label className={cn("text-sm font-bold transition-opacity", !locationValue && "opacity-50")}>Revenue Center</Label>
-                                  <Select 
-                                    disabled={!locationValue}
-                                    value={revenueCenterValue || ""}
-                                    onValueChange={setRevenueCenterValue}
-                                  >
-                                    <SelectTrigger className={cn("h-11 transition-colors", !locationValue ? "bg-muted cursor-not-allowed" : "bg-background")}>
-                                      <SelectValue placeholder={!locationValue ? "Select location first" : "Select Revenue Center"} />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                      <SelectItem value="food">Dine-in Food</SelectItem>
-                                      <SelectItem value="bar">Bar Revenue</SelectItem>
-                                    </SelectContent>
-                                  </Select>
-                                </div>
-                              </div>
-
-                              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                                <div className="space-y-2">
-                                  <Label className={cn("text-sm font-bold transition-opacity", !revenueCenterValue && "opacity-50")}>Tender</Label>
-                                  <Select disabled={!revenueCenterValue}>
-                                    <SelectTrigger className={cn("h-11 transition-colors", !revenueCenterValue ? "bg-muted cursor-not-allowed" : "bg-background")}>
-                                      <SelectValue placeholder={!revenueCenterValue ? "Select center first" : "Select Tender"} />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                      <SelectItem value="visa">Visa/Mastercard</SelectItem>
-                                      <SelectItem value="cash">Cash Tender</SelectItem>
-                                    </SelectContent>
-                                  </Select>
-                                </div>
-
-                                <div className="space-y-2">
-                                  <Label className={cn("text-sm font-bold transition-opacity", !revenueCenterValue && "opacity-50")}>Employee ID</Label>
-                                  <Input 
-                                    disabled={!revenueCenterValue}
-                                    placeholder="Enter Employee's ID" 
-                                    className={cn("h-11 transition-colors", !revenueCenterValue ? "bg-muted cursor-not-allowed" : "bg-background")} 
-                                  />
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    </ScrollArea>
-                  )}
+                  </ScrollArea>
 
                   <SheetFooter className="p-6 bg-muted/30 border-t shrink-0 flex flex-row items-center justify-between gap-4">
-                    {showVerification ? (
-                      <>
-                        <Button variant="ghost" className="font-bold px-8 h-11" onClick={() => setShowVerification(false)}>Back</Button>
-                        <Button className="font-bold bg-primary text-primary-foreground px-12 h-11 shadow-lg gap-2" onClick={handleFinishSync}>
-                          Finish & Save
-                        </Button>
-                      </>
-                    ) : currentStep === 1 ? (
+                    {currentStep === 1 ? (
                       <>
                         <Button variant="ghost" className="font-bold px-8 h-11" onClick={() => setIsConnectDrawerOpen(false)}>Cancel</Button>
                         <Button 
@@ -707,7 +528,7 @@ export default function PosIntegrationPage() {
                     <Button variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground hover:text-foreground rounded-lg">
                       <Settings className="h-4 w-4" />
                     </Button>
-                    <Button variant="ghost" size="icon" className="h-9 w-9 text-destructive hover:bg-destructive/10 rounded-lg" onClick={() => toast({ title: "Removed" })}>
+                    <Button variant="ghost" size="icon" className="h-9 w-9 text-destructive hover:bg-destructive/10 rounded-lg">
                       <Trash2 className="h-4 w-4" />
                     </Button>
                   </div>
@@ -785,6 +606,202 @@ export default function PosIntegrationPage() {
                 <ChevronRight className="ml-2 h-4 w-4" />
               </Button>
             )}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* BIG Center Verification Modal */}
+      <Dialog open={isVerificationModalOpen} onOpenChange={setIsVerificationModalOpen}>
+        <DialogContent className="max-w-7xl w-[95vw] h-[90vh] p-0 overflow-hidden flex flex-col border-0 shadow-2xl rounded-2xl bg-background">
+          {/* Custom Modern Header */}
+          <div className="bg-[#142424] p-6 text-white shrink-0 flex items-center justify-between">
+            <div className="space-y-1">
+              <div className="flex items-center gap-2">
+                <Database className="h-5 w-5 text-primary" />
+                <h2 className="text-xl font-bold tracking-tight">Oracle Simphony Menu Verification</h2>
+              </div>
+              <p className="text-white/60 text-xs font-medium">Reviewing {items.length} items grouped by Category and Subcategory.</p>
+            </div>
+            <div className="flex items-center gap-4 bg-white/5 rounded-xl px-4 py-2 border border-white/10">
+              <div className="flex flex-col">
+                <span className="text-[9px] font-black uppercase tracking-widest text-primary">Live Connection</span>
+                <span className="text-xs font-bold">Main Outlet / Bar Hub</span>
+              </div>
+              <div className="h-8 w-px bg-white/10" />
+              <Button variant="ghost" size="sm" className="h-8 text-xs text-white/80 hover:text-white hover:bg-white/10 gap-2">
+                <RefreshCw className="h-3.5 w-3.5" /> Re-sync
+              </Button>
+            </div>
+          </div>
+
+          {/* Search & Bulk Actions */}
+          <div className="p-4 border-b bg-muted/10 flex flex-col sm:flex-row items-center gap-4 justify-between">
+            <div className="relative w-full sm:max-w-md">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input 
+                placeholder="Find item, ID or category..." 
+                className="pl-10 h-11 bg-background border-border shadow-sm"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+            </div>
+
+            {selectedItemIds.size > 0 ? (
+              <div className="flex items-center gap-3 bg-primary/10 border border-primary/20 px-4 py-1.5 rounded-full animate-in zoom-in duration-300">
+                <span className="text-xs font-black text-primary uppercase tracking-widest">{selectedItemIds.size} Items Selected</span>
+                <div className="flex items-center gap-1 border-l border-primary/20 pl-3">
+                  <Button size="sm" variant="ghost" className="h-8 text-xs font-bold text-primary hover:bg-primary/10 uppercase" onClick={() => handleBulkAction('enable')}>
+                    Activate
+                  </Button>
+                  <Button size="sm" variant="ghost" className="h-8 text-xs font-bold text-destructive hover:bg-destructive/10 uppercase" onClick={() => handleBulkAction('disable')}>
+                    Lock
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <div className="flex items-center gap-2">
+                <Button variant="outline" className="h-10 gap-2 text-xs font-bold uppercase tracking-widest border-border shadow-sm">
+                  <ListFilter className="h-4 w-4" /> Filter Status
+                </Button>
+                <Button variant="outline" className="h-10 gap-2 text-xs font-bold uppercase tracking-widest border-border shadow-sm">
+                  <Layers className="h-4 w-4" /> Hierarchy
+                </Button>
+              </div>
+            )}
+          </div>
+
+          {/* The Large Table */}
+          <div className="flex-1 overflow-hidden flex flex-col">
+            <ScrollArea className="flex-1">
+              <Table>
+                <TableHeader className="sticky top-0 z-30 bg-background/95 backdrop-blur-sm shadow-sm">
+                  <TableRow className="border-b-2">
+                    <TableHead className="w-12 px-6">
+                      <Checkbox 
+                        checked={selectedItemIds.size === filteredItems.length && filteredItems.length > 0}
+                        onCheckedChange={toggleAllVisible}
+                      />
+                    </TableHead>
+                    <TableHead className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Product Details</TableHead>
+                    <TableHead className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">POS Source Identifier</TableHead>
+                    <TableHead className="text-[10px] font-black uppercase tracking-widest text-muted-foreground text-right">Base Price</TableHead>
+                    <TableHead className="text-[10px] font-black uppercase tracking-widest text-muted-foreground text-right">Sync Integrity</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {Object.entries(itemsByCategory).map(([category, subCats]) => (
+                    <React.Fragment key={category}>
+                      {/* CATEGORY LEVEL HEADER */}
+                      <TableRow className="bg-[#142424]/5 hover:bg-[#142424]/5 border-y border-border/50 sticky top-12 z-20">
+                        <TableCell colSpan={5} className="py-3 px-6">
+                          <div className="flex items-center gap-3">
+                            <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                              <ChevronDown className="h-4 w-4 text-primary" />
+                            </div>
+                            <span className="text-sm font-black uppercase tracking-[0.2em] text-foreground">{category}</span>
+                            <Badge variant="outline" className="text-[9px] font-bold opacity-60 ml-2">
+                              {Object.values(subCats).flat().length} PRODUCTS
+                            </Badge>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+
+                      {Object.entries(subCats).map(([subCat, subItems]) => (
+                        <React.Fragment key={subCat}>
+                          {/* SUBCATEGORY LEVEL HEADER */}
+                          <TableRow className="bg-muted/30 hover:bg-muted/30 border-b border-border/30">
+                            <TableCell colSpan={5} className="py-2 pl-12 pr-6">
+                              <div className="flex items-center gap-2">
+                                <div className="h-1.5 w-1.5 rounded-full bg-primary/40" />
+                                <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">{subCat}</span>
+                              </div>
+                            </TableCell>
+                          </TableRow>
+
+                          {/* ITEM ROWS */}
+                          {subItems.map((item) => (
+                            <TableRow key={item.id} className={cn(
+                              "group transition-colors border-b last:border-0",
+                              selectedItemIds.has(item.id) ? "bg-primary/5 hover:bg-primary/10" : "hover:bg-muted/20",
+                              !item.enabled && "opacity-50"
+                            )}>
+                              <TableCell className="px-6">
+                                <Checkbox 
+                                  checked={selectedItemIds.has(item.id)}
+                                  onCheckedChange={() => toggleItemSelection(item.id)}
+                                />
+                              </TableCell>
+                              <TableCell>
+                                <div className="flex flex-col py-1">
+                                  <span className="font-bold text-sm text-foreground">{item.name}</span>
+                                  <span className="text-[10px] text-muted-foreground font-medium uppercase tracking-tighter">Verified from Simphony DB</span>
+                                </div>
+                              </TableCell>
+                              <TableCell>
+                                <code className="bg-muted px-2 py-1 rounded text-[11px] font-bold text-foreground/70">
+                                  {item.posId}
+                                </code>
+                              </TableCell>
+                              <TableCell className="text-right font-bold font-mono text-sm">
+                                {item.price}
+                              </TableCell>
+                              <TableCell className="text-right">
+                                <div className="flex justify-end items-center gap-4">
+                                  <span className={cn(
+                                    "text-[9px] font-black uppercase tracking-widest",
+                                    item.enabled ? "text-primary" : "text-muted-foreground"
+                                  )}>
+                                    {item.enabled ? 'ACTIVE' : 'LOCKED'}
+                                  </span>
+                                  <Switch 
+                                    checked={item.enabled} 
+                                    onCheckedChange={(checked) => {
+                                      const newItems = items.map(i => i.id === item.id ? { ...i, enabled: checked } : i);
+                                      setItems(newItems);
+                                    }} 
+                                  />
+                                </div>
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </React.Fragment>
+                      ))}
+                    </React.Fragment>
+                  ))}
+                </TableBody>
+              </Table>
+              {filteredItems.length === 0 && (
+                <div className="py-32 text-center">
+                  <div className="h-16 w-16 rounded-full bg-muted flex items-center justify-center mx-auto mb-4">
+                    <Search className="h-8 w-8 text-muted-foreground opacity-20" />
+                  </div>
+                  <p className="text-sm font-bold text-muted-foreground">No menu items found matching "{searchQuery}"</p>
+                </div>
+              )}
+            </ScrollArea>
+          </div>
+
+          {/* Verification Footer */}
+          <div className="p-6 bg-muted/20 border-t shrink-0 flex items-center justify-between">
+            <div className="flex items-center gap-6">
+              <div className="flex flex-col">
+                <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Total Items</span>
+                <span className="text-lg font-bold">{items.length}</span>
+              </div>
+              <div className="h-8 w-px bg-border" />
+              <div className="flex flex-col">
+                <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Active Sync</span>
+                <span className="text-lg font-bold text-primary">{items.filter(i => i.enabled).length}</span>
+              </div>
+            </div>
+            
+            <div className="flex items-center gap-3">
+              <Button variant="ghost" className="font-bold px-8 h-12" onClick={() => setIsVerificationModalOpen(false)}>Review Later</Button>
+              <Button className="font-bold bg-primary text-primary-foreground px-12 h-12 shadow-xl gap-2 rounded-xl" onClick={handleFinishSync}>
+                Finish & Harmonize
+                <ArrowRight className="h-4 w-4" />
+              </Button>
+            </div>
           </div>
         </DialogContent>
       </Dialog>
