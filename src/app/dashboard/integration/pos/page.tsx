@@ -37,7 +37,8 @@ import {
   ListFilter,
   Tag,
   Edit,
-  Save
+  Save,
+  Cog
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -100,6 +101,8 @@ interface PosConnection {
   status: PosStatus;
   lastSync: string;
   terminalId: string;
+  location?: string;
+  revenueCenter?: string;
 }
 
 const SUPPORTED_POS = [
@@ -149,6 +152,7 @@ const MOCK_ITEMS = generateMockItems();
 export default function PosIntegrationPage() {
   const { toast } = useToast();
   const [isConnectDrawerOpen, setIsConnectDrawerOpen] = useState(false);
+  const [isSettingsDrawerOpen, setIsSettingsDrawerOpen] = useState(false);
   const [selectedProvider, setSelectedProvider] = useState<string | null>(null);
   const [currentStep, setCurrentStep] = useState(1);
   
@@ -171,6 +175,9 @@ export default function PosIntegrationPage() {
   const [selectedItemIds, setSelectedItems] = useState<Set<string>>(new Set());
   const [items, setItems] = useState(MOCK_ITEMS);
   const [editingItem, setEditingItem] = useState<typeof MOCK_ITEMS[0] | null>(null);
+
+  // Settings Temp State
+  const [tempSettings, setTempSettings] = useState<Partial<PosConnection>>({});
 
   // Unique categories for filtering
   const uniqueCategories = useMemo(() => {
@@ -289,7 +296,9 @@ export default function PosIntegrationPage() {
       label: finalLabel,
       status: 'active',
       lastSync: 'just now',
-      terminalId: `${selectedProvider?.substring(0, 3).toUpperCase() || 'POS'}-${Math.floor(1000 + Math.random() * 9000)}`
+      terminalId: `${selectedProvider?.substring(0, 3).toUpperCase() || 'POS'}-${Math.floor(1000 + Math.random() * 9000)}`,
+      location: locationValue || undefined,
+      revenueCenter: revenueCenterValue || undefined,
     };
 
     setConnections([newConnection]);
@@ -333,6 +342,23 @@ export default function PosIntegrationPage() {
     setSearchQuery('');
     setStatusFilter('all');
     setCategoryFilter('all');
+  };
+
+  const handleOpenSettings = (conn: PosConnection) => {
+    setTempSettings({ ...conn });
+    setIsSettingsDrawerOpen(true);
+  };
+
+  const handleSaveSettings = () => {
+    if (connections.length > 0) {
+      const updated = { ...connections[0], ...tempSettings };
+      setConnections([updated]);
+      setIsSettingsDrawerOpen(false);
+      toast({
+        title: "Configuration Saved",
+        description: "Your terminal settings have been updated successfully."
+      });
+    }
   };
 
   return (
@@ -617,7 +643,12 @@ export default function PosIntegrationPage() {
                   </CardContent>
                   <CardFooter className="bg-muted/20 border-t p-4 flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <Button variant="ghost" size="icon" className="h-10 w-10 text-muted-foreground hover:text-foreground rounded-xl">
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className="h-10 w-10 text-muted-foreground hover:text-foreground rounded-xl"
+                        onClick={() => handleOpenSettings(conn)}
+                      >
                         <Settings className="h-5 w-5" />
                       </Button>
                       <Button 
@@ -648,6 +679,135 @@ export default function PosIntegrationPage() {
           )}
         </div>
       </main>
+
+      {/* Connection Settings Drawer */}
+      <Sheet open={isSettingsDrawerOpen} onOpenChange={setIsSettingsDrawerOpen}>
+        <SheetContent className="sm:max-w-xl p-0 overflow-hidden flex flex-col border-l shadow-2xl bg-white">
+          <div className="bg-muted/30 p-8 border-b shrink-0">
+            <div className="flex items-center gap-4 mb-4">
+              <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center border border-primary/20">
+                <Cog className="h-5 w-5 text-primary" />
+              </div>
+              <SheetHeader className="text-left p-0">
+                <SheetTitle className="text-2xl font-bold text-foreground">Connection Settings</SheetTitle>
+                <SheetDescription className="text-muted-foreground font-medium">Manage operational mappings for your active POS terminal.</SheetDescription>
+              </SheetHeader>
+            </div>
+          </div>
+
+          <ScrollArea className="flex-1">
+            <div className="p-8 space-y-10">
+              <section className="space-y-6">
+                <div className="flex items-center gap-2">
+                  <div className="h-1.5 w-1.5 rounded-full bg-primary" />
+                  <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">Identity & Label</h3>
+                </div>
+                
+                <div className="space-y-2">
+                  <Label className="text-sm font-bold flex items-center gap-2">
+                    <Tag className="h-3.5 w-3.5 text-muted-foreground" /> Terminal Label
+                  </Label>
+                  <Input 
+                    value={tempSettings.label || ""} 
+                    onChange={(e) => setTempSettings(prev => ({ ...prev, label: e.target.value }))}
+                    className="h-11 bg-background font-medium"
+                  />
+                  <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider">How this terminal appears on your integration grid.</p>
+                </div>
+
+                <div className="grid grid-cols-2 gap-6 pt-2">
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">POS Provider</Label>
+                    <div className="h-11 flex items-center px-4 rounded-xl bg-muted/30 border border-dashed font-bold text-xs">
+                      {tempSettings.brand}
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Machine ID</Label>
+                    <div className="h-11 flex items-center px-4 rounded-xl bg-muted/30 border border-dashed font-mono text-xs font-bold">
+                      {tempSettings.terminalId}
+                    </div>
+                  </div>
+                </div>
+              </section>
+
+              <section className="space-y-6 pt-4 border-t border-muted">
+                <div className="flex items-center gap-2">
+                  <div className="h-1.5 w-1.5 rounded-full bg-primary" />
+                  <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">Venue Mapping</h3>
+                </div>
+
+                <div className="grid gap-6">
+                  <div className="space-y-2">
+                    <Label className="text-sm font-bold">Location</Label>
+                    <Select 
+                      value={tempSettings.location || ""} 
+                      onValueChange={(val) => setTempSettings(prev => ({ ...prev, location: val }))}
+                    >
+                      <SelectTrigger className="h-11 bg-background font-medium">
+                        <SelectValue placeholder="Select a location" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="main">Main Outlet</SelectItem>
+                        <SelectItem value="annex">Annex Lounge</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label className="text-sm font-bold">Revenue Center</Label>
+                    <Select 
+                      value={tempSettings.revenueCenter || ""} 
+                      onValueChange={(val) => setTempSettings(prev => ({ ...prev, revenueCenter: val }))}
+                    >
+                      <SelectTrigger className="h-11 bg-background font-medium">
+                        <SelectValue placeholder="Select Revenue Center" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="food">Dine-in Food</SelectItem>
+                        <SelectItem value="bar">Bar Revenue</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                      <Label className="text-sm font-bold">Tender Type</Label>
+                      <Select defaultValue="visa">
+                        <SelectTrigger className="h-11 bg-background font-medium">
+                          <SelectValue placeholder="Select Tender" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="visa">Visa/Mastercard</SelectItem>
+                          <SelectItem value="cash">Cash Tender</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-sm font-bold">Employee ID</Label>
+                      <Input defaultValue="1001" className="h-11 bg-background font-medium" />
+                    </div>
+                  </div>
+                </div>
+              </section>
+
+              <div className="p-4 rounded-2xl bg-orange-50 border border-orange-100 flex items-start gap-3">
+                <AlertCircle className="h-4 w-4 text-orange-600 shrink-0 mt-0.5" />
+                <p className="text-[10px] text-orange-800 font-medium leading-tight">
+                  Note: Changes to Venue Mapping may affect how transactions are recorded in your POS. Consult your terminal administrator before making changes.
+                </p>
+              </div>
+            </div>
+          </ScrollArea>
+
+          <SheetFooter className="p-6 bg-muted/30 border-t shrink-0 flex flex-row items-center justify-end gap-3">
+            <Button variant="ghost" className="font-bold px-8 h-11" onClick={() => setIsSettingsDrawerOpen(false)}>Cancel</Button>
+            <Button className="font-bold bg-primary text-primary-foreground px-10 h-11 shadow-lg" onClick={handleSaveSettings}>
+              Save Changes
+            </Button>
+          </SheetFooter>
+        </SheetContent>
+      </Sheet>
 
       {/* Syncing Progress Dialog */}
       <Dialog open={isSyncing} onOpenChange={(open) => !open && setIsSyncing(false)}>
@@ -886,7 +1046,7 @@ export default function PosIntegrationPage() {
                           )}>
                             <TableCell className="px-6">
                               <Checkbox 
-                                checked={selectedItemIds.has(item.id)}
+                                checked={item.id === selectedProvider ? true : selectedItemIds.has(item.id)}
                                 onCheckedChange={() => toggleItemSelection(item.id)}
                               />
                             </TableCell>
