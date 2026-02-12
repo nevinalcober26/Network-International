@@ -10,7 +10,6 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardFooter } from '@/components/ui/card';
 import {
   Plus,
-  Download,
   Search,
   SlidersHorizontal,
   Star,
@@ -321,10 +320,6 @@ export default function ManageRestaurantPage() {
               </p>
             </div>
             <div className="flex items-center gap-3">
-              <Button variant="outline" className="gap-2 font-semibold">
-                <Download className="h-4 w-4" />
-                Export Data
-              </Button>
               <Button 
                 className="gap-2 font-bold bg-primary hover:bg-primary/90 text-primary-foreground"
                 onClick={handleAddNewBranch}
