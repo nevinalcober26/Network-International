@@ -43,7 +43,6 @@ import {
   SheetTitle,
   SheetDescription,
   SheetFooter,
-  SheetTrigger,
 } from "@/components/ui/sheet";
 import {
   Dialog,
@@ -51,8 +50,17 @@ import {
   DialogHeader,
   DialogTitle,
   DialogDescription,
-  DialogFooter,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
@@ -101,7 +109,6 @@ const SUPPORTED_GATEWAYS = [
 export default function PaymentGatewayPage() {
   const { toast } = useToast();
   
-  // Initialize with 2 default gateways as requested
   const [connections, setConnections] = useState<GatewayConnection[]>([
     {
       id: '1',
@@ -128,62 +135,12 @@ export default function PaymentGatewayPage() {
   const [isConnectDrawerOpen, setIsConnectDrawerOpen] = useState(false);
   const [isSettingsDrawerOpen, setIsSettingsDrawerOpen] = useState(false);
   const [isUpgradeDialogOpen, setIsUpgradeDialogOpen] = useState(false);
+  const [confirmToggleData, setConfirmToggleData] = useState<{ id: string, enabled: boolean, brand: string } | null>(null);
   const [selectedProvider, setSelectedProvider] = useState<string | null>(null);
-  const [currentStep, setCurrentStep] = useState(1);
   
-  // Connection Flow States
-  const [isSyncing, setIsSyncing] = useState(false);
-  const [syncProgress, setSyncProgress] = useState(0);
-  const [isSyncComplete, setIsSyncComplete] = useState(false);
-  const [showSuccessDialog, setShowSuccessDialog] = useState(false);
-
   // Settings Temp State
   const [editingGateway, setEditingGateway] = useState<GatewayConnection | null>(null);
   const [tempSettings, setTempSettings] = useState<Partial<GatewayConnection>>({});
-
-  const startSyncProcess = () => {
-    setIsSyncing(true);
-    let progress = 0;
-    const interval = setInterval(() => {
-      progress += Math.floor(Math.random() * 20) + 5;
-      if (progress >= 100) {
-        progress = 100;
-        setSyncProgress(100);
-        setIsSyncComplete(true);
-        clearInterval(interval);
-      } else {
-        setSyncProgress(progress);
-      }
-    }, 400);
-  };
-
-  const handleFinishConnection = () => {
-    const provider = SUPPORTED_GATEWAYS.find(p => p.id === selectedProvider);
-    
-    const newConnection: GatewayConnection = {
-      id: Date.now().toString(),
-      brand: provider?.name || 'Gateway',
-      status: 'active',
-      lastSync: 'just now',
-      merchantId: `mch_${Math.random().toString(36).substring(2, 10).toUpperCase()}`,
-      environment: 'live',
-      isEnabled: true,
-      providerId: selectedProvider || 'custom'
-    };
-
-    setConnections(prev => [...prev, newConnection]);
-    setIsSyncing(false);
-    setIsConnectDrawerOpen(false);
-    setShowSuccessDialog(true);
-    resetWorkflow();
-  };
-
-  const resetWorkflow = () => {
-    setSelectedProvider(null);
-    setCurrentStep(1);
-    setIsSyncComplete(false);
-    setSyncProgress(0);
-  };
 
   const getStatusBadge = (gateway: GatewayConnection) => {
     if (!gateway.isEnabled) {
@@ -201,12 +158,22 @@ export default function PaymentGatewayPage() {
     }
   };
 
-  const toggleGatewayStatus = (id: string, enabled: boolean) => {
+  const confirmToggleStatus = (id: string, enabled: boolean, brand: string) => {
+    setConfirmToggleData({ id, enabled, brand });
+  };
+
+  const handleToggleAction = () => {
+    if (!confirmToggleData) return;
+    
+    const { id, enabled } = confirmToggleData;
     setConnections(prev => prev.map(c => c.id === id ? { ...c, isEnabled: enabled } : c));
+    
     toast({
       title: enabled ? "Gateway Enabled" : "Gateway Disabled",
       description: `The gateway is now ${enabled ? 'accepting' : 'no longer accepting'} payments.`
     });
+    
+    setConfirmToggleData(null);
   };
 
   const handleOpenSettings = (gateway: GatewayConnection) => {
@@ -294,7 +261,7 @@ export default function PaymentGatewayPage() {
                         <Switch 
                           id={`status-${conn.id}`}
                           checked={conn.isEnabled} 
-                          onCheckedChange={(checked) => toggleGatewayStatus(conn.id, checked)}
+                          onCheckedChange={(checked) => confirmToggleStatus(conn.id, checked, conn.brand)}
                         />
                       </div>
 
@@ -341,6 +308,34 @@ export default function PaymentGatewayPage() {
           )}
         </div>
       </main>
+
+      {/* Confirmation Dialog for Enable/Disable */}
+      <AlertDialog open={!!confirmToggleData} onOpenChange={(open) => !open && setConfirmToggleData(null)}>
+        <AlertDialogContent className="rounded-3xl">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-xl font-bold">
+              {confirmToggleData?.enabled ? `Enable ${confirmToggleData?.brand}?` : `Disable ${confirmToggleData?.brand}?`}
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-base">
+              {confirmToggleData?.enabled 
+                ? `This will immediately allow guests to process payments through ${confirmToggleData?.brand}.`
+                : `This will stop accepting all new guest payments through ${confirmToggleData?.brand}. Active checkouts may be interrupted.`}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="rounded-xl font-bold">Cancel</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={handleToggleAction}
+              className={cn(
+                "rounded-xl font-bold",
+                confirmToggleData?.enabled ? "bg-primary" : "bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              )}
+            >
+              {confirmToggleData?.enabled ? "Confirm Enable" : "Confirm Disable"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* Upgrade Required Dialog */}
       <Dialog open={isUpgradeDialogOpen} onOpenChange={setIsUpgradeDialogOpen}>
@@ -467,90 +462,6 @@ export default function PaymentGatewayPage() {
           </SheetFooter>
         </SheetContent>
       </Sheet>
-
-      {/* Syncing Progress Dialog */}
-      <Dialog open={isSyncing} onOpenChange={(open) => !open && setIsSyncing(false)}>
-        <DialogContent className="sm:max-w-md p-8 border-0 shadow-2xl bg-white text-left">
-          <div className="flex flex-col items-center text-center space-y-8">
-            <div className="relative">
-              <div className={cn(
-                "h-24 w-24 rounded-full border-4 border-muted flex items-center justify-center transition-all duration-500",
-                isSyncComplete ? "border-green-500 bg-green-50" : "border-primary/20"
-              )}>
-                {isSyncComplete ? (
-                  <Check className="h-12 w-12 text-green-600 animate-in zoom-in duration-300" />
-                ) : (
-                  <Loader2 className="h-12 w-12 text-primary animate-spin" />
-                )}
-              </div>
-              {!isSyncComplete && (
-                <div className="absolute inset-0 h-24 w-24 rounded-full border-t-4 border-primary animate-spin" style={{ animationDuration: '1.5s' }} />
-              )}
-            </div>
-
-            <div className="space-y-2 w-full text-center">
-              <DialogTitle className="text-2xl font-bold text-foreground">
-                {isSyncComplete ? "Account Linked" : "Verifying Merchant"}
-              </DialogTitle>
-              <DialogDescription className="font-medium text-muted-foreground text-sm">
-                {isSyncComplete 
-                  ? `Secure connection established with ${SUPPORTED_GATEWAYS.find(p => p.id === selectedProvider)?.name}.` 
-                  : "We are validating your API keys and setting up secure webhooks."}
-              </DialogDescription>
-            </div>
-
-            {!isSyncComplete && (
-              <div className="w-full space-y-2">
-                <Progress value={syncProgress} className="h-2" />
-                <div className="flex justify-between text-[10px] font-black uppercase tracking-widest text-muted-foreground">
-                  <span>Securing Connection...</span>
-                  <span>{syncProgress}%</span>
-                </div>
-              </div>
-            )}
-
-            {isSyncComplete && (
-              <Button 
-                className="w-full h-12 font-bold bg-primary hover:bg-primary/90 text-primary-foreground animate-in slide-in-from-bottom-2"
-                onClick={handleFinishConnection}
-              >
-                Complete Integration
-                <ChevronRight className="ml-2 h-4 w-4" />
-              </Button>
-            )}
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      <Dialog open={showSuccessDialog} onOpenChange={setShowSuccessDialog}>
-        <DialogContent className="sm:max-w-md p-10 border-0 shadow-2xl overflow-hidden bg-white text-center">
-          <div className="absolute -top-10 -right-10 p-8 opacity-10 pointer-events-none rotate-12">
-            <CreditCard className="h-48 w-48 text-primary" />
-          </div>
-          
-          <div className="relative z-10 flex flex-col items-center space-y-6">
-            <div className="h-20 w-20 rounded-3xl bg-primary/10 flex items-center justify-center shadow-sm border border-primary/20">
-              <CheckCircle2 className="h-10 w-10 text-primary animate-in zoom-in duration-500" />
-            </div>
-            
-            <div className="space-y-3">
-              <DialogTitle className="text-3xl font-bold tracking-tight text-foreground leading-tight">
-                Payments Enabled!
-              </DialogTitle>
-              <DialogDescription className="text-muted-foreground text-base font-medium leading-relaxed max-w-[280px] mx-auto text-center">
-                Your new gateway is active and ready to process guest transactions.
-              </DialogDescription>
-            </div>
-
-            <Button 
-              className="w-full h-12 font-bold uppercase tracking-widest bg-primary text-white hover:bg-primary/90 shadow-lg rounded-xl"
-              onClick={() => setShowSuccessDialog(false)}
-            >
-              Back to Dashboard
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
     </>
   );
 }
