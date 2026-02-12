@@ -44,7 +44,7 @@ const TUTORIAL_STEPS: Step[] = [
     targetId: 'header-actions',
     title: 'Stay Updated',
     content: 'Access real-time alerts, system notifications, and manage your account profile here.',
-    placement: 'left',
+    placement: 'bottom',
   },
   {
     targetId: 'welcome-banner',
@@ -58,6 +58,18 @@ const TUTORIAL_STEPS: Step[] = [
     content: 'Monitor your key performance indicators and sales trends in real-time.',
     placement: 'top',
   },
+  {
+    targetId: 'popular-items',
+    title: 'Sales Performance',
+    content: 'See which menu items are driving the most revenue and popularity today.',
+    placement: 'left',
+  },
+  {
+    targetId: 'recent-activity',
+    title: 'Live Operations',
+    content: 'Keep track of all recent orders and tickets currently in progress at your outlet.',
+    placement: 'top',
+  },
 ];
 
 export function OnboardingTutorial() {
@@ -69,7 +81,6 @@ export function OnboardingTutorial() {
   const popoverRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    // Show tutorial only if tutorial=true is in URL
     if (searchParams.get('tutorial') === 'true') {
       setIsOpen(true);
     }
@@ -78,7 +89,6 @@ export function OnboardingTutorial() {
   useEffect(() => {
     if (currentStep >= 0 && currentStep < TUTORIAL_STEPS.length) {
       updatePopoverPosition();
-      // Listen for window resize to reposition
       window.addEventListener('resize', updatePopoverPosition);
       return () => window.removeEventListener('resize', updatePopoverPosition);
     }
@@ -93,27 +103,53 @@ export function OnboardingTutorial() {
       const rect = element.getBoundingClientRect();
       const scrollY = window.scrollY;
       const scrollX = window.scrollX;
+      const popoverWidth = 288; // w-72 matches the CSS class
+      const viewportWidth = window.innerWidth;
+      const padding = 24;
 
       let top = 0;
       let left = 0;
+      let transform = '';
       const offset = 16;
 
       switch (step.placement) {
         case 'right':
           top = rect.top + scrollY + rect.height / 2;
           left = rect.right + scrollX + offset;
+          transform = 'translateY(-50%)';
           break;
         case 'left':
           top = rect.top + scrollY + rect.height / 2;
           left = rect.left + scrollX - offset;
+          transform = 'translate(-100%, -50%)';
           break;
         case 'bottom':
           top = rect.bottom + scrollY + offset;
           left = rect.left + scrollX + rect.width / 2;
+          transform = 'translateX(-50%)';
+          
+          // Safety check for right edge
+          if (left + (popoverWidth / 2) > viewportWidth - padding) {
+            left = viewportWidth - padding - (popoverWidth / 2);
+          }
+          // Safety check for left edge
+          if (left - (popoverWidth / 2) < padding) {
+            left = padding + (popoverWidth / 2);
+          }
           break;
         case 'top':
           top = rect.top + scrollY - offset;
           left = rect.left + scrollX + rect.width / 2;
+          transform = 'translate(-50%, -100%)';
+
+          // Safety check for right edge
+          if (left + (popoverWidth / 2) > viewportWidth - padding) {
+            left = viewportWidth - padding - (popoverWidth / 2);
+          }
+          // Safety check for left edge
+          if (left - (popoverWidth / 2) < padding) {
+            left = padding + (popoverWidth / 2);
+          }
           break;
       }
 
@@ -121,13 +157,10 @@ export function OnboardingTutorial() {
         position: 'absolute',
         top: `${top}px`,
         left: `${left}px`,
-        transform: step.placement === 'right' || step.placement === 'left' 
-          ? 'translateY(-50%)' 
-          : 'translateX(-50%)',
+        transform,
         zIndex: 100,
       });
 
-      // Scroll element into view if needed
       element.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
   };
@@ -147,7 +180,6 @@ export function OnboardingTutorial() {
   const handleComplete = () => {
     setIsOpen(false);
     setCurrentStep(-1);
-    // Remove query param from URL
     const newParams = new URLSearchParams(searchParams.toString());
     newParams.delete('tutorial');
     router.replace(`/dashboard?${newParams.toString()}`);
