@@ -14,6 +14,9 @@ import { AuthCardSkeleton } from '@/components/dashboard/skeletons';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, Eye, EyeOff } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { Inter } from 'next/font/google';
+
+const inter = Inter({ subsets: ['latin'] });
 
 export default function LoginPage() {
   const router = useRouter();
@@ -108,7 +111,7 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="relative flex flex-col min-h-screen bg-[#fafbfc]">
+    <div className={cn("relative flex flex-col min-h-screen bg-[#fafbfc]", inter.className)}>
       <header className="relative z-20 w-full bg-white border-b border-gray-100 py-4 flex justify-center shrink-0">
         <EMenuIcon />
       </header>
