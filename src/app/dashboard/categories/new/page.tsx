@@ -144,7 +144,7 @@ export default function AddNewBranchPage() {
                 <ArrowLeft className="h-5 w-5" />
               </Button>
               <div className="text-left">
-                <h1 className="text-3xl font-extrabold tracking-tight text-foreground">Add New Branch</h1>
+                <h1 className="text-3xl font-bold tracking-tight text-foreground">Add New Branch</h1>
                 <p className="text-muted-foreground mt-1">Configure your new outlet details and operating hours</p>
               </div>
             </div>
@@ -168,11 +168,11 @@ export default function AddNewBranchPage() {
               <TabsList className="w-full grid grid-cols-2 rounded-none border-b bg-background p-0 h-14 sticky top-0 z-20">
                 <TabsTrigger 
                   value="basic" 
-                  className="data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:bg-transparent rounded-none h-full gap-2 text-xs font-bold uppercase tracking-wider"
+                  className="data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:bg-transparent rounded-none h-full gap-2 text-sm font-semibold"
                 >
                   <Info className="h-4 w-4" /> Basic Information
                 </TabsTrigger>
-                <TabsTrigger value="hours" className="data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:bg-transparent rounded-none h-full gap-2 text-xs font-bold uppercase tracking-wider">
+                <TabsTrigger value="hours" className="data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:bg-transparent rounded-none h-full gap-2 text-sm font-semibold">
                   <Clock className="h-4 w-4" /> Opening Hours
                 </TabsTrigger>
               </TabsList>
@@ -182,7 +182,7 @@ export default function AddNewBranchPage() {
                   <div className="flex items-center justify-between">
                     <h3 className="text-lg font-bold">Restaurant Details</h3>
                     <div className="flex items-center gap-3">
-                      <Label htmlFor="branch-active" className="text-sm font-medium">Active?</Label>
+                      <Label htmlFor="branch-active" className="text-sm font-medium">Active Status</Label>
                       <Switch id="branch-active" defaultChecked />
                     </div>
                   </div>
@@ -196,17 +196,17 @@ export default function AddNewBranchPage() {
                         <Upload className="h-4 w-4" />
                         Upload Logo
                       </Button>
-                      <p className="text-[10px] text-muted-foreground uppercase tracking-wide">PNG, JPG, GIF up to 1MB</p>
+                      <p className="text-xs text-muted-foreground">PNG, JPG, or GIF up to 1MB</p>
                     </div>
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-2 text-left">
-                      <Label className="font-semibold text-muted-foreground text-xs uppercase tracking-wider">Restaurant Name</Label>
+                      <Label className="font-semibold text-muted-foreground text-xs">Restaurant Name</Label>
                       <Input placeholder="e.g. Bella Cucina Italian" className="bg-background" />
                     </div>
                     <div className="space-y-2 text-left">
-                      <Label className="font-semibold text-muted-foreground text-xs uppercase tracking-wider">Cuisine Type</Label>
+                      <Label className="font-semibold text-muted-foreground text-xs">Cuisine Type</Label>
                       <Select>
                         <SelectTrigger className="bg-background">
                           <SelectValue placeholder="Select cuisine" />
@@ -219,7 +219,7 @@ export default function AddNewBranchPage() {
                   </div>
 
                   <div className="space-y-2 text-left">
-                    <Label className="font-semibold text-muted-foreground text-xs uppercase tracking-wider">Description</Label>
+                    <Label className="font-semibold text-muted-foreground text-xs">Description</Label>
                     <Textarea 
                       placeholder="Enter restaurant description..." 
                       className="min-h-[120px] resize-none bg-background"
@@ -232,17 +232,17 @@ export default function AddNewBranchPage() {
                   
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-2 text-left">
-                      <Label className="font-semibold text-muted-foreground text-xs uppercase tracking-wider">Street Address</Label>
+                      <Label className="font-semibold text-muted-foreground text-xs">Street Address</Label>
                       <Input placeholder="e.g. 123 Main Street" className="bg-background" />
                     </div>
                     <div className="space-y-2 text-left">
-                      <Label className="font-semibold text-muted-foreground text-xs uppercase tracking-wider">City</Label>
+                      <Label className="font-semibold text-muted-foreground text-xs">City</Label>
                       <Input placeholder="e.g. San Francisco" className="bg-background" />
                     </div>
                   </div>
 
                   <div className="space-y-2 text-left">
-                    <Label className="font-semibold text-muted-foreground text-xs uppercase tracking-wider">Google Maps URL</Label>
+                    <Label className="font-semibold text-muted-foreground text-xs">Google Maps URL</Label>
                     <div className="relative">
                       <Input placeholder="https://maps.google.com/..." className="pr-10 bg-background" />
                       <ExternalLink className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -259,44 +259,38 @@ export default function AddNewBranchPage() {
               </TabsContent>
 
               <TabsContent value="hours" className="p-8 space-y-12 focus-visible:ring-0 mt-0 bg-background">
-                {/* Header Information */}
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 border-b pb-8">
                   <div className="space-y-1.5 text-left max-w-2xl">
-                    <h3 className="text-2xl font-black tracking-tight flex items-center gap-2">
-                      Operating Schedule <HelpCircle className="h-5 w-5 text-muted-foreground/40" />
+                    <h3 className="text-xl font-bold tracking-tight flex items-center gap-2">
+                      Operating Schedule <HelpCircle className="h-4 w-4 text-muted-foreground/40" />
                     </h3>
                     <p className="text-sm text-muted-foreground leading-relaxed">
                       Define when your branch is open. These hours dictate when customers can view and place orders from your Digital eMenu.
                     </p>
                   </div>
                   <div className="flex flex-wrap items-center gap-3 shrink-0">
-                    <Button variant="outline" size="sm" className="gap-2 font-bold text-[10px] uppercase tracking-widest h-10 px-4" onClick={handleCopyToAllDays}>
+                    <Button variant="outline" size="sm" className="gap-2 font-semibold text-xs h-10 px-4" onClick={handleCopyToAllDays}>
                       <Copy className="h-3.5 w-3.5" /> Apply Monday to All Days
                     </Button>
-                    <Button variant="ghost" size="sm" className="gap-2 font-bold text-[10px] uppercase tracking-widest h-10 px-4 text-muted-foreground" onClick={handleResetHours}>
+                    <Button variant="ghost" size="sm" className="gap-2 font-semibold text-xs h-10 px-4 text-muted-foreground" onClick={handleResetHours}>
                       <RotateCcw className="h-3.5 w-3.5" /> Reset Schedule
                     </Button>
                   </div>
                 </div>
 
-                {/* Section 1: Weekly Routine */}
                 <div className="space-y-6">
                   <div className="flex items-center gap-3">
                     <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center">
                       <Clock className="h-4 w-4 text-primary" />
                     </div>
-                    <h4 className="text-sm font-black uppercase tracking-[0.15em] text-foreground">Weekly Routine</h4>
+                    <h4 className="text-sm font-bold text-foreground">Weekly Routine</h4>
                   </div>
 
                   <Card className="border shadow-none overflow-hidden bg-muted/10">
                     <CardHeader className="bg-white border-b py-4 px-8 flex flex-row items-center justify-between space-y-0">
                       <div className="space-y-0.5">
-                        <CardTitle className="text-xs font-black uppercase tracking-widest text-muted-foreground">Standard Hours</CardTitle>
-                        <p className="text-[10px] text-muted-foreground font-medium uppercase">Set your recurring weekly availability</p>
-                      </div>
-                      <div className="flex items-center gap-3 bg-muted/30 px-3 py-1.5 rounded-full border">
-                        <span className="text-[10px] font-black text-muted-foreground uppercase tracking-wider">Time Format: 12h</span>
-                        <Switch className="scale-75" />
+                        <CardTitle className="text-sm font-bold text-foreground">Standard Hours</CardTitle>
+                        <p className="text-xs text-muted-foreground font-medium">Set your recurring weekly availability</p>
                       </div>
                     </CardHeader>
                     <CardContent className="p-0 divide-y bg-white">
@@ -306,15 +300,15 @@ export default function AddNewBranchPage() {
                           hour.closed ? "bg-muted/20 opacity-60" : "hover:bg-muted/5"
                         )}>
                           <div className="w-32 shrink-0 text-left">
-                            <span className="font-black text-lg tracking-tight text-foreground">{hour.day}</span>
+                            <span className="font-bold text-base text-foreground">{hour.day}</span>
                           </div>
                           
                           <div className="flex-1 flex flex-wrap items-center gap-4">
                             <div className={cn("flex items-center gap-3 transition-opacity", hour.closed && "pointer-events-none")}>
-                              <div className="space-y-1.5">
-                                <Label className="text-[10px] font-bold uppercase text-muted-foreground tracking-widest ml-1">Open At</Label>
+                              <div className="space-y-1.5 text-left">
+                                <Label className="text-xs font-semibold text-muted-foreground ml-1">Open At</Label>
                                 <Select value={hour.open} onValueChange={(val) => handleUpdateRegularHour(index, 'open', val)}>
-                                  <SelectTrigger className="w-36 h-11 bg-background font-bold">
+                                  <SelectTrigger className="w-36 h-10 bg-background font-medium">
                                     <SelectValue />
                                   </SelectTrigger>
                                   <SelectContent>
@@ -322,11 +316,11 @@ export default function AddNewBranchPage() {
                                   </SelectContent>
                                 </Select>
                               </div>
-                              <span className="text-[10px] font-black text-muted-foreground uppercase mt-6">until</span>
-                              <div className="space-y-1.5">
-                                <Label className="text-[10px] font-bold uppercase text-muted-foreground tracking-widest ml-1">Close At</Label>
+                              <span className="text-xs font-medium text-muted-foreground mt-6">until</span>
+                              <div className="space-y-1.5 text-left">
+                                <Label className="text-xs font-semibold text-muted-foreground ml-1">Close At</Label>
                                 <Select value={hour.close} onValueChange={(val) => handleUpdateRegularHour(index, 'close', val)}>
-                                  <SelectTrigger className="w-36 h-11 bg-background font-bold">
+                                  <SelectTrigger className="w-36 h-10 bg-background font-medium">
                                     <SelectValue />
                                   </SelectTrigger>
                                   <SelectContent>
@@ -349,7 +343,7 @@ export default function AddNewBranchPage() {
                                 className="h-5 w-5 rounded-md"
                               />
                               <label htmlFor={`closed-${hour.day}`} className={cn(
-                                "text-[11px] font-black uppercase tracking-widest cursor-pointer",
+                                "text-xs font-bold cursor-pointer",
                                 hour.closed ? "text-destructive" : "text-green-700"
                               )}>
                                 {hour.closed ? 'Closed Today' : 'Store Open'}
@@ -362,16 +356,15 @@ export default function AddNewBranchPage() {
                   </Card>
                 </div>
 
-                {/* Section 2: Holiday Exceptions */}
                 <div className="space-y-6">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
                       <div className="h-8 w-8 rounded-lg bg-orange-100 flex items-center justify-center">
                         <CalendarDays className="h-4 w-4 text-orange-600" />
                       </div>
-                      <h4 className="text-sm font-black uppercase tracking-[0.15em] text-foreground">Holiday Exceptions</h4>
+                      <h4 className="text-sm font-bold text-foreground">Holiday Exceptions</h4>
                     </div>
-                    <Button size="sm" className="bg-primary text-primary-foreground font-black h-10 px-5 rounded-xl text-[10px] uppercase tracking-widest shadow-lg shadow-primary/20" onClick={handleAddSpecialHour}>
+                    <Button size="sm" className="bg-primary text-primary-foreground font-bold h-10 px-5 rounded-xl text-xs shadow-lg shadow-primary/20" onClick={handleAddSpecialHour}>
                       <Plus className="h-4 w-4 mr-2" /> Add Holiday Date
                     </Button>
                   </div>
@@ -379,8 +372,8 @@ export default function AddNewBranchPage() {
                   <Card className="border shadow-none overflow-hidden bg-muted/10">
                     <CardHeader className="bg-white border-b py-4 px-8">
                       <div className="space-y-0.5">
-                        <CardTitle className="text-xs font-black uppercase tracking-widest text-muted-foreground">Specific Dates</CardTitle>
-                        <p className="text-[10px] text-muted-foreground font-medium uppercase">Override regular hours for public holidays or events</p>
+                        <CardTitle className="text-sm font-bold text-foreground">Specific Dates</CardTitle>
+                        <p className="text-xs text-muted-foreground font-medium">Override regular hours for public holidays or events</p>
                       </div>
                     </CardHeader>
                     <CardContent className="p-0 divide-y bg-white">
@@ -393,26 +386,26 @@ export default function AddNewBranchPage() {
                             <Input 
                               value={item.date} 
                               onChange={(e) => handleUpdateSpecialHour(item.id, 'date', e.target.value)}
-                              className="h-9 font-black text-base bg-transparent border-none p-0 focus-visible:ring-0 text-foreground" 
+                              className="h-9 font-bold text-base bg-transparent border-none p-0 focus-visible:ring-0 text-foreground" 
                             />
                             <Input 
                               value={item.name} 
                               onChange={(e) => handleUpdateSpecialHour(item.id, 'name', e.target.value)}
-                              className="h-6 text-[10px] uppercase font-black text-muted-foreground tracking-widest bg-transparent border-none p-0 focus-visible:ring-0" 
+                              className="h-6 text-xs font-semibold text-muted-foreground bg-transparent border-none p-0 focus-visible:ring-0" 
                             />
                           </div>
                           
                           <div className="flex-1 flex items-center gap-4">
                             {item.closed ? (
                               <div className="flex items-center gap-3 px-4 py-2 bg-destructive/10 rounded-xl border border-destructive/20">
-                                <span className="text-[11px] font-black uppercase tracking-[0.15em] text-destructive italic">Closed All Day</span>
+                                <span className="text-xs font-bold text-destructive italic">Closed All Day</span>
                               </div>
                             ) : (
                               <div className="flex items-center gap-3">
                                 <div className="space-y-1.5 text-left">
-                                  <Label className="text-[10px] font-bold uppercase text-muted-foreground tracking-widest ml-1">From</Label>
+                                  <Label className="text-xs font-semibold text-muted-foreground ml-1">From</Label>
                                   <Select value={item.from} onValueChange={(val) => handleUpdateSpecialHour(item.id, 'from', val)}>
-                                    <SelectTrigger className="w-36 h-11 bg-background font-bold">
+                                    <SelectTrigger className="w-36 h-10 bg-background font-medium">
                                       <SelectValue />
                                     </SelectTrigger>
                                     <SelectContent>
@@ -420,11 +413,11 @@ export default function AddNewBranchPage() {
                                     </SelectContent>
                                   </Select>
                                 </div>
-                                <span className="text-[10px] font-black text-muted-foreground uppercase mt-6">to</span>
+                                <span className="text-xs font-medium text-muted-foreground mt-6">to</span>
                                 <div className="space-y-1.5 text-left">
-                                  <Label className="text-[10px] font-bold uppercase text-muted-foreground tracking-widest ml-1">Until</Label>
+                                  <Label className="text-xs font-semibold text-muted-foreground ml-1">Until</Label>
                                   <Select value={item.to} onValueChange={(val) => handleUpdateSpecialHour(item.id, 'to', val)}>
-                                    <SelectTrigger className="w-36 h-11 bg-background font-bold">
+                                    <SelectTrigger className="w-36 h-10 bg-background font-medium">
                                       <SelectValue />
                                     </SelectTrigger>
                                     <SelectContent>
@@ -444,7 +437,7 @@ export default function AddNewBranchPage() {
                                 onCheckedChange={(checked) => handleUpdateSpecialHour(item.id, 'closed', !!checked)} 
                                 className="h-5 w-5 rounded-md"
                               />
-                              <label htmlFor={`special-closed-${item.id}`} className="text-[11px] font-black uppercase tracking-widest text-muted-foreground cursor-pointer">Closed</label>
+                              <label htmlFor={`special-closed-${item.id}`} className="text-xs font-bold text-muted-foreground cursor-pointer">Closed</label>
                             </div>
                             <Button variant="ghost" size="icon" className="h-10 w-10 text-destructive hover:bg-destructive/10 rounded-xl" onClick={() => handleRemoveSpecialHour(item.id)}>
                               <Trash2 className="h-5 w-5" />
@@ -453,7 +446,7 @@ export default function AddNewBranchPage() {
                         </div>
                       )) : (
                         <div className="p-16 text-center">
-                          <p className="text-sm font-medium text-gray-400">No holiday overrides added yet.</p>
+                          <p className="text-sm font-medium text-muted-foreground">No holiday overrides added yet.</p>
                         </div>
                       )}
                     </CardContent>
@@ -471,7 +464,7 @@ export default function AddNewBranchPage() {
               <Save className="h-4 w-4" />
               Save Draft
             </Button>
-            <Button className="px-10 h-12 bg-primary hover:bg-primary/90 text-primary-foreground font-black gap-2 rounded-xl shadow-xl shadow-primary/20" onClick={handlePublish}>
+            <Button className="px-10 h-12 bg-primary hover:bg-primary/90 text-primary-foreground font-bold gap-2 rounded-xl shadow-xl shadow-primary/20" onClick={handlePublish}>
               <Rocket className="h-4 w-4" />
               Publish Branch
             </Button>
