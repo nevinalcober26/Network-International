@@ -165,14 +165,10 @@ export default function AnalyticsPage() {
     setTimeout(() => {
         const mockOrders = mockDataStore.orders;
         
-        // Re-base timestamps to be relative to today to ensure data is always fresh
         const now = new Date();
-        // Find the most recent timestamp in the stale mock data
         const latestTimestampInMock = Math.max(...mockOrders.map(o => o.orderTimestamp));
-        // Calculate the difference between now and the latest mock timestamp
         const timeDiff = now.getTime() - latestTimestampInMock;
 
-        // Create a new array of orders with updated timestamps
         const freshOrders = mockOrders.map(order => ({
             ...order,
             orderTimestamp: order.orderTimestamp + timeDiff,
@@ -191,11 +187,11 @@ export default function AnalyticsPage() {
     if (timeRange === '90d') daysToSubtract = 90;
     
     const startDate = subDays(now, daysToSubtract - 1);
-    const dateRange = { from: startOfDay(startDate), to: endOfDay(now) };
+    const interval = { start: startOfDay(startDate), end: endOfDay(now) };
 
     return transactions.filter(t => {
         const transactionDate = new Date(t.timestamp);
-        const matchesDate = isWithinInterval(transactionDate, dateRange);
+        const matchesDate = isWithinInterval(transactionDate, interval);
         const matchesBranch = branchFilter === 'all' || t.branch === branchFilter;
         return matchesDate && matchesBranch;
     });
@@ -258,7 +254,7 @@ export default function AnalyticsPage() {
     filteredTransactions.forEach(t => {
       let status: string = t.paymentStatus;
       if (status === 'Unpaid') status = 'Pending';
-      if (status === 'Refunded') status = 'Failed'; // Map Refunded to Failed
+      if (status === 'Refunded') status = 'Failed';
       
       if(status in pulseData) {
         pulseData[status]++;
@@ -276,17 +272,17 @@ export default function AnalyticsPage() {
     const successRateNum = totalPayments > 0 ? ((pulseData['Paid'] / totalPayments) * 100) : 0;
     const successRate = successRateNum.toFixed(0);
 
-    // Growth Trends Logic
     let dataMap: { [key: string]: { vol: number; rev: number } } = {};
     const now = new Date();
 
     let volumeData, revenueData;
 
     if (timeRange === '90d') {
-        const startDate = startOfDay(subDays(now, 89));
+        const days = 90;
+        const startDate = startOfDay(subDays(now, days - 1));
         const startWeek = startOfWeek(startDate, { weekStartsOn: 1 });
 
-        for (let i = 0; i < 13; i++) { // Approx 13 weeks in 90 days
+        for (let i = 0; i < 13; i++) { 
             const weekStart = addWeeks(startWeek, i);
             const weekKey = format(weekStart, 'yyyy-ww');
             dataMap[weekKey] = { vol: 0, rev: 0 };
@@ -294,13 +290,11 @@ export default function AnalyticsPage() {
 
         filteredTransactions.forEach(t => {
             const transactionDate = new Date(t.timestamp);
-            if (isWithinInterval(transactionDate, { start: startDate, end: now })) {
-                const weekStart = startOfWeek(transactionDate, { weekStartsOn: 1 });
-                const weekKey = format(weekStart, 'yyyy-ww');
-                if (dataMap[weekKey]) {
-                    dataMap[weekKey].vol += 1;
-                    dataMap[weekKey].rev += t.totalAmount;
-                }
+            const weekStart = startOfWeek(transactionDate, { weekStartsOn: 1 });
+            const weekKey = format(weekStart, 'yyyy-ww');
+            if (dataMap[weekKey]) {
+                dataMap[weekKey].vol += 1;
+                dataMap[weekKey].rev += t.totalAmount;
             }
         });
 
@@ -315,7 +309,7 @@ export default function AnalyticsPage() {
         volumeData = sortedData.map(d => ({ name: d.name, value: d.vol }));
         revenueData = sortedData.map(d => ({ name: d.name, value: d.rev }));
 
-    } else { // 7d and 30d are daily
+    } else {
         const days = timeRange === '7d' ? 7 : 30;
         const startDate = startOfDay(subDays(now, days - 1));
         const formatLabel = (date: Date) => days === 7 ? format(date, 'eee') : format(date, 'd');
@@ -327,12 +321,10 @@ export default function AnalyticsPage() {
 
         filteredTransactions.forEach(t => {
             const transactionDate = new Date(t.timestamp);
-            if (isWithinInterval(transactionDate, { start: startDate, end: now })) {
-                const dateStr = format(transactionDate, 'yyyy-MM-dd');
-                if (dataMap[dateStr]) {
-                    dataMap[dateStr].vol += 1;
-                    dataMap[dateStr].rev += t.totalAmount;
-                }
+            const dateStr = format(transactionDate, 'yyyy-MM-dd');
+            if (dataMap[dateStr]) {
+                dataMap[dateStr].vol += 1;
+                dataMap[dateStr].rev += t.totalAmount;
             }
         });
         
@@ -359,7 +351,6 @@ export default function AnalyticsPage() {
       <DashboardHeader />
       <main className="p-4 sm:p-6 lg:p-8 space-y-8 bg-muted/30 min-h-screen">
         <div className="max-w-7xl mx-auto">
-          {/* Header */}
           <div className="mb-8">
             <h1 className="text-3xl font-bold tracking-tight text-foreground">Analytics</h1>
             <p className="text-muted-foreground mt-1">
@@ -367,7 +358,6 @@ export default function AnalyticsPage() {
             </p>
           </div>
 
-          {/* Filter Bar */}
           <Card className="p-4 mb-8 shadow-sm">
             <div className="flex flex-wrap items-center justify-between gap-4">
               <div className="flex items-center gap-4">
@@ -398,7 +388,6 @@ export default function AnalyticsPage() {
             </div>
           </Card>
           
-          {/* Performance Metrics */}
           <div className="mb-8">
             <div className="flex items-center justify-between mb-4">
                 <h2 className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Performance Metrics</h2>
@@ -407,7 +396,6 @@ export default function AnalyticsPage() {
             <StatCards cards={kpiData} />
           </div>
           
-          {/* Main Content Grid */}
           <div className="grid grid-cols-1 xl:grid-cols-3 gap-8 mb-8">
             <div className="xl:col-span-1">
               <Card className="h-full shadow-sm">
@@ -521,7 +509,6 @@ export default function AnalyticsPage() {
             </div>
           </div>
           
-          {/* Bottom Grid */}
            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
               <Card className="shadow-sm">
                   <CardHeader className="flex flex-row items-start justify-between">
