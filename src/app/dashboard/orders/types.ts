@@ -38,4 +38,5 @@ export type Order = {
   splitType?: 'equally' | 'byItem';
   customer?: Customer;
   orderComments?: string;
+  source?: 'App to App' | 'POS';
 };
