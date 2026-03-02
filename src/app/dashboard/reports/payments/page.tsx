@@ -38,6 +38,10 @@ import {
   Laptop,
   ChevronLeft,
   ChevronRight,
+  Download,
+  File as FileIcon,
+  FileText,
+  Sheet as SheetIcon,
 } from 'lucide-react';
 import { DashboardHeader } from '@/components/dashboard/header';
 import { cn } from '@/lib/utils';
@@ -59,7 +63,15 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
-
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
 
 type Transaction = {
   id: string;
@@ -148,6 +160,48 @@ const KpiCard = ({ icon: Icon, title, value, description, color, tooltipText }: 
     )
 }
 
+const ExportDialog = ({
+  open,
+  onOpenChange,
+  onExport,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onExport: (format: 'CSV' | 'Excel' | 'PDF') => void;
+}) => {
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Export Transactions</DialogTitle>
+          <DialogDescription>
+            Select a file format to download the current view of transactions.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="grid grid-cols-3 gap-4 py-4">
+          <Button variant="outline" className="h-24 flex-col gap-2" onClick={() => onExport('CSV')}>
+            <FileIcon className="h-6 w-6" />
+            <span>CSV</span>
+          </Button>
+          <Button variant="outline" className="h-24 flex-col gap-2" onClick={() => onExport('Excel')}>
+            <SheetIcon className="h-6 w-6" />
+            <span>Excel</span>
+          </Button>
+          <Button variant="outline" className="h-24 flex-col gap-2" onClick={() => onExport('PDF')}>
+            <FileText className="h-6 w-6" />
+            <span>PDF</span>
+          </Button>
+        </div>
+        <DialogFooter>
+          <Button variant="ghost" onClick={() => onOpenChange(false)}>
+            Cancel
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+};
+
 export default function OrderReportPage() {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [allOrders, setAllOrders] = useState<Order[]>([]);
@@ -158,6 +212,7 @@ export default function OrderReportPage() {
   const { toast } = useToast();
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
+  const [isExportDialogOpen, setIsExportDialogOpen] = useState(false);
 
   useEffect(() => {
     setIsLoading(true);
@@ -183,6 +238,14 @@ export default function OrderReportPage() {
             description: `Details for order ${transaction.orderId} are not available.`,
         });
     }
+  };
+
+  const handleExport = (format: 'CSV' | 'Excel' | 'PDF') => {
+    setIsExportDialogOpen(false);
+    toast({
+      title: 'Export Initiated',
+      description: `Your transactions are being prepared for a ${format} download.`,
+    });
   };
 
   const handleFilterChange = (
@@ -341,6 +404,10 @@ export default function OrderReportPage() {
               A financial breakdown of orders, items, and payer information.
             </p>
           </div>
+          <Button variant="outline" onClick={() => setIsExportDialogOpen(true)}>
+            <Download className="mr-2 h-4 w-4" />
+            Export
+          </Button>
         </div>
 
         <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 rounded-lg border bg-card p-3 shadow-sm">
@@ -497,6 +564,11 @@ export default function OrderReportPage() {
             )}
           </Card>
       </main>
+      <ExportDialog
+        open={isExportDialogOpen}
+        onOpenChange={setIsExportDialogOpen}
+        onExport={handleExport}
+      />
       <OrderDetailsSheet 
         order={selectedOrder}
         open={isSheetOpen}
