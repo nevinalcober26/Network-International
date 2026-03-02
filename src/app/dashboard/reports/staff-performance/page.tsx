@@ -139,8 +139,14 @@ const paymentPulseConfig = {
   Pending: { label: 'Pending' },
   Failed: { label: 'Failed' },
 };
-const volumeConfig = { value: { label: 'Orders', color: 'hsl(var(--chart-1))' } };
-const revenueConfig = { value: { label: 'Revenue', color: 'hsl(var(--chart-1))' } };
+const volumeConfig = { 
+  volume: { label: 'Volume' },
+  prevVolume: { label: 'Previous Period' },
+};
+const revenueConfig = { 
+  revenue: { label: 'Revenue' },
+  prevRevenue: { label: 'Previous Period' }
+};
 const osConfig = {
   iOS: { label: 'iOS' },
   Android: { label: 'Android' },
@@ -154,193 +160,185 @@ const webEntryConfig = {
   Edge: { label: 'Edge' },
 };
 
+function getAdjustedTransactions(orders: Order[]): Transaction[] {
+  const now = new Date();
+  if (orders.length === 0) return [];
+  
+  const latestTimestampInMock = Math.max(...orders.map(o => o.orderTimestamp));
+  const timeDiff = now.getTime() - latestTimestampInMock;
+  
+  const freshOrders = orders.map(order => ({
+    ...order,
+    orderTimestamp: order.orderTimestamp + timeDiff,
+  }));
+
+  return generateTransactionsFromOrders(freshOrders);
+}
+
 export default function AnalyticsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [timeRange, setTimeRange] = useState('7d');
   const [branchFilter, setBranchFilter] = useState('all');
+  const [isComparing, setIsComparing] = useState(false);
 
   useEffect(() => {
     setIsLoading(true);
     setTimeout(() => {
-        const mockOrders = mockDataStore.orders;
-        
-        const now = new Date();
-        const latestTimestampInMock = Math.max(...mockOrders.map(o => o.orderTimestamp));
-        const timeDiff = now.getTime() - latestTimestampInMock;
-
-        const freshOrders = mockOrders.map(order => ({
-            ...order,
-            orderTimestamp: order.orderTimestamp + timeDiff,
-        }));
-
-        const mockTransactions = generateTransactionsFromOrders(freshOrders);
+        const mockTransactions = getAdjustedTransactions(mockDataStore.orders);
         setTransactions(mockTransactions);
         setIsLoading(false);
     }, 1000);
   }, []);
-
-  const filteredTransactions = useMemo(() => {
+  
+  const { filteredTransactions, previousPeriodFilteredTransactions } = useMemo(() => {
     const now = new Date();
     let daysToSubtract = 7;
     if (timeRange === '30d') daysToSubtract = 30;
     if (timeRange === '90d') daysToSubtract = 90;
-    
-    const startDate = subDays(now, daysToSubtract - 1);
-    const interval = { start: startOfDay(startDate), end: endOfDay(now) };
 
-    return transactions.filter(t => {
-        const transactionDate = new Date(t.timestamp);
-        const matchesDate = isWithinInterval(transactionDate, interval);
+    const currentEndDate = endOfDay(now);
+    const currentStartDate = startOfDay(subDays(now, daysToSubtract - 1));
+    const currentInterval = { start: currentStartDate, end: currentEndDate };
+    
+    const filterFn = (t: Transaction) => {
         const matchesBranch = branchFilter === 'all' || t.branch === branchFilter;
-        return matchesDate && matchesBranch;
+        return matchesBranch;
+    }
+
+    const currentPeriodTxns = transactions.filter(t => {
+      const transactionDate = new Date(t.timestamp);
+      return isWithinInterval(transactionDate, currentInterval) && filterFn(t);
     });
-  }, [transactions, timeRange, branchFilter]);
+
+    let previousPeriodTxns: Transaction[] = [];
+    if (isComparing) {
+        const previousEndDate = endOfDay(subDays(now, daysToSubtract));
+        const previousStartDate = startOfDay(subDays(now, daysToSubtract * 2 - 1));
+        const previousInterval = { start: previousStartDate, end: previousEndDate };
+        
+        previousPeriodTxns = transactions.filter(t => {
+          const transactionDate = new Date(t.timestamp);
+          return isWithinInterval(transactionDate, previousInterval) && filterFn(t);
+        });
+    }
+
+    return { filteredTransactions: currentPeriodTxns, previousPeriodFilteredTransactions: previousPeriodTxns };
+}, [transactions, timeRange, branchFilter, isComparing]);
 
   const kpiData: StatCardData[] = useMemo(() => {
-    const totalOrders = filteredTransactions.length;
-    const totalRevenue = filteredTransactions.reduce((acc, t) => acc + t.totalAmount, 0);
-    const pendingAmount = filteredTransactions.reduce((acc, t) => acc + t.outstandingAmount, 0);
-    const billPaid = filteredTransactions.reduce((acc, t) => acc + t.paidAmount, 0);
-    const tipsCollected = filteredTransactions.reduce((acc, t) => acc + (t.tipAmount || 0), 0);
-    const avgOrderValue = totalOrders > 0 ? totalRevenue / totalOrders : 0;
+    const calculateMetrics = (txns: Transaction[]) => {
+        const totalOrders = txns.length;
+        const totalRevenue = txns.reduce((acc, t) => acc + t.totalAmount, 0);
+        const pendingAmount = txns.reduce((acc, t) => acc + t.outstandingAmount, 0);
+        const billPaid = txns.reduce((acc, t) => acc + t.paidAmount, 0);
+        const tipsCollected = txns.reduce((acc, t) => acc + (t.tipAmount || 0), 0);
+        const avgOrderValue = totalOrders > 0 ? totalRevenue / totalOrders : 0;
+        return { totalOrders, totalRevenue, pendingAmount, billPaid, tipsCollected, avgOrderValue };
+    };
+
+    const currentMetrics = calculateMetrics(filteredTransactions);
     
+    if (isComparing) {
+      const previousMetrics = calculateMetrics(previousPeriodFilteredTransactions);
+      
+      const calculateChange = (current: number, previous: number) => {
+          if (previous === 0) return current > 0 ? '+100%' : '+0.0%';
+          const percentageChange = ((current - previous) / previous) * 100;
+          return `${percentageChange >= 0 ? '+' : ''}${percentageChange.toFixed(1)}%`;
+      };
+      
+      const periodLabel = `vs. previous ${timeRange.replace('d', '')} days`;
+
+      return [
+        { title: 'Total Orders', value: currentMetrics.totalOrders.toLocaleString(), icon: ShoppingCart, color: 'teal', change: calculateChange(currentMetrics.totalOrders, previousMetrics.totalOrders), changeDescription: periodLabel },
+        { title: 'Average Order Value', value: `AED ${currentMetrics.avgOrderValue.toFixed(2)}`, icon: DollarSign, color: 'orange', change: calculateChange(currentMetrics.avgOrderValue, previousMetrics.avgOrderValue), changeDescription: periodLabel },
+        { title: 'Pending Amount', value: `AED ${currentMetrics.pendingAmount.toFixed(2)}`, icon: AlertTriangle, color: 'pink', change: calculateChange(currentMetrics.pendingAmount, previousMetrics.pendingAmount), changeDescription: periodLabel },
+        { title: 'Bill Paid', value: `AED ${currentMetrics.billPaid.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, icon: WalletCards, color: 'green', change: calculateChange(currentMetrics.billPaid, previousMetrics.billPaid), changeDescription: periodLabel },
+        { title: 'Tips Collected', value: `AED ${currentMetrics.tipsCollected.toFixed(2)}`, icon: HandCoins, color: 'purple', change: calculateChange(currentMetrics.tipsCollected, previousMetrics.tipsCollected), changeDescription: periodLabel },
+      ];
+    }
+
     return [
-        {
-            title: 'Total Orders',
-            value: totalOrders.toLocaleString(),
-            icon: ShoppingCart,
-            color: 'teal',
-            changeDescription: `Last ${timeRange.replace('d', '')} days`,
-            tooltipText: 'Total number of orders placed in the selected period.'
-        },
-        {
-            title: 'Average Order Value',
-            value: `AED ${avgOrderValue.toFixed(2)}`,
-            icon: DollarSign,
-            color: 'orange',
-            changeDescription: `Last ${timeRange.replace('d', '')} days`,
-            tooltipText: 'The average amount spent per order.'
-        },
-        {
-            title: 'Pending Amount',
-            value: `AED ${pendingAmount.toFixed(2)}`,
-            icon: AlertTriangle,
-            color: 'pink',
-            changeDescription: 'from open orders',
-            tooltipText: 'Total amount from orders that have not been fully paid.'
-        },
-        {
-            title: 'Bill Paid',
-            value: `AED ${billPaid.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
-            icon: WalletCards,
-            color: 'green',
-            changeDescription: `Last ${timeRange.replace('d', '')} days`,
-            tooltipText: 'Total amount collected from customers.'
-        },
-        {
-            title: 'Tips Collected',
-            value: `AED ${tipsCollected.toFixed(2)}`,
-            icon: HandCoins,
-            color: 'purple',
-            changeDescription: `Last ${timeRange.replace('d', '')} days`,
-            tooltipText: 'Total amount of tips collected from customers.'
-        },
+        { title: 'Total Orders', value: currentMetrics.totalOrders.toLocaleString(), icon: ShoppingCart, color: 'teal', changeDescription: `Last ${timeRange.replace('d', '')} days` },
+        { title: 'Average Order Value', value: `AED ${currentMetrics.avgOrderValue.toFixed(2)}`, icon: DollarSign, color: 'orange', changeDescription: `Last ${timeRange.replace('d', '')} days` },
+        { title: 'Pending Amount', value: `AED ${currentMetrics.pendingAmount.toFixed(2)}`, icon: AlertTriangle, color: 'pink', changeDescription: 'from open orders' },
+        { title: 'Bill Paid', value: `AED ${currentMetrics.billPaid.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, icon: WalletCards, color: 'green', changeDescription: `Last ${timeRange.replace('d', '')} days` },
+        { title: 'Tips Collected', value: `AED ${currentMetrics.tipsCollected.toFixed(2)}`, icon: HandCoins, color: 'purple', changeDescription: `Last ${timeRange.replace('d', '')} days` },
     ];
-  }, [filteredTransactions, timeRange]);
+  }, [filteredTransactions, previousPeriodFilteredTransactions, timeRange, isComparing]);
   
-  const { paymentPulseData, successRate, volumeData, revenueData, totalVolume, totalGrossRevenue } = useMemo(() => {
+  const { paymentPulseData, successRate, volumeAndRevenueData, totalVolume, totalGrossRevenue } = useMemo(() => {
     const pulseData: Record<string, number> = { 'Paid': 0, 'Partial': 0, 'Pending': 0, 'Failed': 0 };
     filteredTransactions.forEach(t => {
       let status: string = t.paymentStatus;
       if (status === 'Unpaid') status = 'Pending';
       if (status === 'Refunded') status = 'Failed';
-      
-      if(status in pulseData) {
-        pulseData[status]++;
-      }
+      if(status in pulseData) pulseData[status]++;
     });
     
-    const paymentPulseData = [
+    const finalPulseData = [
       { name: 'Paid', value: pulseData['Paid'], color: '#14b8a6' },
       { name: 'Partial', value: pulseData['Partial'], color: '#f59e0b' },
       { name: 'Pending', value: pulseData['Pending'], color: '#f97316' },
       { name: 'Failed', value: pulseData['Failed'], color: '#ef4444' },
     ];
     
-    const totalPayments = paymentPulseData.reduce((acc, item) => acc + item.value, 0);
+    const totalPayments = finalPulseData.reduce((acc, item) => acc + item.value, 0);
     const successRateNum = totalPayments > 0 ? ((pulseData['Paid'] / totalPayments) * 100) : 0;
-    const successRate = successRateNum.toFixed(0);
+    const finalSuccessRate = successRateNum.toFixed(0);
 
-    let dataMap: { [key: string]: { vol: number; rev: number } } = {};
+    let dataMap: { [key: string]: { volume: number; revenue: number; prevVolume: number; prevRevenue: number } } = {};
     const now = new Date();
+    let days = timeRange === '7d' ? 7 : timeRange === '30d' ? 30 : 90;
+    const startDate = startOfDay(subDays(now, days - 1));
+    const formatLabel = timeRange === '7d' ? (d: Date) => format(d, 'eee') : (d: Date) => format(d, 'd');
 
-    let volumeData, revenueData;
-
-    if (timeRange === '90d') {
-        const days = 90;
-        const startDate = startOfDay(subDays(now, days - 1));
-        const startWeek = startOfWeek(startDate, { weekStartsOn: 1 });
-
-        for (let i = 0; i < 13; i++) { 
-            const weekStart = addWeeks(startWeek, i);
-            const weekKey = format(weekStart, 'yyyy-ww');
-            dataMap[weekKey] = { vol: 0, rev: 0 };
-        }
-
-        filteredTransactions.forEach(t => {
+    const processTransactions = (txns: Transaction[], period: 'current' | 'previous') => {
+        txns.forEach(t => {
             const transactionDate = new Date(t.timestamp);
-            const weekStart = startOfWeek(transactionDate, { weekStartsOn: 1 });
-            const weekKey = format(weekStart, 'yyyy-ww');
-            if (dataMap[weekKey]) {
-                dataMap[weekKey].vol += 1;
-                dataMap[weekKey].rev += t.totalAmount;
+            const keyDate = period === 'previous' ? addDays(transactionDate, days) : transactionDate;
+            const dateKey = format(keyDate, 'yyyy-MM-dd');
+            if (!(dateKey in dataMap)) {
+                dataMap[dateKey] = { volume: 0, revenue: 0, prevVolume: 0, prevRevenue: 0 };
+            }
+            if (period === 'current') {
+                dataMap[dateKey].volume++;
+                dataMap[dateKey].revenue += t.totalAmount;
+            } else {
+                dataMap[dateKey].prevVolume++;
+                dataMap[dateKey].prevRevenue += t.totalAmount;
             }
         });
+    };
 
-        const sortedData = Object.keys(dataMap).sort().map(weekKey => {
-            const [year, week] = weekKey.split('-').map(Number);
-            return {
-                name: `W${week}`,
-                ...dataMap[weekKey]
-            };
-        });
-        
-        volumeData = sortedData.map(d => ({ name: d.name, value: d.vol }));
-        revenueData = sortedData.map(d => ({ name: d.name, value: d.rev }));
-
-    } else {
-        const days = timeRange === '7d' ? 7 : 30;
-        const startDate = startOfDay(subDays(now, days - 1));
-        const formatLabel = (date: Date) => days === 7 ? format(date, 'eee') : format(date, 'd');
-
-        for (let i = 0; i < days; i++) {
-            const date = addDays(startDate, i);
-            dataMap[format(date, 'yyyy-MM-dd')] = { vol: 0, rev: 0 };
-        }
-
-        filteredTransactions.forEach(t => {
-            const transactionDate = new Date(t.timestamp);
-            const dateStr = format(transactionDate, 'yyyy-MM-dd');
-            if (dataMap[dateStr]) {
-                dataMap[dateStr].vol += 1;
-                dataMap[dateStr].rev += t.totalAmount;
-            }
-        });
-        
-        const sortedData = Object.entries(dataMap)
-            .map(([dateStr, data]) => ({ date: new Date(dateStr), ...data }))
-            .sort((a, b) => a.date.getTime() - b.date.getTime());
-        
-        volumeData = sortedData.map(d => ({ name: formatLabel(d.date), value: d.vol }));
-        revenueData = sortedData.map(d => ({ name: formatLabel(d.date), value: d.rev }));
+    for (let i = 0; i < days; i++) {
+        const date = addDays(startDate, i);
+        dataMap[format(date, 'yyyy-MM-dd')] = { volume: 0, revenue: 0, prevVolume: 0, prevRevenue: 0 };
     }
 
-    const totalVolume = volumeData.reduce((sum, item) => sum + item.value, 0);
-    const totalGrossRevenue = revenueData.reduce((sum, item) => sum + item.value, 0);
+    processTransactions(filteredTransactions, 'current');
+    if (isComparing) {
+        processTransactions(previousPeriodFilteredTransactions, 'previous');
+    }
+    
+    const sortedData = Object.entries(dataMap)
+        .map(([dateStr, data]) => ({ date: new Date(dateStr), ...data }))
+        .sort((a, b) => a.date.getTime() - b.date.getTime());
+    
+    const finalVolumeAndRevenueData = sortedData.map(d => ({
+        name: formatLabel(d.date),
+        volume: d.volume,
+        prevVolume: d.prevVolume,
+        revenue: d.revenue,
+        prevRevenue: d.prevRevenue,
+    }));
 
-    return { paymentPulseData, successRate, volumeData, revenueData, totalVolume, totalGrossRevenue };
-}, [filteredTransactions, timeRange]);
+    const totalVol = filteredTransactions.length;
+    const totalGrossRev = filteredTransactions.reduce((sum, item) => sum + item.totalAmount, 0);
+
+    return { paymentPulseData: finalPulseData, successRate: finalSuccessRate, volumeAndRevenueData: finalVolumeAndRevenueData, totalVolume: totalVol, totalGrossRevenue: totalGrossRev };
+}, [filteredTransactions, previousPeriodFilteredTransactions, isComparing, timeRange]);
 
   if (isLoading) {
       return <OrdersPageSkeleton view="list"/>
@@ -382,7 +380,7 @@ export default function AnalyticsPage() {
                 <Button variant={timeRange === '90d' ? 'default' : 'ghost'} size="sm" className={cn("shadow-sm font-semibold", timeRange === '90d' && "bg-white text-foreground hover:bg-white")} onClick={() => setTimeRange('90d')}>3M</Button>
                 <div className="flex items-center gap-2 pl-4">
                   <Label htmlFor="compare-switch" className="text-xs font-semibold text-muted-foreground">COMPARE</Label>
-                  <Switch id="compare-switch" />
+                  <Switch id="compare-switch" checked={isComparing} onCheckedChange={setIsComparing} />
                 </div>
               </div>
             </div>
@@ -467,13 +465,14 @@ export default function AnalyticsPage() {
                                     <p className="text-xl font-bold">{totalVolume} <span className="text-xs font-semibold text-muted-foreground">UNITS</span></p>
                                 </div>
                                 <ChartContainer config={volumeConfig} className="h-[200px] w-full">
-                                    <RechartsBarChart data={volumeData} margin={{ top: 5, right: 0, left: -20, bottom: -10 }}>
+                                    <RechartsBarChart data={volumeAndRevenueData} margin={{ top: 5, right: 0, left: -20, bottom: -10 }}>
                                         <ChartTooltip
                                             cursor={{ fill: "hsl(var(--muted))" }}
                                             content={<ChartTooltipContent />}
                                         />
                                         <XAxis dataKey="name" axisLine={false} tickLine={false} fontSize={10} interval="auto" />
-                                        <Bar dataKey="value" radius={[4, 4, 0, 0]} fill="hsl(var(--chart-1))" />
+                                        <Bar dataKey="volume" radius={[4, 4, 0, 0]} fill="hsl(var(--chart-1))" />
+                                        {isComparing && <Bar dataKey="prevVolume" radius={[4, 4, 0, 0]} fill="hsl(var(--chart-1))" opacity={0.3} />}
                                     </RechartsBarChart>
                                 </ChartContainer>
                             </div>
@@ -483,7 +482,7 @@ export default function AnalyticsPage() {
                                     <p className="text-xl font-bold">AED <span className="text-xl font-bold">{totalGrossRevenue.toLocaleString('en-US', {maximumFractionDigits: 0})}</span></p>
                                 </div>
                                 <ChartContainer config={revenueConfig} className="h-[200px] w-full">
-                                    <AreaChart data={revenueData} margin={{ top: 5, right: 0, left: -20, bottom: -10 }}>
+                                    <AreaChart data={volumeAndRevenueData} margin={{ top: 5, right: 0, left: -20, bottom: -10 }}>
                                         <defs>
                                             <linearGradient id="revenueGradient" x1="0" y1="0" x2="0" y2="1">
                                                 <stop offset="5%" stopColor="hsl(var(--chart-1))" stopOpacity={0.3}/>
@@ -495,7 +494,8 @@ export default function AnalyticsPage() {
                                             content={<ChartTooltipContent />}
                                         />
                                         <XAxis dataKey="name" axisLine={false} tickLine={false} fontSize={10} interval="auto" />
-                                        <Area type="monotone" dataKey="value" stroke="hsl(var(--chart-1))" strokeWidth={2} fill="url(#revenueGradient)" />
+                                        <Area type="monotone" dataKey="revenue" stroke="hsl(var(--chart-1))" strokeWidth={2} fill="url(#revenueGradient)" />
+                                        {isComparing && <Area type="monotone" dataKey="prevRevenue" stroke="hsl(var(--chart-1))" fill="transparent" strokeDasharray="3 3" />}
                                     </AreaChart>
                                 </ChartContainer>
                             </div>
