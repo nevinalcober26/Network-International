@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { DashboardHeader } from '@/components/dashboard/header';
 import {
   Card,
@@ -32,8 +32,8 @@ import {
   ResponsiveContainer,
   Legend,
 } from 'recharts';
-import { 
-  Info, 
+import {
+  Info,
   ShoppingCart,
   DollarSign,
   AlertTriangle,
@@ -42,75 +42,73 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
-import { StatCards, type StatCardData } from '@/components/dashboard/stat-cards';
+import { StatCardData } from '@/components/dashboard/stat-cards';
 import {
   ChartContainer,
   ChartTooltip,
   ChartTooltipContent,
 } from '@/components/ui/chart';
+import { subDays, startOfDay, endOfDay, isWithinInterval } from 'date-fns';
 
-// --- Data Mocks ---
+import type { Order } from '@/app/dashboard/orders/types';
+import { mockDataStore } from '@/lib/mock-data-store';
+import { OrdersPageSkeleton } from '@/components/dashboard/skeletons';
 
-const kpiData: StatCardData[] = [
-  {
-    title: 'Total Orders',
-    value: '159',
-    icon: ShoppingCart,
-    color: 'teal',
-    changeDescription: 'Last 7 days',
-  },
-  {
-    title: 'Average Order Value',
-    value: 'AED 114.00',
-    icon: DollarSign,
-    color: 'orange',
-    changeDescription: 'Last 7 days',
-  },
-  {
-    title: 'Pending Amount',
-    value: 'AED 18.00',
-    icon: AlertTriangle,
-    color: 'pink',
-    changeDescription: 'from open orders',
-  },
-  {
-    title: 'Bill Paid',
-    value: 'AED 12,509',
-    icon: WalletCards,
-    color: 'green',
-    changeDescription: 'Last 7 days',
-  },
-  {
-    title: 'Tips Collected',
-    value: 'AED 859',
-    icon: HandCoins,
-    color: 'purple',
-    changeDescription: 'Last 7 days',
-  },
-];
+type Transaction = {
+  id: string;
+  orderId: string;
+  timestamp: number;
+  totalAmount: number;
+  paidAmount: number;
+  outstandingAmount: number;
+  paymentStatus: 'Paid' | 'Partial' | 'Unpaid' | 'Refunded';
+  paymentMethod: string;
+  payers: number;
+  branch: 'Ras Al Khaimah' | 'Dubai Mall' | string;
+  table: string;
+  splitMethod?: 'Equal' | 'Item-based' | 'Custom';
+  lastPaymentAttempt: number;
+  closeType: 'Auto' | 'Manual';
+  staffName: string;
+  tipAmount?: number;
+  tipType?: 'Preset' | 'Custom';
+  serviceChargeAmount?: number;
+};
 
+const generateTransactionsFromOrders = (orders: Order[]): Transaction[] => {
+    return orders.map(order => {
+        const paymentStatusMap = {
+            'Fully Paid': 'Paid',
+            'Partial': 'Partial',
+            'Unpaid': 'Unpaid',
+            'Voided': 'Unpaid',
+            'Returned': 'Refunded',
+        };
 
-const paymentPulseData = [
-  { name: 'Paid', value: 1248, color: '#14b8a6' },
-  { name: 'Partial', value: 84, color: '#f59e0b' },
-  { name: 'Pending', value: 12, color: '#f59e0b' },
-  { name: 'Failed', value: 2, color: '#ef4444' },
-];
+        const tipAmount = order.payments.reduce((acc, p) => acc + (p.tip || 0), 0);
 
-const totalPayments = paymentPulseData.reduce((acc, item) => acc + item.value, 0);
-const successRate = ((paymentPulseData.find(d => d.name === 'Paid')?.value || 0) / totalPayments * 100).toFixed(0);
-
-const volumeData = [
-  { name: 'Mon', value: 180 }, { name: 'Tue', value: 220 }, { name: 'Wed', value: 150 },
-  { name: 'Thu', value: 130 }, { name: 'Fri', value: 250 }, { name: 'Sat', value: 280 },
-  { name: 'Sun', value: 190 },
-];
-
-const revenueData = [
-  { name: 'Mon', value: 15000 }, { name: 'Tue', value: 18000 }, { name: 'Wed', value: 16000 },
-  { name: 'Thu', value: 19000 }, { name: 'Fri', value: 22000 }, { name: 'Sat', value: 19865 },
-  { name: 'Sun', value: 21000 },
-];
+        return {
+            id: `txn_${order.orderId.replace('#', '')}`,
+            orderId: order.orderId,
+            timestamp: order.orderTimestamp,
+            totalAmount: order.totalAmount,
+            paidAmount: order.paidAmount,
+            outstandingAmount: order.totalAmount - order.paidAmount,
+            paymentStatus: paymentStatusMap[order.paymentState] as Transaction['paymentStatus'] || 'Unpaid',
+            paymentMethod: order.payments[0]?.method || 'Credit Card',
+            payers: order.payments.length > 0 ? order.payments.length : 1,
+            branch: order.branch,
+            table: order.table,
+            splitMethod: order.splitType === 'equally' ? 'Equal' : order.splitType === 'byItem' ? 'Item-based' : undefined,
+            lastPaymentAttempt: order.orderTimestamp + Math.random() * 3600000,
+            closeType: Math.random() > 0.5 ? 'Auto' : 'Manual',
+            staffName: order.staffName,
+            tipAmount: tipAmount > 0 ? tipAmount : undefined,
+            tipType: 'Custom',
+            serviceChargeAmount: Math.random() > 0.5 ? order.totalAmount * 0.1 : undefined,
+        };
+    });
+};
 
 const osDistributionData = [
   { name: 'iOS', value: 52, color: '#14b8a6' },
@@ -147,9 +145,131 @@ const webEntryConfig = {
   Edge: { label: 'Edge' },
 };
 
-
-// --- Main Page Component ---
 export default function AnalyticsPage() {
+  const [isLoading, setIsLoading] = useState(true);
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [timeRange, setTimeRange] = useState('7d');
+  const [branchFilter, setBranchFilter] = useState('all');
+
+  useEffect(() => {
+    setIsLoading(true);
+    setTimeout(() => {
+        const mockOrders = mockDataStore.orders;
+        const mockTransactions = generateTransactionsFromOrders(mockOrders);
+        setTransactions(mockTransactions);
+        setIsLoading(false);
+    }, 1000);
+  }, []);
+
+  const filteredTransactions = useMemo(() => {
+    const now = new Date();
+    let daysToSubtract = 7;
+    if (timeRange === '30d') daysToSubtract = 30;
+    if (timeRange === '90d') daysToSubtract = 90;
+    
+    const startDate = subDays(now, daysToSubtract - 1);
+    const dateRange = { from: startOfDay(startDate), to: endOfDay(now) };
+
+    return transactions.filter(t => {
+        const transactionDate = new Date(t.timestamp);
+        const matchesDate = isWithinInterval(transactionDate, dateRange);
+        const matchesBranch = branchFilter === 'all' || t.branch === branchFilter;
+        return matchesDate && matchesBranch;
+    });
+  }, [transactions, timeRange, branchFilter]);
+
+  const kpiData: StatCardData[] = useMemo(() => {
+    const totalOrders = filteredTransactions.length;
+    const totalRevenue = filteredTransactions.reduce((acc, t) => acc + t.totalAmount, 0);
+    const pendingAmount = filteredTransactions.reduce((acc, t) => acc + t.outstandingAmount, 0);
+    const billPaid = filteredTransactions.reduce((acc, t) => acc + t.paidAmount, 0);
+    const tipsCollected = filteredTransactions.reduce((acc, t) => acc + (t.tipAmount || 0), 0);
+    const avgOrderValue = totalOrders > 0 ? totalRevenue / totalOrders : 0;
+    
+    return [
+        {
+            title: 'Total Orders',
+            value: totalOrders.toLocaleString(),
+            icon: ShoppingCart,
+            color: 'teal',
+            changeDescription: `Last ${timeRange.replace('d', '')} days`,
+        },
+        {
+            title: 'Average Order Value',
+            value: `AED ${avgOrderValue.toFixed(2)}`,
+            icon: DollarSign,
+            color: 'orange',
+            changeDescription: `Last ${timeRange.replace('d', '')} days`,
+        },
+        {
+            title: 'Pending Amount',
+            value: `AED ${pendingAmount.toFixed(2)}`,
+            icon: AlertTriangle,
+            color: 'pink',
+            changeDescription: 'from open orders',
+        },
+        {
+            title: 'Bill Paid',
+            value: `AED ${billPaid.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+            icon: WalletCards,
+            color: 'green',
+            changeDescription: `Last ${timeRange.replace('d', '')} days`,
+        },
+        {
+            title: 'Tips Collected',
+            value: `AED ${tipsCollected.toFixed(2)}`,
+            icon: HandCoins,
+            color: 'purple',
+            changeDescription: `Last ${timeRange.replace('d', '')} days`,
+        },
+    ];
+  }, [filteredTransactions, timeRange]);
+  
+  const { paymentPulseData, totalPayments, successRate, volumeData, revenueData, totalVolume, totalGrossRevenue } = useMemo(() => {
+    const pulseData: Record<string, number> = { 'Paid': 0, 'Partial': 0, 'Pending': 0, 'Failed': 0 };
+    filteredTransactions.forEach(t => {
+      let status = t.paymentStatus;
+      if (status === 'Unpaid') status = 'Pending';
+      if(status === 'Paid' || status === 'Partial' || status === 'Pending' || status === 'Failed') {
+        pulseData[status] = (pulseData[status] || 0) + 1;
+      }
+    });
+    
+    const paymentPulseData = [
+      { name: 'Paid', value: pulseData['Paid'], color: '#14b8a6' },
+      { name: 'Partial', value: pulseData['Partial'], color: '#f59e0b' },
+      { name: 'Pending', value: pulseData['Pending'], color: '#f59e0b' },
+      { name: 'Failed', value: pulseData['Failed'], color: '#ef4444' },
+    ];
+    
+    const totalPayments = paymentPulseData.reduce((acc, item) => acc + item.value, 0);
+    const successRateNum = totalPayments > 0 ? ((pulseData['Paid'] / totalPayments) * 100) : 0;
+    const successRate = successRateNum.toFixed(0);
+
+    const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+    const volData: { [key: string]: number } = { Mon:0, Tue:0, Wed:0, Thu:0, Fri:0, Sat:0, Sun:0 };
+    const revData: { [key: string]: number } = { Mon:0, Tue:0, Wed:0, Thu:0, Fri:0, Sat:0, Sun:0 };
+    
+    filteredTransactions.forEach(t => {
+        const dayIndex = new Date(t.timestamp).getDay();
+        const dayName = days[(dayIndex + 6) % 7];
+        volData[dayName] = (volData[dayName] || 0) + 1;
+        revData[dayName] = (revData[dayName] || 0) + t.totalAmount;
+    });
+
+    const volumeData = days.map(day => ({ name: day, value: volData[day] }));
+    const revenueData = days.map(day => ({ name: day, value: revData[day] }));
+
+    const totalVolume = volumeData.reduce((sum, item) => sum + item.value, 0);
+    const totalGrossRevenue = revenueData.reduce((sum, item) => sum + item.value, 0);
+    
+    return { paymentPulseData, totalPayments, successRate, volumeData, revenueData, totalVolume, totalGrossRevenue };
+}, [filteredTransactions]);
+
+  if (isLoading) {
+      return <OrdersPageSkeleton view="list"/>
+  }
+
   return (
     <>
       <DashboardHeader />
@@ -169,22 +289,23 @@ export default function AnalyticsPage() {
               <div className="flex items-center gap-4">
                 <div className="space-y-1">
                     <Label className="text-xs font-semibold text-muted-foreground px-1">OUTLET</Label>
-                    <Select defaultValue="all">
+                    <Select value={branchFilter} onValueChange={setBranchFilter}>
                         <SelectTrigger className="w-[200px] bg-background border-border font-semibold">
                             <SelectValue placeholder="Select Outlet" />
                         </SelectTrigger>
                         <SelectContent>
                             <SelectItem value="all">All Outlets</SelectItem>
-                            <SelectItem value="rak">Ras Al Khaimah</SelectItem>
-                            <SelectItem value="dubai">Dubai Mall</SelectItem>
+                            {mockDataStore.branches.map(branch => (
+                              <SelectItem key={branch.id} value={branch.name}>{branch.name}</SelectItem>
+                            ))}
                         </SelectContent>
                     </Select>
                 </div>
               </div>
               <div className="flex items-center gap-2 bg-muted p-1 rounded-lg">
-                <Button variant="ghost" size="sm" className="bg-white shadow-sm font-semibold">1W</Button>
-                <Button variant="ghost" size="sm">1M</Button>
-                <Button variant="ghost" size="sm">3M</Button>
+                <Button variant={timeRange === '7d' ? 'default' : 'ghost'} size="sm" className={cn("shadow-sm font-semibold", timeRange === '7d' && "bg-white text-foreground hover:bg-white")} onClick={() => setTimeRange('7d')}>1W</Button>
+                <Button variant={timeRange === '30d' ? 'default' : 'ghost'} size="sm" className={cn("shadow-sm font-semibold", timeRange === '30d' && "bg-white text-foreground hover:bg-white")} onClick={() => setTimeRange('30d')}>1M</Button>
+                <Button variant={timeRange === '90d' ? 'default' : 'ghost'} size="sm" className={cn("shadow-sm font-semibold", timeRange === '90d' && "bg-white text-foreground hover:bg-white")} onClick={() => setTimeRange('90d')}>3M</Button>
                 <div className="flex items-center gap-2 pl-4">
                   <Label htmlFor="compare-switch" className="text-xs font-semibold text-muted-foreground">COMPARE</Label>
                   <Switch id="compare-switch" />
@@ -197,9 +318,24 @@ export default function AnalyticsPage() {
           <div className="mb-8">
             <div className="flex items-center justify-between mb-4">
                 <h2 className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Performance Metrics</h2>
-                <span className="text-xs font-medium text-muted-foreground">LAST 7 DAYS</span>
+                <span className="text-xs font-medium text-muted-foreground">LAST {timeRange.replace('d', '')} DAYS</span>
             </div>
-            <StatCards cards={kpiData} />
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
+                {kpiData.map(card => (
+                    <Card key={card.title} className="shadow-sm">
+                        <CardHeader className="pb-2">
+                            <div className="flex items-center justify-between">
+                                <CardTitle className="text-sm font-semibold text-muted-foreground">{card.title}</CardTitle>
+                                <card.icon className={cn('h-5 w-5', `text-${card.color}-500`)} />
+                            </div>
+                        </CardHeader>
+                        <CardContent>
+                            <p className="text-2xl font-bold">{card.value}</p>
+                            <p className="text-xs text-muted-foreground">{card.changeDescription}</p>
+                        </CardContent>
+                    </Card>
+                ))}
+            </div>
           </div>
           
           {/* Main Content Grid */}
@@ -263,7 +399,7 @@ export default function AnalyticsPage() {
                                 <CardTitle className="text-base font-bold">Growth Trends</CardTitle>
                                 <CardDescription className="text-xs">Volume and revenue analysis</CardDescription>
                             </div>
-                            <Badge variant="outline" className="text-xs">RANGE: 1W</Badge>
+                            <Badge variant="outline" className="text-xs">RANGE: {timeRange.replace('d', '')}D</Badge>
                         </div>
                     </CardHeader>
                     <CardContent>
@@ -271,7 +407,7 @@ export default function AnalyticsPage() {
                             <div>
                                 <div className="flex justify-between items-baseline mb-4">
                                     <h3 className="font-semibold text-sm">Volume (Orders)</h3>
-                                    <p className="text-xl font-bold">155 <span className="text-xs font-semibold text-muted-foreground">UNITS</span></p>
+                                    <p className="text-xl font-bold">{totalVolume} <span className="text-xs font-semibold text-muted-foreground">UNITS</span></p>
                                 </div>
                                 <ChartContainer config={volumeConfig} className="h-[200px] w-full">
                                     <RechartsBarChart data={volumeData} margin={{ top: 5, right: 0, left: -20, bottom: -10 }}>
@@ -287,7 +423,7 @@ export default function AnalyticsPage() {
                             <div>
                                 <div className="flex justify-between items-baseline mb-4">
                                     <h3 className="font-semibold text-sm">Gross Revenue</h3>
-                                    <p className="text-xl font-bold">AED <span className="text-xl font-bold">19,865</span></p>
+                                    <p className="text-xl font-bold">AED <span className="text-xl font-bold">{totalGrossRevenue.toLocaleString('en-US', {maximumFractionDigits: 0})}</span></p>
                                 </div>
                                 <ChartContainer config={revenueConfig} className="h-[200px] w-full">
                                     <AreaChart data={revenueData} margin={{ top: 5, right: 0, left: -20, bottom: -10 }}>

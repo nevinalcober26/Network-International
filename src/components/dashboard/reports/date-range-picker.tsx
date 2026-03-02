@@ -1,6 +1,6 @@
-'use client';
+"use client"
 
-import * as React from 'react';
+import * as React from "react"
 import { 
     addDays, 
     format, 
@@ -14,17 +14,17 @@ import {
     subYears,
     isSameDay,
 } from 'date-fns';
-import { Calendar as CalendarIcon } from 'lucide-react';
-import { type DateRange } from 'react-day-picker';
+import { Calendar as CalendarIcon } from "lucide-react"
+import { type DateRange } from "react-day-picker"
 
-import { cn } from '@/lib/utils';
-import { Button } from '@/components/ui/button';
-import { Calendar } from '@/components/ui/calendar';
+import { cn } from "@/lib/utils"
+import { Button } from "@/components/ui/button"
+import { Calendar } from "@/components/ui/calendar"
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from '@/components/ui/popover';
+} from "@/components/ui/popover"
 
 interface DateRangePickerProps extends React.HTMLAttributes<HTMLDivElement> {
   dateRange?: DateRange;
@@ -64,7 +64,6 @@ export function DateRangePicker({
             return 'Pick a date range';
         }
         
-        // Find if the current range matches any preset
         for (const preset of presets) {
             const presetRange = preset.range();
             if (dateRange.from && presetRange.from && isSameDay(dateRange.from, presetRange.from) &&
@@ -73,12 +72,13 @@ export function DateRangePicker({
             }
         }
 
-        // Format custom range
         if (dateRange.to) {
+            if (isSameDay(dateRange.from, dateRange.to)) {
+                return format(dateRange.from, 'LLL dd, y');
+            }
             return `${format(dateRange.from, 'LLL dd, y')} - ${format(dateRange.to, 'LLL dd, y')}`;
         }
 
-        // Format single day
         return format(dateRange.from, 'LLL dd, y');
 
     }, [dateRange]);

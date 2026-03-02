@@ -85,9 +85,9 @@ export function SignupCardSkeleton() {
 
 export function StatCardsSkeleton() {
   return (
-    <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-      {[...Array(4)].map((_, i) => (
-        <Card key={i} className="border-0 shadow-lg">
+    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+      {[...Array(5)].map((_, i) => (
+        <Card key={i} className="border shadow-sm">
           <CardHeader className="flex flex-row justify-between items-start pb-2">
             <Skeleton className="h-4 w-24" />
             <Skeleton className="h-8 w-8 rounded-lg" />
