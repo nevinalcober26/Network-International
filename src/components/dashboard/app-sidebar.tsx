@@ -15,6 +15,8 @@ import {
   ChevronDown,
   PlusCircle,
   Loader2,
+  BarChart,
+  TrendingUp,
 } from 'lucide-react';
 import {
   Sidebar,
@@ -145,6 +147,17 @@ interface SidebarItem {
 
 const OVERVIEW: SidebarItem[] = [
   { label: 'Dashboard', id: 'dashboard', path: '/dashboard', icon: PieChart },
+  { label: 'Analytics', id: 'analytics', path: '/dashboard/reports/staff-performance', icon: BarChart },
+  { 
+    label: 'Reports', 
+    id: 'reports', 
+    icon: TrendingUp, 
+    items: [
+      { label: 'Order Report', path: '/dashboard/reports/payments' },
+      { label: 'Split Bill Report', path: '/dashboard/reports/split-bills' },
+      { label: 'Tips Report', path: '/dashboard/reports/tips-and-charges' },
+    ] 
+  },
 ];
 
 const MANAGEMENT: SidebarItem[] = [
@@ -229,7 +242,7 @@ export function AppSidebar() {
   }, []);
 
   useEffect(() => {
-    const allGroups = [...MANAGEMENT, ...CONNECTIONS];
+    const allGroups = [...OVERVIEW, ...MANAGEMENT, ...CONNECTIONS];
     const currentGroup = allGroups.find(group => 
       group.items?.some(sub => pathname.startsWith(sub.path))
     );
@@ -285,13 +298,15 @@ export function AppSidebar() {
                       {item.label}
                     </span>
                   </div>
-                  <div className="h-5 w-5 border flex items-center justify-center rounded-sm bg-background/50 group-data-[collapsible=icon]:hidden">
-                    {isExpanded ? (
-                      <Minus className="h-3 w-3" />
-                    ) : (
-                      <Plus className="h-3 w-3" />
-                    )}
-                  </div>
+                  {item.id !== 'reports' && (
+                    <div className="h-5 w-5 border flex items-center justify-center rounded-sm bg-background/50 group-data-[collapsible=icon]:hidden">
+                      {isExpanded ? (
+                        <Minus className="h-3 w-3" />
+                      ) : (
+                        <Plus className="h-3 w-3" />
+                      )}
+                    </div>
+                  )}
                 </div>
               </SidebarMenuButton>
             </CollapsibleTrigger>
