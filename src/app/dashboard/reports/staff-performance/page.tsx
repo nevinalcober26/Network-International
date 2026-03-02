@@ -217,22 +217,22 @@ export default function AnalyticsPage() {
                 </CardHeader>
                 <CardContent className="flex flex-col items-center">
                   <ChartContainer config={paymentPulseConfig} className="h-48 w-48 relative">
-                      <PieChart>
-                        <ChartTooltip
-                          cursor={false}
-                          content={<ChartTooltipContent hideLabel />}
-                        />
-                        <Pie data={paymentPulseData} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius="75%" outerRadius="95%" startAngle={90} endAngle={450} paddingAngle={4}>
-                          {paymentPulseData.map((entry, index) => (
-                            <Cell key={`cell-${index}`} fill={entry.color} stroke={entry.color} />
-                          ))}
-                        </Pie>
-                      </PieChart>
-                  </ChartContainer>
-                    <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none mt-16">
+                    <PieChart>
+                      <ChartTooltip
+                        cursor={false}
+                        content={<ChartTooltipContent hideLabel />}
+                      />
+                      <Pie data={paymentPulseData} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius="75%" outerRadius="95%" startAngle={90} endAngle={450} paddingAngle={4}>
+                        {paymentPulseData.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={entry.color} stroke={entry.color} />
+                        ))}
+                      </Pie>
+                    </PieChart>
+                    <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
                       <p className="text-[10px] font-bold text-muted-foreground uppercase">Success Rate</p>
                       <p className="text-4xl font-bold text-foreground mt-1">{successRate}%</p>
                     </div>
+                  </ChartContainer>
                   <div className="w-full mt-6">
                     <div className="grid grid-cols-2 gap-x-4 gap-y-2 mb-4">
                       {paymentPulseData.map(item => (
