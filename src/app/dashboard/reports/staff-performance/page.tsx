@@ -42,7 +42,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
-import { StatCardData } from '@/components/dashboard/stat-cards';
+import { type StatCardData, StatCards } from '@/components/dashboard/stat-cards';
 import {
   ChartContainer,
   ChartTooltip,
@@ -130,8 +130,8 @@ const paymentPulseConfig = {
   Pending: { label: 'Pending' },
   Failed: { label: 'Failed' },
 };
-const volumeConfig = { value: { label: 'Orders', color: '#14b8a6' } };
-const revenueConfig = { value: { label: 'Revenue', color: '#14b8a6' } };
+const volumeConfig = { value: { label: 'Orders', color: 'hsl(var(--chart-1))' } };
+const revenueConfig = { value: { label: 'Revenue', color: 'hsl(var(--chart-1))' } };
 const osConfig = {
   iOS: { label: 'iOS' },
   Android: { label: 'Android' },
@@ -193,6 +193,7 @@ export default function AnalyticsPage() {
             icon: ShoppingCart,
             color: 'teal',
             changeDescription: `Last ${timeRange.replace('d', '')} days`,
+            tooltipText: 'Total number of orders placed in the selected period.'
         },
         {
             title: 'Average Order Value',
@@ -200,6 +201,7 @@ export default function AnalyticsPage() {
             icon: DollarSign,
             color: 'orange',
             changeDescription: `Last ${timeRange.replace('d', '')} days`,
+            tooltipText: 'The average amount spent per order.'
         },
         {
             title: 'Pending Amount',
@@ -207,6 +209,7 @@ export default function AnalyticsPage() {
             icon: AlertTriangle,
             color: 'pink',
             changeDescription: 'from open orders',
+            tooltipText: 'Total amount from orders that have not been fully paid.'
         },
         {
             title: 'Bill Paid',
@@ -214,6 +217,7 @@ export default function AnalyticsPage() {
             icon: WalletCards,
             color: 'green',
             changeDescription: `Last ${timeRange.replace('d', '')} days`,
+            tooltipText: 'Total amount collected from customers.'
         },
         {
             title: 'Tips Collected',
@@ -221,6 +225,7 @@ export default function AnalyticsPage() {
             icon: HandCoins,
             color: 'purple',
             changeDescription: `Last ${timeRange.replace('d', '')} days`,
+            tooltipText: 'Total amount of tips collected from customers.'
         },
     ];
   }, [filteredTransactions, timeRange]);
@@ -320,22 +325,7 @@ export default function AnalyticsPage() {
                 <h2 className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Performance Metrics</h2>
                 <span className="text-xs font-medium text-muted-foreground">LAST {timeRange.replace('d', '')} DAYS</span>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
-                {kpiData.map(card => (
-                    <Card key={card.title} className="shadow-sm">
-                        <CardHeader className="pb-2">
-                            <div className="flex items-center justify-between">
-                                <CardTitle className="text-sm font-semibold text-muted-foreground">{card.title}</CardTitle>
-                                <card.icon className={cn('h-5 w-5', `text-${card.color}-500`)} />
-                            </div>
-                        </CardHeader>
-                        <CardContent>
-                            <p className="text-2xl font-bold">{card.value}</p>
-                            <p className="text-xs text-muted-foreground">{card.changeDescription}</p>
-                        </CardContent>
-                    </Card>
-                ))}
-            </div>
+            <StatCards cards={kpiData} />
           </div>
           
           {/* Main Content Grid */}
@@ -416,7 +406,7 @@ export default function AnalyticsPage() {
                                             content={<ChartTooltipContent />}
                                         />
                                         <XAxis dataKey="name" axisLine={false} tickLine={false} fontSize={10} />
-                                        <Bar dataKey="value" radius={[4, 4, 0, 0]} fill="var(--color-value)" />
+                                        <Bar dataKey="value" radius={[4, 4, 0, 0]} fill="hsl(var(--chart-1))" />
                                     </RechartsBarChart>
                                 </ChartContainer>
                             </div>
@@ -429,8 +419,8 @@ export default function AnalyticsPage() {
                                     <AreaChart data={revenueData} margin={{ top: 5, right: 0, left: -20, bottom: -10 }}>
                                         <defs>
                                             <linearGradient id="revenueGradient" x1="0" y1="0" x2="0" y2="1">
-                                                <stop offset="5%" stopColor="var(--color-value)" stopOpacity={0.3}/>
-                                                <stop offset="95%" stopColor="var(--color-value)" stopOpacity={0}/>
+                                                <stop offset="5%" stopColor="hsl(var(--chart-1))" stopOpacity={0.3}/>
+                                                <stop offset="95%" stopColor="hsl(var(--chart-1))" stopOpacity={0}/>
                                             </linearGradient>
                                         </defs>
                                         <ChartTooltip
@@ -438,7 +428,7 @@ export default function AnalyticsPage() {
                                             content={<ChartTooltipContent />}
                                         />
                                         <XAxis dataKey="name" axisLine={false} tickLine={false} fontSize={10} />
-                                        <Area type="monotone" dataKey="value" stroke="var(--color-value)" strokeWidth={2} fill="url(#revenueGradient)" />
+                                        <Area type="monotone" dataKey="value" stroke="hsl(var(--chart-1))" strokeWidth={2} fill="url(#revenueGradient)" />
                                     </AreaChart>
                                 </ChartContainer>
                             </div>
@@ -475,7 +465,7 @@ export default function AnalyticsPage() {
                                   ))}
                               </Pie>
                           </PieChart>
-                          <div className="absolute inset-0 flex flex-col items-center justify-center">
+                          <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
                               <p className="text-[10px] font-bold text-muted-foreground uppercase">MOBILE</p>
                               <p className="text-xl font-bold">{osDistributionData.reduce((max, item) => item.value > max.value ? item : max, osDistributionData[0]).name}</p>
                           </div>
@@ -516,7 +506,7 @@ export default function AnalyticsPage() {
                                   ))}
                               </Pie>
                           </PieChart>
-                          <div className="absolute inset-0 flex flex-col items-center justify-center">
+                          <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
                               <p className="text-[10px] font-bold text-muted-foreground uppercase">TOP</p>
                               <p className="text-xl font-bold">{webEntryData.reduce((max, item) => item.value > max.value ? item : max, webEntryData[0]).name}</p>
                           </div>
