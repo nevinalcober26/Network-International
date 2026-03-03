@@ -122,6 +122,7 @@ const initialFilterState = {
   } as DateRange | undefined,
   branch: "Bloomsbury's - Ras Al Khaimah",
   paymentStatus: 'all',
+  source: 'all',
 };
 
 const ExportDialog = ({
@@ -240,11 +241,14 @@ export default function OrderReportPage() {
       const matchesStatus =
         filters.paymentStatus === 'all' ||
         transaction.paymentStatus === filters.paymentStatus;
+      const matchesSource =
+        filters.source === 'all' || transaction.source === filters.source;
 
       return (
         matchesDate &&
         matchesBranch &&
-        matchesStatus
+        matchesStatus &&
+        matchesSource
       );
     }).sort((a, b) => b.timestamp - a.timestamp);
   }, [transactions, filters]);
@@ -414,6 +418,23 @@ export default function OrderReportPage() {
                 </Select>
             </div>
             
+            <div className="space-y-1">
+                <p className="text-xs font-semibold text-muted-foreground">SOURCE</p>
+                <Select
+                    value={filters.source}
+                    onValueChange={(value) => handleFilterChange('source', value)}
+                >
+                    <SelectTrigger className="w-full sm:w-[180px] bg-background">
+                    <SelectValue placeholder="Source" />
+                    </SelectTrigger>
+                    <SelectContent>
+                    <SelectItem value="all">All Sources</SelectItem>
+                    <SelectItem value="App to App">App to App</SelectItem>
+                    <SelectItem value="POS">POS</SelectItem>
+                    </SelectContent>
+                </Select>
+            </div>
+
             <div className="space-y-1">
                 <p className="text-xs font-semibold text-muted-foreground">REPORT PERIOD</p>
                 <DateRangePicker
