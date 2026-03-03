@@ -537,9 +537,9 @@ export default function OrderReportPage() {
             </div>
           </div>
 
-          <Button variant="ghost" size="sm" onClick={resetAllFilters} className="self-end">
-            <RotateCcw className="mr-2 h-4 w-4" />
-            Refresh
+          <Button variant="ghost" size="icon" onClick={resetAllFilters} className="self-end" title="Refresh">
+            <RotateCcw className="h-4 w-4" />
+            <span className="sr-only">Refresh</span>
           </Button>
         </div>
 

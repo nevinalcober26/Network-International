@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useMemo, useEffect } from 'react';
@@ -545,12 +544,13 @@ export default function TipsAndGratuityReportPage() {
             </div>
           <Button
             variant="ghost"
-            size="sm"
+            size="icon"
             onClick={resetAllFilters}
             className="lg:justify-self-end"
+            title="Refresh Filters"
           >
-            <RotateCcw className="mr-2 h-4 w-4" />
-            Refresh
+            <RotateCcw className="h-4 w-4" />
+            <span className="sr-only">Refresh</span>
           </Button>
         </div>
 

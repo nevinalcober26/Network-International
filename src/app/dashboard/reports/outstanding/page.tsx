@@ -477,9 +477,9 @@ export default function OutstandingReportPage() {
               </PopoverContent>
             </Popover>
           </div>
-          <Button variant="ghost" size="sm" onClick={resetAllFilters}>
-            <RotateCcw className="mr-2 h-4 w-4" />
-            Reset All Filters
+          <Button variant="ghost" size="icon" onClick={resetAllFilters} title="Reset Filters">
+            <RotateCcw className="h-4 w-4" />
+            <span className="sr-only">Reset All Filters</span>
           </Button>
         </div>
 
