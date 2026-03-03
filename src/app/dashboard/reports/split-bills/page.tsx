@@ -275,13 +275,12 @@ export default function SplitBillsReportPage() {
 
         <StatCards cards={kpiCards} />
 
-        <div className="flex flex-wrap items-end justify-between gap-x-4 gap-y-2 rounded-lg border bg-card p-3 shadow-sm">
-          <div className="flex flex-wrap items-start gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 items-end gap-4 rounded-lg border bg-card p-3 shadow-sm">
             <div className="space-y-1">
               <Label className="text-xs font-semibold text-muted-foreground px-1">OUTLET</Label>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="outline" className="w-full sm:w-[220px] justify-between">
+                  <Button variant="outline" className="w-full justify-between">
                     <span className="truncate">
                       {filters.branches.length === mockDataStore.branches.length
                         ? 'All Branches'
@@ -320,7 +319,7 @@ export default function SplitBillsReportPage() {
                 value={filters.splitMethod}
                 onValueChange={(value) => handleFilterChange('splitMethod', value)}
               >
-                <SelectTrigger className="w-full sm:w-[180px]">
+                <SelectTrigger className="w-full">
                   <SelectValue placeholder="Split Method" />
                 </SelectTrigger>
                 <SelectContent>
@@ -337,12 +336,11 @@ export default function SplitBillsReportPage() {
                 onDateRangeChange={(range) => handleFilterChange('dateRange', range)}
               />
             </div>
-          </div>
           <Button
             variant="ghost"
             size="sm"
             onClick={resetAllFilters}
-            className="self-end"
+            className="lg:justify-self-end"
           >
             <RotateCcw className="mr-2 h-4 w-4" />
             Refresh
