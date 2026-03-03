@@ -117,6 +117,7 @@ const initialFilterState = {
   } as DateRange | undefined,
   branches: ["Bloomsbury's - Ras Al Khaimah"],
   staffName: 'all',
+  sortBy: 'all',
 };
 
 const avatarColors = [
@@ -272,8 +273,22 @@ export default function TipsAndGratuityReportPage() {
   }, [transactions, filters]);
 
   const tipTransactions = useMemo(() => {
-    return filteredTransactions.filter(t => t.tipAmount && t.tipAmount > 0);
-  }, [filteredTransactions]);
+    let tips = filteredTransactions.filter(t => t.tipAmount && t.tipAmount > 0);
+
+    if (filters.sortBy === 'top_earners_amount') {
+      tips.sort((a, b) => (b.tipAmount || 0) - (a.tipAmount || 0));
+    } else if (filters.sortBy === 'top_earners_percent') {
+      tips.sort((a, b) => {
+        const percentA = a.totalAmount > 0 ? (a.tipAmount || 0) / a.totalAmount : 0;
+        const percentB = b.totalAmount > 0 ? (b.tipAmount || 0) / b.totalAmount : 0;
+        return percentB - percentA;
+      });
+    } else {
+      // Default sort by timestamp
+      tips.sort((a, b) => b.timestamp - a.timestamp);
+    }
+    return tips;
+  }, [filteredTransactions, filters.sortBy]);
 
   const staffNames = useMemo(() => {
     return [...new Set(transactions.map((t) => t.staffName))].sort();
@@ -452,6 +467,22 @@ export default function TipsAndGratuityReportPage() {
                     {staffNames.map((name) => (
                         <SelectItem key={name} value={name}>{name}</SelectItem>
                     ))}
+                    </SelectContent>
+                </Select>
+            </div>
+            <div className="space-y-1">
+                <Label className="text-xs text-muted-foreground px-1">SORT BY</Label>
+                <Select
+                    value={filters.sortBy}
+                    onValueChange={(value) => handleFilterChange('sortBy', value)}
+                >
+                    <SelectTrigger className="w-full sm:w-[180px]">
+                    <SelectValue placeholder="Sort by" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="all">Default (Date)</SelectItem>
+                        <SelectItem value="top_earners_amount">Top Earners (Amount)</SelectItem>
+                        <SelectItem value="top_earners_percent">Highest Tip %</SelectItem>
                     </SelectContent>
                 </Select>
             </div>
