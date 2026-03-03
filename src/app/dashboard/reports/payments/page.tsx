@@ -1,5 +1,6 @@
 'use client';
 
+import * as React from 'react';
 import { useState, useMemo, useEffect } from 'react';
 import {
   Card,
@@ -451,13 +452,12 @@ export default function OrderReportPage() {
           </Button>
         </div>
 
-        <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 rounded-lg border bg-card p-3 shadow-sm">
-          <div className="flex flex-wrap items-center gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 items-end gap-4 rounded-lg border bg-card p-3 shadow-sm">
             <div className="space-y-1">
-                <p className="text-xs font-semibold text-muted-foreground">OUTLET</p>
+                <Label className="text-xs font-semibold text-muted-foreground px-1">OUTLET</Label>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="outline" className="w-full sm:w-[220px] bg-background justify-between">
+                    <Button variant="outline" className="w-full justify-between">
                       <span className="truncate">
                         {filters.branches.length === mockDataStore.branches.length
                           ? 'All Branches'
@@ -490,14 +490,14 @@ export default function OrderReportPage() {
                   </DropdownMenuContent>
                 </DropdownMenu>
             </div>
-
+            
             <div className="space-y-1">
-                <p className="text-xs font-semibold text-muted-foreground">PAYMENT STATUS</p>
+                <Label className="text-xs font-semibold text-muted-foreground px-1">PAYMENT STATUS</Label>
                 <Select
                     value={filters.paymentStatus}
                     onValueChange={(value) => handleFilterChange('paymentStatus', value)}
                 >
-                    <SelectTrigger className="w-full sm:w-[180px] bg-background">
+                    <SelectTrigger className="w-full">
                     <SelectValue placeholder="Payment Status" />
                     </SelectTrigger>
                     <SelectContent>
@@ -512,12 +512,12 @@ export default function OrderReportPage() {
             </div>
             
             <div className="space-y-1">
-                <p className="text-xs font-semibold text-muted-foreground">SOURCE</p>
+                <Label className="text-xs font-semibold text-muted-foreground px-1">SOURCE</Label>
                 <Select
                     value={filters.source}
                     onValueChange={(value) => handleFilterChange('source', value)}
                 >
-                    <SelectTrigger className="w-full sm:w-[180px] bg-background">
+                    <SelectTrigger className="w-full">
                     <SelectValue placeholder="Source" />
                     </SelectTrigger>
                     <SelectContent>
@@ -529,18 +529,22 @@ export default function OrderReportPage() {
             </div>
 
             <div className="space-y-1">
-                <p className="text-xs font-semibold text-muted-foreground">REPORT PERIOD</p>
+                <Label className="text-xs font-semibold text-muted-foreground px-1">REPORT PERIOD</Label>
                 <DateRangePicker
                 dateRange={filters.dateRange}
                 onDateRangeChange={(range) => handleFilterChange('dateRange', range)}
                 />
             </div>
-          </div>
-
-          <Button variant="ghost" size="icon" onClick={resetAllFilters} className="self-end" title="Refresh">
-            <RotateCcw className="h-4 w-4" />
-            <span className="sr-only">Refresh</span>
-          </Button>
+            <Button
+                variant="ghost"
+                size="icon"
+                onClick={resetAllFilters}
+                className="lg:col-start-5 lg:justify-self-end"
+                title="Refresh"
+            >
+                <RotateCcw className="h-4 w-4" />
+                <span className="sr-only">Refresh</span>
+            </Button>
         </div>
 
         <StatCards cards={kpiData} />
