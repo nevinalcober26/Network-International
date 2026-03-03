@@ -275,9 +275,9 @@ export default function TipsAndGratuityReportPage() {
   const tipTransactions = useMemo(() => {
     let tips = filteredTransactions.filter(t => t.tipAmount && t.tipAmount > 0);
 
-    if (filters.sortBy === 'top_earners_amount') {
-      tips.sort((a, b) => (b.tipAmount || 0) - (a.tipAmount || 0));
-    } else if (filters.sortBy === 'top_earners_percent') {
+    if (filters.sortBy === 'highest_revenue') {
+        tips.sort((a, b) => b.totalAmount - a.totalAmount);
+    } else if (filters.sortBy === 'highest_tip_percent') {
       tips.sort((a, b) => {
         const percentA = a.totalAmount > 0 ? (a.tipAmount || 0) / a.totalAmount : 0;
         const percentB = b.totalAmount > 0 ? (b.tipAmount || 0) / b.totalAmount : 0;
@@ -472,7 +472,7 @@ export default function TipsAndGratuityReportPage() {
                 </Select>
             </div>
             <div className="space-y-1">
-                <Label className="text-xs font-semibold text-muted-foreground px-1">SORT BY</Label>
+                <Label className="text-xs font-semibold text-muted-foreground px-1">Ranked by</Label>
                 <Select
                     value={filters.sortBy}
                     onValueChange={(value) => handleFilterChange('sortBy', value)}
@@ -481,9 +481,9 @@ export default function TipsAndGratuityReportPage() {
                     <SelectValue placeholder="Sort by" />
                     </SelectTrigger>
                     <SelectContent>
-                        <SelectItem value="all">Default (Date)</SelectItem>
-                        <SelectItem value="top_earners_amount">Top Earners (Amount)</SelectItem>
-                        <SelectItem value="top_earners_percent">Highest Tip %</SelectItem>
+                        <SelectItem value="all">Most recent activity (Default)</SelectItem>
+                        <SelectItem value="highest_revenue">Highest revenue</SelectItem>
+                        <SelectItem value="highest_tip_percent">Highest tip %</SelectItem>
                     </SelectContent>
                 </Select>
             </div>
