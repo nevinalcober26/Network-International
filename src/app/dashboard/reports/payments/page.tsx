@@ -24,6 +24,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuCheckboxItem,
+  DropdownMenuSeparator,
+} from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -42,6 +49,7 @@ import {
   File as FileIcon,
   FileText,
   Sheet as SheetIcon,
+  ChevronDown,
 } from 'lucide-react';
 import { DashboardHeader } from '@/components/dashboard/header';
 import { cn } from '@/lib/utils';
@@ -120,7 +128,7 @@ const initialFilterState = {
     from: subDays(new Date(), 29),
     to: new Date(),
   } as DateRange | undefined,
-  branch: "Bloomsbury's - Ras Al Khaimah",
+  branches: ["Bloomsbury's - Ras Al Khaimah"],
   paymentStatus: 'all',
   source: 'all',
 };
@@ -221,6 +229,24 @@ export default function OrderReportPage() {
     setCurrentPage(1);
   };
 
+  const handleBranchesChange = (branchName: string, isChecked: boolean) => {
+    setFilters(prev => {
+        const newBranches = isChecked 
+            ? [...prev.branches, branchName] 
+            : prev.branches.filter(b => b !== branchName);
+        return { ...prev, branches: newBranches };
+    });
+    setCurrentPage(1);
+  };
+  
+  const handleSelectAllBranches = (isChecked: boolean) => {
+    setFilters(prev => ({
+        ...prev,
+        branches: isChecked ? mockDataStore.branches.map(b => b.name) : []
+    }));
+    setCurrentPage(1);
+  };
+
   const resetAllFilters = () => {
     setFilters(initialFilterState);
     setCurrentPage(1);
@@ -236,8 +262,7 @@ export default function OrderReportPage() {
               end: endOfDay(filters.dateRange.to),
             })
           : true;
-      const matchesBranch =
-        filters.branch === 'all' || transaction.branch === filters.branch;
+      const matchesBranch = filters.branches.includes(transaction.branch);
       const matchesStatus =
         filters.paymentStatus === 'all' ||
         transaction.paymentStatus === filters.paymentStatus;
@@ -382,20 +407,40 @@ export default function OrderReportPage() {
           <div className="flex flex-wrap items-center gap-4">
             <div className="space-y-1">
                 <p className="text-xs font-semibold text-muted-foreground">OUTLET</p>
-                <Select
-                value={filters.branch}
-                onValueChange={(value) => handleFilterChange('branch', value)}
-                >
-                <SelectTrigger className="w-full sm:w-[220px] bg-background">
-                    <SelectValue placeholder="Branch/Venue" />
-                </SelectTrigger>
-                <SelectContent>
-                    <SelectItem value="all">All Branches</SelectItem>
-                    {mockDataStore.branches.map(branch => (
-                      <SelectItem key={branch.id} value={branch.name}>{branch.name}</SelectItem>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" className="w-full sm:w-[220px] bg-background justify-between">
+                      <span className="truncate">
+                        {filters.branches.length === mockDataStore.branches.length
+                          ? 'All Branches'
+                          : filters.branches.length === 0
+                          ? 'Select Branch'
+                          : filters.branches.length === 1
+                          ? filters.branches[0]
+                          : `${filters.branches.length} branches selected`}
+                      </span>
+                      <ChevronDown className="h-4 w-4 opacity-50 ml-2" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent className="w-[220px]">
+                    <DropdownMenuCheckboxItem
+                      checked={filters.branches.length === mockDataStore.branches.length}
+                      onCheckedChange={handleSelectAllBranches}
+                    >
+                      All Branches
+                    </DropdownMenuCheckboxItem>
+                    <DropdownMenuSeparator />
+                    {mockDataStore.branches.map((branch) => (
+                      <DropdownMenuCheckboxItem
+                        key={branch.id}
+                        checked={filters.branches.includes(branch.name)}
+                        onCheckedChange={(checked) => handleBranchesChange(branch.name, !!checked)}
+                      >
+                        {branch.name}
+                      </DropdownMenuCheckboxItem>
                     ))}
-                </SelectContent>
-                </Select>
+                  </DropdownMenuContent>
+                </DropdownMenu>
             </div>
 
             <div className="space-y-1">
