@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useMemo, useEffect } from 'react';
@@ -481,7 +482,7 @@ export default function TipsAndGratuityReportPage() {
                     <SelectValue placeholder="Sort by" />
                     </SelectTrigger>
                     <SelectContent>
-                        <SelectItem value="all">Most recent activity (Default)</SelectItem>
+                        <SelectItem value="all">Most recent activity</SelectItem>
                         <SelectItem value="highest_revenue">Highest revenue</SelectItem>
                         <SelectItem value="highest_tip_percent">Highest tip %</SelectItem>
                     </SelectContent>
