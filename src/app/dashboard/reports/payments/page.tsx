@@ -120,7 +120,7 @@ const initialFilterState = {
     from: subDays(new Date(), 29),
     to: new Date(),
   } as DateRange | undefined,
-  branch: 'all',
+  branch: "Bloomsbury's - Ras Al Khaimah",
   paymentStatus: 'all',
 };
 
@@ -382,13 +382,14 @@ export default function OrderReportPage() {
                 value={filters.branch}
                 onValueChange={(value) => handleFilterChange('branch', value)}
                 >
-                <SelectTrigger className="w-full sm:w-[180px] bg-background">
+                <SelectTrigger className="w-full sm:w-[220px] bg-background">
                     <SelectValue placeholder="Branch/Venue" />
                 </SelectTrigger>
                 <SelectContent>
                     <SelectItem value="all">All Branches</SelectItem>
-                    <SelectItem value="Ras Al Khaimah">Bloomsbury's - Ras Al Khaimah</SelectItem>
-                    <SelectItem value="Dubai Mall">Bloomsbury's - Dubai Mall</SelectItem>
+                    {mockDataStore.branches.map(branch => (
+                      <SelectItem key={branch.id} value={branch.name}>{branch.name}</SelectItem>
+                    ))}
                 </SelectContent>
                 </Select>
             </div>
