@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   Card,
   CardContent,
@@ -70,7 +70,7 @@ import { type DateRange } from 'react-day-picker';
 import { DateRangePicker } from '@/components/dashboard/reports/date-range-picker';
 import type { Order } from '@/app/dashboard/orders/types';
 import { mockDataStore } from '@/lib/mock-data-store';
-import { OrderDetailsSheet } from '@/app/dashboard/orders/order-details-sheet';
+import { OrderDetailsSheet } => '@/app/dashboard/orders/order-details-sheet';
 import { StatCards, type StatCardData } from '@/components/dashboard/stat-cards';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 
@@ -415,7 +415,7 @@ export default function TipsAndGratuityReportPage() {
         </div>
 
         <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 rounded-lg border bg-card p-3 shadow-sm">
-          <div className="flex flex-wrap items-center gap-4">
+          <div className="flex flex-wrap items-end gap-4">
             <div className="space-y-1">
                 <Label className="text-xs font-semibold text-muted-foreground px-1">OUTLET</Label>
                 <DropdownMenu>

@@ -73,6 +73,7 @@ import {
   TooltipTrigger as UiTooltipTrigger,
 } from '@/components/ui/tooltip';
 import { StatCards, type StatCardData } from '@/components/dashboard/stat-cards';
+import { Label } from '@/components/ui/label';
 
 type SplitSettlementLog = {
   orderId: string;
@@ -274,10 +275,10 @@ export default function SplitBillsReportPage() {
 
         <StatCards cards={kpiCards} />
 
-        <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 rounded-lg border bg-card p-3">
-          <div className="flex flex-wrap items-center gap-4">
-            <div className="flex items-center gap-2">
-              <p className="text-xs font-semibold text-muted-foreground">OUTLET</p>
+        <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 rounded-lg border bg-card p-3 shadow-sm">
+          <div className="flex flex-wrap items-end gap-4">
+            <div className="space-y-1">
+              <Label className="text-xs font-semibold text-muted-foreground px-1">OUTLET</Label>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="outline" className="w-full sm:w-[220px] justify-between">
@@ -313,8 +314,8 @@ export default function SplitBillsReportPage() {
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
-            <div className="flex items-center gap-2">
-              <p className="text-xs font-semibold text-muted-foreground">SPLIT METHODS</p>
+            <div className="space-y-1">
+              <Label className="text-xs font-semibold text-muted-foreground px-1">SPLIT METHODS</Label>
               <Select
                 value={filters.splitMethod}
                 onValueChange={(value) => handleFilterChange('splitMethod', value)}
@@ -329,8 +330,8 @@ export default function SplitBillsReportPage() {
                 </SelectContent>
               </Select>
             </div>
-            <div className="flex items-center gap-2">
-              <p className="text-xs font-semibold text-muted-foreground">REPORT PERIOD</p>
+            <div className="space-y-1">
+              <Label className="text-xs font-semibold text-muted-foreground px-1">REPORT PERIOD</Label>
               <DateRangePicker
                 dateRange={filters.dateRange}
                 onDateRangeChange={(range) => handleFilterChange('dateRange', range)}
@@ -339,11 +340,12 @@ export default function SplitBillsReportPage() {
           </div>
           <Button
             variant="ghost"
-            size="icon"
+            size="sm"
             onClick={resetAllFilters}
             className="self-end"
           >
-            <RotateCcw className="h-4 w-4" />
+            <RotateCcw className="mr-2 h-4 w-4" />
+            Refresh
           </Button>
         </div>
 
