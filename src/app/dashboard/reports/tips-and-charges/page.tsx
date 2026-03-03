@@ -416,44 +416,44 @@ export default function TipsAndGratuityReportPage() {
 
         <StatCards cards={tipsKpiCards} />
 
-        <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-2 rounded-lg border bg-card p-3 shadow-sm">
+        <div className="flex flex-wrap items-end justify-between gap-x-4 gap-y-2 rounded-lg border bg-card p-3 shadow-sm">
           <div className="flex flex-wrap items-start gap-4">
             <div className="space-y-1">
-                <Label className="text-xs font-semibold text-muted-foreground px-1">OUTLET</Label>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="outline" className="w-full sm:w-[220px] justify-between">
-                      <span className="truncate">
-                        {filters.branches.length === mockDataStore.branches.length
-                          ? 'All Branches'
-                          : filters.branches.length === 0
-                          ? 'Select Branch'
-                          : filters.branches.length === 1
-                          ? filters.branches[0]
-                          : `${filters.branches.length} branches selected`}
-                      </span>
-                      <ChevronDown className="h-4 w-4 opacity-50 ml-2" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent className="w-[220px]">
+              <Label className="text-xs font-semibold text-muted-foreground px-1">OUTLET</Label>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" className="w-full sm:w-[220px] justify-between">
+                    <span className="truncate">
+                      {filters.branches.length === mockDataStore.branches.length
+                        ? 'All Branches'
+                        : filters.branches.length === 0
+                        ? 'Select Branch'
+                        : filters.branches.length === 1
+                        ? filters.branches[0]
+                        : `${filters.branches.length} branches selected`}
+                    </span>
+                    <ChevronDown className="h-4 w-4 opacity-50 ml-2" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="w-[220px]">
+                  <DropdownMenuCheckboxItem
+                    checked={filters.branches.length === mockDataStore.branches.length}
+                    onCheckedChange={handleSelectAllBranches}
+                  >
+                    All Branches
+                  </DropdownMenuCheckboxItem>
+                  <DropdownMenuSeparator />
+                  {mockDataStore.branches.map((branch) => (
                     <DropdownMenuCheckboxItem
-                      checked={filters.branches.length === mockDataStore.branches.length}
-                      onCheckedChange={handleSelectAllBranches}
+                      key={branch.id}
+                      checked={filters.branches.includes(branch.name)}
+                      onCheckedChange={(checked) => handleBranchesChange(branch.name, !!checked)}
                     >
-                      All Branches
+                      {branch.name}
                     </DropdownMenuCheckboxItem>
-                    <DropdownMenuSeparator />
-                    {mockDataStore.branches.map((branch) => (
-                      <DropdownMenuCheckboxItem
-                        key={branch.id}
-                        checked={filters.branches.includes(branch.name)}
-                        onCheckedChange={(checked) => handleBranchesChange(branch.name, !!checked)}
-                      >
-                        {branch.name}
-                      </DropdownMenuCheckboxItem>
-                    ))}
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
             <div className="space-y-1">
                 <Label className="text-xs font-semibold text-muted-foreground px-1">STAFF MEMBERS</Label>
@@ -496,7 +496,12 @@ export default function TipsAndGratuityReportPage() {
                 />
             </div>
           </div>
-          <Button variant="ghost" size="sm" onClick={resetAllFilters} className="self-end">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={resetAllFilters}
+            className="self-end"
+          >
             <RotateCcw className="mr-2 h-4 w-4" />
             Refresh
           </Button>
