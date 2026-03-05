@@ -503,7 +503,7 @@ export default function EditBranchPage() {
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
                       <div className="space-y-2 text-left">
-                        <Label>Max Rate</Label>
+                        <Label>Max Tip Amount Allowed</Label>
                         <Input value={maxRate} onChange={(e) => setMaxRate(e.target.value)} placeholder="100" className="bg-background"/>
                       </div>
                       <div className="space-y-2 text-left">
