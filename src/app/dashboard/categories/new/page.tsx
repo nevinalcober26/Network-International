@@ -560,7 +560,7 @@ export default function AddNewBranchPage() {
                                 value={quickTagSearch}
                                 onChange={(e) => setQuickTagSearch(e.target.value)}
                                 onKeyDown={handleAddSuggestedRate}
-                                className="bg-background mt-2"
+                                className="bg-background mt-2 placeholder:text-muted-foreground"
                             />
                             </PopoverTrigger>
                             <PopoverContent className="w-[--radix-popover-trigger-width] p-1">
