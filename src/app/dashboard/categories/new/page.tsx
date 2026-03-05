@@ -556,6 +556,7 @@ export default function AddNewBranchPage() {
                         <Popover>
                             <PopoverTrigger asChild>
                             <Input
+                                type="text"
                                 placeholder="Select or enter custom rate..."
                                 value={quickTagSearch}
                                 onChange={(e) => setQuickTagSearch(e.target.value)}
