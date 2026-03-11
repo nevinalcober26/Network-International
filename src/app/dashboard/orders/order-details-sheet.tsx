@@ -23,7 +23,7 @@ import {
   Card,
   CardContent,
   CardHeader,
-  CardTitle,
+  CardTitle as CardTitleComponent,
 } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
@@ -91,10 +91,10 @@ export function OrderDetailsSheet({
               <div className="lg:col-span-3 space-y-6">
                 <Card>
                   <CardHeader className="p-8">
-                    <CardTitle className="text-lg flex items-center gap-2">
+                    <CardTitleComponent className="text-lg flex items-center gap-2">
                       <Package className="h-5 w-5" />
                       Items Ordered ({order.items.length})
-                    </CardTitle>
+                    </CardTitleComponent>
                   </CardHeader>
                   <CardContent className="p-8 pt-0">
                     <div className="space-y-4">
@@ -122,10 +122,10 @@ export function OrderDetailsSheet({
 
                 <Card>
                   <CardHeader className="p-8">
-                    <CardTitle className="text-lg flex items-center gap-2">
+                    <CardTitleComponent className="text-lg flex items-center gap-2">
                       <CreditCard className="h-5 w-5" />
                       Payment Details
-                    </CardTitle>
+                    </CardTitleComponent>
                   </CardHeader>
                   <CardContent className="p-8 pt-0">
                     <div className="space-y-2 text-sm">
@@ -286,10 +286,10 @@ export function OrderDetailsSheet({
               <div className="lg:col-span-2 space-y-6">
                 <Card>
                   <CardHeader className="p-8">
-                    <CardTitle className="text-lg flex items-center gap-2">
+                    <CardTitleComponent className="text-lg flex items-center gap-2">
                       <User className="h-5 w-5" />
                       {order.customer ? 'Customer Details' : 'Guest Details'}
-                    </CardTitle>
+                    </CardTitleComponent>
                   </CardHeader>
                   <CardContent className="p-8 pt-0 text-sm space-y-4">
                     <div className="flex justify-between items-center">
@@ -315,10 +315,10 @@ export function OrderDetailsSheet({
 
                 <Card>
                   <CardHeader className="p-8">
-                    <CardTitle className="text-lg flex items-center gap-2">
+                    <CardTitleComponent className="text-lg flex items-center gap-2">
                       <Info className="h-5 w-5" />
                       Order Summary
-                    </CardTitle>
+                    </CardTitleComponent>
                   </CardHeader>
                   <CardContent className="p-8 pt-0 grid grid-cols-2 gap-x-4 gap-y-6 text-sm">
                     <div className="space-y-1">
@@ -353,10 +353,10 @@ export function OrderDetailsSheet({
                 {order.orderComments && (
                     <Card>
                         <CardHeader className="p-8">
-                            <CardTitle className="text-lg flex items-center gap-2">
+                            <CardTitleComponent className="text-lg flex items-center gap-2">
                                 <MessageSquare className="h-5 w-5" />
                                 Order Comments
-                            </CardTitle>
+                            </CardTitleComponent>
                         </CardHeader>
                         <CardContent className="p-8 pt-0">
                             <p className="text-sm text-muted-foreground italic">
@@ -381,6 +381,12 @@ export function OrderDetailsSheet({
       {order.staffReference && (
         <Dialog open={isStaffInfoOpen} onOpenChange={setIsStaffInfoOpen}>
           <DialogContent className="p-0 max-w-sm overflow-hidden rounded-3xl border-0 shadow-2xl">
+            <DialogHeader className="sr-only">
+              <DialogTitle>Server Performance: {order.staffName}</DialogTitle>
+              <DialogDescription>
+                A summary of {order.staffName}'s performance including sales and tips for the current period.
+              </DialogDescription>
+            </DialogHeader>
             <RadixDialogClose className="absolute top-4 left-4 z-10 h-8 w-8 rounded-full bg-black/20 text-white ring-offset-0 focus:ring-0 focus:outline-none flex items-center justify-center">
               <X className="h-4 w-4" />
             </RadixDialogClose>
