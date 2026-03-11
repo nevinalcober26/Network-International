@@ -16,6 +16,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogDescription,
+  DialogClose as RadixDialogClose,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import {
@@ -37,10 +38,17 @@ import {
   User,
   Hourglass,
   MessageSquare,
+  Star,
+  CalendarDays,
+  DollarSign,
+  FileText,
+  X,
 } from 'lucide-react';
 import type { Order } from './types';
 import { getStatusBadgeVariant } from './utils';
 import { cn } from '@/lib/utils';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+
 
 interface OrderDetailsSheetProps {
   order: Order | null;
@@ -372,47 +380,79 @@ export function OrderDetailsSheet({
       </SheetContent>
       {order.staffReference && (
         <Dialog open={isStaffInfoOpen} onOpenChange={setIsStaffInfoOpen}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle className="flex items-center gap-2">
-                <User className="h-5 w-5" />
-                Server Performance: {order.staffName}
-              </DialogTitle>
-              <DialogDescription>
-                Performance summary for this staff member for the period {format(new Date(order.staffReference.start_date), 'MMM d')} to {format(new Date(order.staffReference.end_date), 'MMM d')}.
-              </DialogDescription>
-            </DialogHeader>
-            <div className="py-4 text-sm space-y-4">
-                <div className="flex justify-between items-center bg-muted p-3 rounded-md">
-                    <p className="text-muted-foreground font-medium">Employee Code</p>
-                    <p className="font-mono text-xs font-bold bg-background px-2 py-1 rounded border">
-                        {order.staffReference.employee_reference_code}
+          <DialogContent className="p-0 max-w-sm overflow-hidden rounded-3xl border-0 shadow-2xl">
+            <RadixDialogClose className="absolute top-4 left-4 z-10 h-8 w-8 rounded-full bg-black/20 text-white ring-offset-0 focus:ring-0 focus:outline-none flex items-center justify-center">
+              <X className="h-4 w-4" />
+            </RadixDialogClose>
+            
+            <div className="relative">
+              <div className="h-52 w-full bg-gradient-to-br from-green-200 via-teal-200 to-cyan-300 p-8 pt-16 flex flex-col items-center justify-end">
+                <Avatar className="h-20 w-20 border-4 border-white shadow-lg">
+                  <AvatarFallback className="text-3xl bg-gray-200 text-gray-500">
+                    <User className="h-10 w-10" />
+                  </AvatarFallback>
+                </Avatar>
+                <h2 className="mt-3 text-2xl font-bold text-gray-800">{order.staffName}</h2>
+                <p className="font-mono text-sm text-gray-600/70">{order.staffReference.employee_reference_code}</p>
+              </div>
+
+              <div className="bg-muted/30 p-6 pt-8 -mt-6 rounded-t-3xl space-y-4">
+                <Card className="rounded-2xl shadow-lg border-white/50">
+                  <CardContent className="p-6 text-center">
+                    <Badge variant="outline" className="font-bold text-xs bg-white text-gray-600 mb-3 border-gray-200">
+                      <Star className="h-3 w-3 mr-1.5 text-yellow-500 fill-yellow-500"/>
+                      TOTAL TIPS EARNED
+                    </Badge>
+                    <p className="text-5xl font-black text-teal-600">
+                      {order.staffReference.currency} {order.staffReference.total_tip_amount.toFixed(2)}
                     </p>
-                </div>
+                    <p className="text-sm text-gray-500 mt-2">Outstanding performance this period</p>
+                  </CardContent>
+                </Card>
+                
+                <Card className="rounded-2xl shadow-lg border-white/50">
+                  <CardContent className="p-4 flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="h-9 w-9 flex items-center justify-center bg-purple-100 text-purple-600 rounded-lg">
+                        <CalendarDays className="h-5 w-5"/>
+                      </div>
+                      <p className="text-sm font-bold text-gray-500">PERIOD</p>
+                    </div>
+                    <p className="font-bold text-sm text-gray-800">
+                      {format(new Date(order.staffReference.start_date), 'MMM d')} - {format(new Date(order.staffReference.end_date), 'MMM d')}
+                    </p>
+                  </CardContent>
+                </Card>
+                
                 <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-1 bg-muted p-3 rounded-md">
-                        <p className="text-muted-foreground">Total Sales</p>
-                        <p className="font-medium text-lg">
-                            {order.staffReference.currency} {order.staffReference.total_sale_amount.toFixed(2)}
-                        </p>
-                    </div>
-                    <div className="space-y-1 bg-muted p-3 rounded-md">
-                        <p className="text-muted-foreground">Total Orders</p>
-                        <p className="font-medium text-lg">{order.staffReference.order_count}</p>
-                    </div>
-                    <div className="space-y-1 bg-muted p-3 rounded-md">
-                        <p className="text-muted-foreground">Total Tips</p>
-                        <p className="font-medium text-lg">
-                            {order.staffReference.currency} {order.staffReference.total_tip_amount.toFixed(2)}
-                        </p>
-                    </div>
-                    <div className="space-y-1 bg-muted p-3 rounded-md">
-                        <p className="text-muted-foreground">Period</p>
-                        <p className="font-medium text-lg">
-                            {format(new Date(order.staffReference.start_date), 'MMM d')} - {format(new Date(order.staffReference.end_date), 'MMM d')}
-                        </p>
-                    </div>
+                  <Card className="rounded-2xl shadow-lg border-white/50 bg-gradient-to-br from-pink-50 to-purple-50">
+                    <CardContent className="p-4 text-center">
+                      <div className="flex items-center justify-center gap-2 text-xs font-bold text-gray-500">
+                        <div className="h-6 w-6 flex items-center justify-center bg-white/50 rounded-full text-green-600">
+                          <DollarSign className="h-4 w-4"/>
+                        </div>
+                        TOTAL SALES
+                      </div>
+                      <p className="text-2xl font-bold text-gray-800 mt-2">
+                        {order.staffReference.currency} {order.staffReference.total_sale_amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      </p>
+                    </CardContent>
+                  </Card>
+                  <Card className="rounded-2xl shadow-lg border-white/50 bg-gradient-to-br from-orange-50 to-yellow-50">
+                    <CardContent className="p-4 text-center">
+                      <div className="flex items-center justify-center gap-2 text-xs font-bold text-gray-500">
+                        <div className="h-6 w-6 flex items-center justify-center bg-white/50 rounded-full text-orange-600">
+                          <FileText className="h-4 w-4"/>
+                        </div>
+                        TOTAL ORDERS
+                      </div>
+                      <p className="text-2xl font-bold text-gray-800 mt-2">
+                        {order.staffReference.order_count}
+                      </p>
+                    </CardContent>
+                  </Card>
                 </div>
+              </div>
             </div>
           </DialogContent>
         </Dialog>
