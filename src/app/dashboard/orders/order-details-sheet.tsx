@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { format } from 'date-fns';
 import {
   Sheet,
@@ -10,6 +10,13 @@ import {
   SheetFooter,
   SheetClose,
 } from '@/components/ui/sheet';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -46,6 +53,8 @@ export function OrderDetailsSheet({
   open,
   onOpenChange,
 }: OrderDetailsSheetProps) {
+  const [isStaffInfoOpen, setIsStaffInfoOpen] = useState(false);
+
   if (!order) return null;
 
   return (
@@ -296,49 +305,6 @@ export function OrderDetailsSheet({
                   </CardContent>
                 </Card>
 
-                {order.staffReference && (
-                    <Card>
-                        <CardHeader className="p-8">
-                        <CardTitle className="text-lg flex items-center gap-2">
-                            <User className="h-5 w-5" />
-                            Staff Reference
-                        </CardTitle>
-                        </CardHeader>
-                        <CardContent className="p-8 pt-0 text-sm space-y-4">
-                            <div className="flex justify-between items-center">
-                                <p className="text-muted-foreground">Employee Code</p>
-                                <p className="font-mono text-xs font-bold bg-muted px-2 py-1 rounded">
-                                    {order.staffReference.employee_reference_code}
-                                </p>
-                            </div>
-                            <div className="grid grid-cols-2 gap-4">
-                                <div className="space-y-1">
-                                    <p className="text-muted-foreground">Total Sales</p>
-                                    <p className="font-medium">
-                                        {order.staffReference.currency} {order.staffReference.total_sale_amount.toFixed(2)}
-                                    </p>
-                                </div>
-                                <div className="space-y-1">
-                                    <p className="text-muted-foreground">Total Orders</p>
-                                    <p className="font-medium">{order.staffReference.order_count}</p>
-                                </div>
-                                <div className="space-y-1">
-                                    <p className="text-muted-foreground">Total Tips</p>
-                                    <p className="font-medium">
-                                        {order.staffReference.currency} {order.staffReference.total_tip_amount.toFixed(2)}
-                                    </p>
-                                </div>
-                                <div className="space-y-1">
-                                    <p className="text-muted-foreground">Period</p>
-                                    <p className="font-medium">
-                                        {format(new Date(order.staffReference.start_date), 'MMM d')} - {format(new Date(order.staffReference.end_date), 'MMM d')}
-                                    </p>
-                                </div>
-                            </div>
-                        </CardContent>
-                    </Card>
-                )}
-
                 <Card>
                   <CardHeader className="p-8">
                     <CardTitle className="text-lg flex items-center gap-2">
@@ -356,8 +322,18 @@ export function OrderDetailsSheet({
                       <p className="font-medium">{order.table}</p>
                     </div>
                     <div className="space-y-1">
-                      <p className="text-muted-foreground">Staff</p>
-                      <p className="font-medium">{order.staffName}</p>
+                      <p className="text-muted-foreground">Server</p>
+                        {order.staffReference ? (
+                            <Button
+                                variant="link"
+                                className="p-0 h-auto font-medium"
+                                onClick={() => setIsStaffInfoOpen(true)}
+                            >
+                                {order.staffName}
+                            </Button>
+                        ) : (
+                            <p className="font-medium">{order.staffName}</p>
+                        )}
                     </div>
                     <div className="space-y-1">
                       <p className="text-muted-foreground">Order Type</p>
@@ -394,6 +370,53 @@ export function OrderDetailsSheet({
           </SheetFooter>
         </div>
       </SheetContent>
+      {order.staffReference && (
+        <Dialog open={isStaffInfoOpen} onOpenChange={setIsStaffInfoOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <User className="h-5 w-5" />
+                Server Performance: {order.staffName}
+              </DialogTitle>
+              <DialogDescription>
+                Performance summary for this staff member for the period {format(new Date(order.staffReference.start_date), 'MMM d')} to {format(new Date(order.staffReference.end_date), 'MMM d')}.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="py-4 text-sm space-y-4">
+                <div className="flex justify-between items-center bg-muted p-3 rounded-md">
+                    <p className="text-muted-foreground font-medium">Employee Code</p>
+                    <p className="font-mono text-xs font-bold bg-background px-2 py-1 rounded border">
+                        {order.staffReference.employee_reference_code}
+                    </p>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-1 bg-muted p-3 rounded-md">
+                        <p className="text-muted-foreground">Total Sales</p>
+                        <p className="font-medium text-lg">
+                            {order.staffReference.currency} {order.staffReference.total_sale_amount.toFixed(2)}
+                        </p>
+                    </div>
+                    <div className="space-y-1 bg-muted p-3 rounded-md">
+                        <p className="text-muted-foreground">Total Orders</p>
+                        <p className="font-medium text-lg">{order.staffReference.order_count}</p>
+                    </div>
+                    <div className="space-y-1 bg-muted p-3 rounded-md">
+                        <p className="text-muted-foreground">Total Tips</p>
+                        <p className="font-medium text-lg">
+                            {order.staffReference.currency} {order.staffReference.total_tip_amount.toFixed(2)}
+                        </p>
+                    </div>
+                    <div className="space-y-1 bg-muted p-3 rounded-md">
+                        <p className="text-muted-foreground">Period</p>
+                        <p className="font-medium text-lg">
+                            {format(new Date(order.staffReference.start_date), 'MMM d')} - {format(new Date(order.staffReference.end_date), 'MMM d')}
+                        </p>
+                    </div>
+                </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
     </Sheet>
   );
 }
