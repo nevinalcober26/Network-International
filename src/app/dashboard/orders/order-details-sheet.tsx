@@ -6,14 +6,12 @@ import {
   Sheet,
   SheetContent,
   SheetHeader,
-  SheetTitle,
   SheetFooter,
   SheetClose,
 } from '@/components/ui/sheet';
 import {
   Dialog,
   DialogContent,
-  DialogHeader as DialogHeaderComponent,
   DialogTitle as DialogTitleComponent,
   DialogDescription as DialogDescriptionComponent,
   DialogClose as RadixDialogClose,
@@ -71,7 +69,7 @@ export function OrderDetailsSheet({
         <div className="flex flex-col h-full">
           <SheetHeader className="p-6 border-b bg-muted/50">
             <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
-              <SheetTitle className="text-2xl">Order {order.orderId}</SheetTitle>
+              <h1 className="text-2xl font-bold">Order {order.orderId}</h1>
               <div className="flex items-center gap-2">
                 <Badge variant={getStatusBadgeVariant(order.orderStatus)}>
                   {order.orderStatus}
@@ -381,27 +379,25 @@ export function OrderDetailsSheet({
       {order.staffReference && (
         <Dialog open={isStaffInfoOpen} onOpenChange={setIsStaffInfoOpen}>
             <DialogContent className="bg-white p-0 max-w-sm overflow-hidden rounded-3xl border-0 shadow-2xl">
-                <DialogHeaderComponent className="sr-only">
-                    <DialogTitleComponent>Server Performance: {order.staffName}</DialogTitleComponent>
-                    <DialogDescriptionComponent>A summary of {order.staffName}'s performance including sales and tips for the current period.</DialogDescriptionComponent>
-                </DialogHeaderComponent>
+                <DialogTitleComponent className="sr-only">Server Performance: {order.staffName}</DialogTitleComponent>
+                <DialogDescriptionComponent className="sr-only">A summary of {order.staffName}'s performance including sales and tips for the current period.</DialogDescriptionComponent>
 
                 <RadixDialogClose className="absolute top-4 left-4 z-50 h-10 w-10 rounded-full bg-black/20 text-white ring-offset-0 focus:ring-0 focus:outline-none flex items-center justify-center transition-all hover:bg-black/30">
                     <X className="h-5 w-5" />
                 </RadixDialogClose>
                 
                 <div className="relative">
-                    <div className="h-60 w-full bg-gradient-to-br from-green-200 via-teal-300 to-cyan-400 p-8 flex flex-col items-center justify-center">
+                    <div className="h-60 w-full bg-gradient-to-br from-teal-300 to-cyan-400 p-8 flex flex-col items-center justify-center">
                         <Avatar className="h-24 w-24 border-4 border-white/30 shadow-lg">
                             <AvatarFallback className="text-4xl bg-gray-100 text-gray-400">
                                 <User className="h-12 w-12" />
                             </AvatarFallback>
                         </Avatar>
-                        <h2 className="mt-3 text-2xl font-bold text-white" style={{textShadow: '0 1px 3px rgba(0,0,0,0.1)'}}>{order.staffName}</h2>
-                        <p className="font-mono text-sm text-white/80">{order.staffReference.employee_reference_code}</p>
+                        <h2 className="mt-4 text-3xl font-bold text-white" style={{textShadow: '0 1px 3px rgba(0,0,0,0.15)'}}>{order.staffName}</h2>
+                        <p className="font-mono text-base text-white/90 mt-1" style={{textShadow: '0 1px 2px rgba(0,0,0,0.2)'}}>{order.staffReference.employee_reference_code}</p>
                     </div>
 
-                    <div className="p-4 -mt-16 space-y-4">
+                    <div className="p-6 -mt-12 space-y-4">
                         <Card className="rounded-2xl shadow-xl bg-white">
                             <CardContent className="p-6 text-center">
                                 <Badge variant="secondary" className="font-bold text-xs bg-gray-100 text-gray-500 mb-3 border-gray-200 uppercase tracking-wider">
@@ -430,7 +426,7 @@ export function OrderDetailsSheet({
                         </Card>
                         
                         <div className="grid grid-cols-2 gap-4">
-                            <Card className="rounded-2xl shadow-lg bg-purple-100 border-0">
+                            <Card className="rounded-2xl shadow-lg bg-purple-50 border-0">
                                 <CardContent className="p-4 text-left">
                                     <div className="flex items-center gap-2 text-xs font-bold text-gray-600 mb-2 uppercase">
                                         <DollarSign className="h-4 w-4 text-green-500"/>
@@ -444,7 +440,7 @@ export function OrderDetailsSheet({
                                     </div>
                                 </CardContent>
                             </Card>
-                            <Card className="rounded-2xl shadow-lg bg-yellow-100 border-0">
+                            <Card className="rounded-2xl shadow-lg bg-yellow-50 border-0">
                                 <CardContent className="p-4 text-left">
                                     <div className="flex items-center gap-2 text-xs font-bold text-gray-600 mb-2 uppercase">
                                         <FileText className="h-4 w-4 text-orange-500"/>
