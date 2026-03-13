@@ -14,8 +14,8 @@ import {
 import {
   Dialog,
   DialogContent,
-  DialogTitle as DialogTitleComponent,
-  DialogDescription as DialogDescriptionComponent,
+  DialogTitle as DialogTitleComponent, // Renamed to avoid conflict
+  DialogDescription as DialogDescriptionComponent, // Renamed
   DialogClose as RadixDialogClose,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -176,7 +176,7 @@ export function OrderDetailsSheet({
                             <Package className="h-5 w-5" />
                           )}
                           <span>
-                            Payment split <strong>{order.splitType}</strong>.
+                            Payment split <strong>{order.splitType === 'byItem' ? 'by Item' : order.splitType}</strong>.
                           </span>
                         </div>
                       ) : order.paymentState === 'Partial' ? (
@@ -220,7 +220,9 @@ export function OrderDetailsSheet({
                                       <div className="min-w-0 flex-1 flex justify-between items-start">
                                         <div>
                                           <p className="font-medium text-sm">
-                                            Payment of ${payment.amount} via {payment.method}
+                                            {order.splitType === 'byItem'
+                                                ? `Paid for items: $${payment.amount} via ${payment.method}`
+                                                : `Payment of $${payment.amount} via ${payment.method}`}
                                           </p>
                                           <p className="mt-0.5 text-sm text-muted-foreground">
                                             by {payment.guestName} on {payment.date}
