@@ -459,55 +459,78 @@ export default function SplitBillsReportPage() {
           </CardHeader>
           <CardContent>
             <div className="relative w-full overflow-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Order ID</TableHead>
-                    <TableHead>Total Bill</TableHead>
-                    <TableHead>Splits</TableHead>
-                    <TableHead>Split Method</TableHead>
-                    <TableHead>Payer Breakdown</TableHead>
-                    <TableHead className="text-right">Settlement Time</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {paginatedLogs.map((log) => (
-                    <TableRow
-                      key={log.orderId}
-                      className="cursor-pointer"
-                      onClick={() => handleViewDetails(log)}
-                    >
-                      <TableCell className="font-medium">{log.orderId}</TableCell>
-                      <TableCell>AED {log.totalBill.toFixed(2)}</TableCell>
-                      <TableCell>
-                        <Badge variant="outline">{log.splits} Ways</Badge>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                           {log.splitMethod === 'Equal' ? <Users className="h-4 w-4 text-muted-foreground" /> : <Package className="h-4 w-4 text-muted-foreground" />}
-                          <span>{log.splitMethod}</span>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex flex-wrap gap-1">
-                          {log.payerBreakdown.map((amount, i) => (
-                            <Badge
-                              key={i}
-                              className="bg-green-100 text-green-700"
-                            >
-                              AED {amount.toFixed(2)}
-                            </Badge>
-                          ))}
-                        </div>
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <p className="font-semibold">{log.settlementTime}</p>
-                        <p className="text-xs text-muted-foreground">Settled</p>
-                      </TableCell>
+              <TooltipProvider>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Order ID</TableHead>
+                      <TableHead>Total Bill</TableHead>
+                      <TableHead>Splits</TableHead>
+                      <TableHead>Split Method</TableHead>
+                      <TableHead>Payer Breakdown</TableHead>
+                      <TableHead className="text-right">Settlement Time</TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                  </TableHeader>
+                  <TableBody>
+                    {paginatedLogs.map((log) => (
+                      <TableRow
+                        key={log.orderId}
+                        className="cursor-pointer"
+                        onClick={() => handleViewDetails(log)}
+                      >
+                        <TableCell className="font-medium">{log.orderId}</TableCell>
+                        <TableCell>AED {log.totalBill.toFixed(2)}</TableCell>
+                        <TableCell>
+                          <Badge variant="outline">{log.splits} Ways</Badge>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            {log.splitMethod === 'Equal' ? <Users className="h-4 w-4 text-muted-foreground" /> : <Package className="h-4 w-4 text-muted-foreground" />}
+                            <span>{log.splitMethod}</span>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          {log.payerBreakdown.length > 3 ? (
+                            <UiTooltip>
+                              <UiTooltipTrigger>
+                                <Badge variant="secondary">{log.splits} Payments</Badge>
+                              </UiTooltipTrigger>
+                              <UiTooltipContent>
+                                <div className="p-1">
+                                  <h4 className="font-semibold mb-2 text-center text-xs uppercase text-muted-foreground">Breakdown</h4>
+                                  <ul className="space-y-1">
+                                    {log.payerBreakdown.map((amount, i) => (
+                                      <li key={i} className="flex justify-between items-center text-xs gap-4">
+                                        <span className="text-muted-foreground">Payer {i + 1}</span>
+                                        <span className="font-mono font-semibold">AED {amount.toFixed(2)}</span>
+                                      </li>
+                                    ))}
+                                  </ul>
+                                </div>
+                              </UiTooltipContent>
+                            </UiTooltip>
+                          ) : (
+                            <div className="flex flex-wrap gap-1">
+                              {log.payerBreakdown.map((amount, i) => (
+                                <Badge
+                                  key={i}
+                                  className="bg-green-100 text-green-700"
+                                >
+                                  AED {amount.toFixed(2)}
+                                </Badge>
+                              ))}
+                            </div>
+                          )}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <p className="font-semibold">{log.settlementTime}</p>
+                          <p className="text-xs text-muted-foreground">Settled</p>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </TooltipProvider>
               {paginatedLogs.length === 0 && (
                 <div className="text-center p-8 text-muted-foreground">
                   No split bills found for the selected filters.
