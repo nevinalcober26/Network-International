@@ -164,7 +164,13 @@ const MANAGEMENT: SidebarItem[] = [
     label: 'Catalog',
     id: 'catalog',
     icon: Briefcase,
-    items: [{ label: 'Products', path: '/dashboard/products' }],
+    items: [
+        { label: 'Products', path: '/dashboard/products' },
+        { label: 'Categories', path: '/dashboard/catalog/categories' },
+        { label: 'Variations', path: '/dashboard/catalog/variations' },
+        { label: 'Properties', path: '/dashboard/catalog/properties' },
+        { label: 'Combo Groups', path: '/dashboard/catalog/combo-groups' },
+    ],
   },
   {
     label: 'Operations',
@@ -182,7 +188,7 @@ const MANAGEMENT: SidebarItem[] = [
     label: 'Settings',
     id: 'settings',
     icon: Settings,
-    items: [{ label: 'Manage Restaurant', path: '/dashboard/categories' }],
+    items: [{ label: 'Manage Branches', path: '/dashboard/categories' }],
   },
 ];
 
