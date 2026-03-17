@@ -6,8 +6,53 @@ import type { Order, OrderItem, Payment as OrderPayment, StaffReference } from '
 import { format, subDays, subHours, endOfDay, setHours, setMinutes, subMinutes, formatDistanceToNow } from 'date-fns';
 import type { Column } from '@/app/dashboard/categories/types';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
+import type { VariationGroup } from '@/app/dashboard/catalog/variations/types';
 
 export const mockComboGroups = ['Lunch Special', 'Family Deal', 'Dinner for Two', 'Breakfast Combo'];
+
+export const mockVariationGroups: VariationGroup[] = [
+  {
+    id: 'group_1',
+    name: 'Size',
+    options: [
+      { id: 'opt_1_1', value: 'Small' },
+      { id: 'opt_1_2', value: 'Medium' },
+      { id: 'opt_1_3', value: 'Large' },
+    ],
+  },
+  {
+    id: 'group_2',
+    name: 'Color',
+    options: [
+      { id: 'opt_2_1', value: 'Red' },
+      { id: 'opt_2_2', value: 'Green' },
+      { id: 'opt_2_3', value: 'Blue' },
+      { id: 'opt_2_4', value: 'Black' },
+      { id: 'opt_2_5', value: 'White' },
+    ],
+  },
+  {
+    id: 'group_3',
+    name: 'Steak Doneness',
+    options: [
+      { id: 'opt_3_1', value: 'Rare' },
+      { id: 'opt_3_2', value: 'Medium Rare' },
+      { id: 'opt_3_3', value: 'Medium' },
+      { id: 'opt_3_4', value: 'Medium Well' },
+      { id: 'opt_3_5', value: 'Well Done' },
+    ],
+  },
+  {
+    id: 'group_4',
+    name: 'Spice Level',
+    options: [
+        { id: 'opt_4_1', value: 'Mild' },
+        { id: 'opt_4_2', value: 'Medium' },
+        { id: 'opt_4_3', value: 'Hot' },
+        { id: 'opt_4_4', value: 'Extra Hot' },
+    ]
+  }
+];
 
 // --- Branch/Restaurant Source of Truth ---
 export interface Branch {
@@ -396,6 +441,7 @@ class MockDataStore {
     public orders: Order[];
     public categories: Column[];
     public branches: Branch[];
+    public variationGroups: VariationGroup[];
 
     constructor() {
         this.branches = mockBranches;
@@ -403,6 +449,7 @@ class MockDataStore {
         const { customers, orders } = generateRelatedMockData(45, 124, this.products);
         this.customers = customers;
         this.orders = orders;
+        this.variationGroups = mockVariationGroups;
         this.categories = [
           {
             id: 'food',
