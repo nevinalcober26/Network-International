@@ -378,7 +378,7 @@ export default function CategoriesPage() {
         setDeleteTarget(null);
     };
 
-    const isAnyDrawerOpen = isAddSheetOpen || isEditSheetOpen || isScheduleSheetOpen;
+    const isAnyDrawerOpen = isAddSheetOpen || isEditSheetOpen || isScheduleSheetOpen || !!deleteTarget;
     const boardContainerIds = useMemo(() => board.map(c => c.id), [board]);
 
   return (
