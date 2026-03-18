@@ -63,6 +63,9 @@ import {
   RefreshCw,
   ChevronDown,
   CheckCircle,
+  Image as ImageIcon,
+  GalleryHorizontal,
+  X,
 } from 'lucide-react';
 import type { Product, Variation } from './types';
 import Image from 'next/image';
@@ -162,6 +165,8 @@ export function ProductSheet({
     null
   );
   const [showNewComboInput, setShowNewComboInput] = useState(false);
+  const [mainImagePreview, setMainImagePreview] = useState<string | null>(null);
+  const [galleryPreviews, setGalleryPreviews] = useState<string[]>([]);
 
   const categoryOptions = useMemo(() => getCategoryNameOptions(mockDataStore.categories), []);
 
@@ -242,8 +247,10 @@ export function ProductSheet({
 
   useEffect(() => {
     form.reset(defaultValues);
+    setMainImagePreview(product?.mainImage || null);
+    setGalleryPreviews(product?.additionalImages || []);
     setShowNewComboInput(false);
-  }, [defaultValues, form]);
+  }, [defaultValues, form, product]);
 
   const handleAttemptClose = () => {
     if (isDirty) {
@@ -303,6 +310,29 @@ export function ProductSheet({
       setIsGenerating(null);
     }
   };
+  
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>, isMain: boolean) => {
+    const files = e.target.files;
+    if (files) {
+      const fileArray = Array.from(files);
+      fileArray.forEach(file => {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          if (isMain) {
+            setMainImagePreview(reader.result as string);
+          } else {
+            setGalleryPreviews(prev => [...prev, reader.result as string]);
+          }
+        };
+        reader.readAsDataURL(file);
+      })
+    }
+  };
+  
+  const removeGalleryImage = (index: number) => {
+    setGalleryPreviews(prev => prev.filter((_, i) => i !== index));
+  };
+
 
   const onSubmit = (data: ProductFormValues, statusOverride?: Product['status']) => {
     let discountedPrice: number | undefined;
@@ -340,6 +370,8 @@ export function ProductSheet({
       discountedPrice,
       smallDescription: data.smallDescription || '',
       description: data.description || '',
+      mainImage: mainImagePreview || undefined,
+      additionalImages: galleryPreviews,
     };
     
     onSave(fullProductData as Product);
@@ -963,53 +995,67 @@ export function ProductSheet({
                                 </CardHeader>
                                 <CardContent className="space-y-4">
                                     <div className="w-full aspect-video rounded-md border border-dashed flex items-center justify-center bg-muted overflow-hidden">
-                                        <Image
-                                        src="https://picsum.photos/seed/product/320/180"
-                                        width={320}
-                                        height={180}
-                                        alt="Product image"
-                                        className="object-cover w-full h-full"
-                                        />
+                                        {mainImagePreview ? (
+                                            <Image src={mainImagePreview} alt="Main product" width={320} height={180} className="object-cover w-full h-full" />
+                                        ) : (
+                                            <ImageIcon className="h-12 w-12 text-muted-foreground opacity-50" />
+                                        )}
                                     </div>
                                     <div className="flex gap-2">
                                         <Button variant="outline" asChild className="w-full">
-                                            <label
-                                                htmlFor="image-upload"
-                                                className="cursor-pointer"
-                                            >
+                                            <label htmlFor="main-image-upload" className="cursor-pointer">
                                                 <Upload className="mr-2 h-4 w-4" />
                                                 Upload Image
                                             </label>
                                         </Button>
-                                        <Input
-                                            id="image-upload"
-                                            type="file"
-                                            className="sr-only"
-                                        />
-                                        <Button
-                                            type="button"
-                                            variant="ghost"
-                                            className="text-destructive hover:text-destructive"
-                                        >
-                                            Clear
-                                        </Button>
+                                        <Input id="main-image-upload" type="file" className="sr-only" onChange={(e) => handleImageUpload(e, true)} />
+                                        {mainImagePreview && (
+                                            <Button type="button" variant="ghost" className="text-destructive hover:text-destructive" onClick={() => setMainImagePreview(null)}>
+                                                Clear
+                                            </Button>
+                                        )}
                                     </div>
                                 </CardContent>
                             </Card>
                             <div className="space-y-6">
                                 <Card>
                                     <CardHeader>
-                                        <CardTitle>Additional Media</CardTitle>
+                                        <CardTitle>Image Gallery</CardTitle>
+                                        <CardDescription>Add up to 5 additional images.</CardDescription>
                                     </CardHeader>
-                                    <CardContent className="space-y-4">
+                                    <CardContent>
+                                        <div className="grid grid-cols-3 gap-2 mb-4">
+                                            {galleryPreviews.map((src, index) => (
+                                                <div key={index} className="relative aspect-square group">
+                                                    <Image src={src} alt={`Gallery image ${index + 1}`} fill className="object-cover rounded-md" />
+                                                    <Button type="button" size="icon" variant="destructive" className="absolute -top-2 -right-2 h-6 w-6 rounded-full opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => removeGalleryImage(index)}>
+                                                        <X className="h-4 w-4" />
+                                                    </Button>
+                                                </div>
+                                            ))}
+                                            {galleryPreviews.length < 5 && (
+                                                <label htmlFor="gallery-upload" className="aspect-square flex flex-col items-center justify-center rounded-md border-2 border-dashed bg-muted hover:bg-muted/80 cursor-pointer">
+                                                    <GalleryHorizontal className="h-8 w-8 text-muted-foreground" />
+                                                    <span className="text-xs text-muted-foreground mt-1">Add Image</span>
+                                                </label>
+                                            )}
+                                        </div>
+                                        <Input id="gallery-upload" type="file" multiple className="sr-only" onChange={(e) => handleImageUpload(e, false)} accept="image/*" />
+                                    </CardContent>
+                                </Card>
+                                <Card>
+                                    <CardHeader>
+                                        <CardTitle className="text-lg flex items-center gap-2">
+                                            <Video /> Video
+                                        </CardTitle>
+                                    </CardHeader>
+                                    <CardContent>
                                         <FormField
                                             control={form.control}
                                             name="videoUrl"
                                             render={({ field }) => (
                                             <FormItem>
-                                                <FormLabel className="flex items-center gap-2">
-                                                <Video /> Video URL (Optional)
-                                                </FormLabel>
+                                                <FormLabel>YouTube or Vimeo URL</FormLabel>
                                                 <FormControl>
                                                 <Input
                                                     placeholder="https://www.youtube.com/watch?v=..."
@@ -1020,16 +1066,6 @@ export function ProductSheet({
                                             </FormItem>
                                             )}
                                         />
-                                        <div>
-                                            <Label>Video List</Label>
-                                            <Button type="button" variant="outline" className="w-full mt-2">Create Video List</Button>
-                                        </div>
-                                        <div>
-                                            <Label>Image Gallery</Label>
-                                            <div className="mt-2 p-4 h-24 border rounded-lg border-dashed flex items-center justify-center">
-                                                <p className="text-center text-sm text-muted-foreground">Image gallery coming soon.</p>
-                                            </div>
-                                        </div>
                                     </CardContent>
                                 </Card>
                             </div>
@@ -1076,7 +1112,16 @@ export function ProductSheet({
                                                         render={({ field }) => (
                                                             <FormItem className="w-full">
                                                                 <FormLabel>Variation Value*</FormLabel>
-                                                                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                                                <Select
+                                                                  onValueChange={(optionId) => {
+                                                                      const allOptions = mockDataStore.variationGroups.flatMap(g => g.options);
+                                                                      const selectedOption = allOptions.find(o => o.id === optionId);
+                                                                      if (selectedOption) {
+                                                                          field.onChange(selectedOption.value);
+                                                                      }
+                                                                  }}
+                                                                  value={mockDataStore.variationGroups.flatMap(g => g.options).find(o => o.value === field.value)?.id}
+                                                                >
                                                                     <FormControl>
                                                                         <SelectTrigger>
                                                                             <SelectValue placeholder="Select a variation value" />
@@ -1088,7 +1133,7 @@ export function ProductSheet({
                                                                                 <SelectGroup>
                                                                                     <SelectLabel>{group.name}</SelectLabel>
                                                                                     {group.options.map((option) => (
-                                                                                        <SelectItem key={option.id} value={option.value}>
+                                                                                        <SelectItem key={option.id} value={option.id}>
                                                                                             {option.value}
                                                                                         </SelectItem>
                                                                                     ))}
