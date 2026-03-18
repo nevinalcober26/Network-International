@@ -43,31 +43,47 @@ import {
 import { Checkbox } from '@/components/ui/checkbox';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { ChevronDown, GripVertical, PlusCircle, Trash, Upload, Image as ImageIcon } from 'lucide-react';
-import type { VariationGroup } from './types';
+import type { VariationGroup, VariationOption } from './types';
 import { useToast } from '@/hooks/use-toast';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Textarea } from '@/components/ui/textarea';
 import Image from 'next/image';
 import { Switch } from '@/components/ui/switch';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+  SelectGroup,
+  SelectLabel,
+  SelectSeparator,
+} from '@/components/ui/select';
+import { mockDataStore } from '@/lib/mock-data-store';
+
 
 const variationOptionSchema = z.object({
   id: z.string().optional(),
   value: z.string().min(1, 'Option value cannot be empty'),
   photoUrl: z.string().url().optional().or(z.literal('')),
-  regularPrice: z.coerce.number().optional(),
+  regularPrice: z.coerce.number().min(0, "Price can't be negative").optional(),
   salePrice: z.coerce.number().optional(),
   stock: z.coerce.number().optional(),
   description: z.string().optional(),
   allowMultiQuantity: z.boolean().default(false),
   maxQuantity: z.coerce.number().optional(),
+  priceMode: z.enum(['override', 'add', 'subtract']).default('override'),
+  priceValue: z.coerce.number().min(0, "Price value can't be negative"),
+  hidden: z.boolean().default(false),
+  categoryPage: z.boolean().default(false),
+  productPage: z.boolean().default(false),
 });
 
 const variationGroupSchema = z.object({
   name: z.string().min(1, 'Group name is required'),
-  sortOrder: z.coerce.number().default(0),
   multiple: z.boolean().default(false),
   required: z.boolean().default(false),
-  maxChoices: z.coerce.number().default(0),
+  maxChoices: z.coerce.number().optional(),
   options: z.array(variationOptionSchema).min(1, 'At least one option is required'),
 });
 
@@ -117,8 +133,38 @@ const SortableOptionItem = ({
               name={`options.${index}.value`}
               render={({ field }) => (
                 <FormItem className="flex-grow">
-                  <FormControl>
-                    <Input placeholder={`Option ${index + 1}`} {...field} className="font-semibold bg-transparent border-0 shadow-none px-1 focus-visible:ring-0" />
+                   <FormControl>
+                      <Select
+                        onValueChange={(optionId) => {
+                            const allOptions = mockDataStore.variationGroups.flatMap(g => g.options);
+                            const selectedOption = allOptions.find(o => o.id === optionId);
+                            if (selectedOption) {
+                                field.onChange(selectedOption.value);
+                                const priceToSet = selectedOption.salePrice ?? selectedOption.regularPrice ?? 0;
+                                form.setValue(`options.${index}.regularPrice`, priceToSet);
+                            }
+                        }}
+                        value={mockDataStore.variationGroups.flatMap(g => g.options).find(o => o.value === field.value)?.id}
+                      >
+                          <SelectTrigger className="font-semibold bg-transparent border-0 shadow-none px-1 focus-visible:ring-0">
+                            <SelectValue placeholder={`Option ${index + 1}`} />
+                          </SelectTrigger>
+                          <SelectContent>
+                              {mockDataStore.variationGroups.map((group, groupIndex) => (
+                                  <React.Fragment key={group.id}>
+                                      <SelectGroup>
+                                          <SelectLabel>{group.name}</SelectLabel>
+                                          {group.options.map((option) => (
+                                              <SelectItem key={option.id} value={option.id}>
+                                                  {option.value}
+                                              </SelectItem>
+                                          ))}
+                                      </SelectGroup>
+                                      {groupIndex < mockDataStore.variationGroups.length - 1 && <SelectSeparator />}
+                                  </React.Fragment>
+                              ))}
+                          </SelectContent>
+                      </Select>
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -190,7 +236,7 @@ const SortableOptionItem = ({
                         </FormItem>
                     )}
                     />
-                  <FormField control={form.control} name={`options.${index}.regularPrice`} render={({ field }) => (<FormItem><FormLabel>Regular Price (AED)</FormLabel><FormControl><Input type="number" step="0.01" placeholder="0.00" {...field} value={field.value ?? ''} /></FormControl></FormItem>)} />
+                  <FormField control={form.control} name={`options.${index}.regularPrice`} render={({ field }) => (<FormItem><FormLabel>Regular Price (AED)*</FormLabel><FormControl><Input type="number" step="0.01" placeholder="0.00" {...field} value={field.value ?? ''} /></FormControl></FormItem>)} />
                   <FormField control={form.control} name={`options.${index}.salePrice`} render={({ field }) => (<FormItem><FormLabel>Sale Price (AED)</FormLabel><FormControl><Input type="number" step="0.01" placeholder="0.00" {...field} value={field.value ?? ''} /></FormControl></FormItem>)} />
                 </div>
             </div>
@@ -235,10 +281,9 @@ export function VariationGroupSheet({ open, onOpenChange, group, onSave }: Varia
     resolver: zodResolver(variationGroupSchema),
     defaultValues: {
       name: '',
-      sortOrder: 0,
       multiple: false,
       required: false,
-      maxChoices: 0,
+      maxChoices: undefined,
       options: [{ 
         value: '', 
         photoUrl: '',
@@ -248,6 +293,11 @@ export function VariationGroupSheet({ open, onOpenChange, group, onSave }: Varia
         description: '',
         allowMultiQuantity: false,
         maxQuantity: undefined,
+        priceMode: 'override',
+        priceValue: 0,
+        hidden: false,
+        categoryPage: true,
+        productPage: true,
       }],
     },
   });
@@ -277,43 +327,53 @@ export function VariationGroupSheet({ open, onOpenChange, group, onSave }: Varia
   const multipleSelection = form.watch('multiple');
 
   useEffect(() => {
-    if (group) {
-      form.reset({
-        name: group.name,
-        sortOrder: group.sortOrder,
-        multiple: group.multiple,
-        required: group.required,
-        maxChoices: group.maxChoices || 0,
-        options: group.options.map(opt => ({
-          id: opt.id,
-          value: opt.value,
-          photoUrl: opt.photoUrl || '',
-          regularPrice: opt.regularPrice,
-          salePrice: opt.salePrice,
-          stock: opt.stock,
-          description: opt.description || '',
-          allowMultiQuantity: opt.allowMultiQuantity || false,
-          maxQuantity: opt.maxQuantity,
-        })),
-      });
-    } else {
-      form.reset({
-        name: '',
-        sortOrder: 0,
-        multiple: false,
-        required: false,
-        maxChoices: 0,
-        options: [{ 
-          value: '', 
-          photoUrl: '',
-          regularPrice: undefined,
-          salePrice: undefined,
-          stock: undefined,
-          description: '',
-          allowMultiQuantity: false,
-          maxQuantity: undefined,
-        }],
-      });
+    if (open) {
+      if (group) {
+        form.reset({
+          name: group.name,
+          multiple: group.multiple,
+          required: group.required,
+          maxChoices: group.maxChoices,
+          options: group.options.map(opt => ({
+            id: opt.id,
+            value: opt.value,
+            photoUrl: opt.photoUrl || '',
+            regularPrice: opt.regularPrice,
+            salePrice: opt.salePrice,
+            stock: opt.stock,
+            description: opt.description || '',
+            allowMultiQuantity: opt.allowMultiQuantity || false,
+            maxQuantity: opt.maxQuantity,
+            priceMode: 'override',
+            priceValue: opt.regularPrice || 0,
+            hidden: false,
+            categoryPage: true,
+            productPage: true,
+          })),
+        });
+      } else {
+        form.reset({
+          name: '',
+          multiple: false,
+          required: false,
+          maxChoices: undefined,
+          options: [{ 
+            value: '', 
+            photoUrl: '',
+            regularPrice: undefined,
+            salePrice: undefined,
+            stock: undefined,
+            description: '',
+            allowMultiQuantity: false,
+            maxQuantity: undefined,
+            priceMode: 'override',
+            priceValue: 0,
+            hidden: false,
+            categoryPage: true,
+            productPage: true,
+          }],
+        });
+      }
     }
   }, [group, form, open]);
 
@@ -321,11 +381,11 @@ export function VariationGroupSheet({ open, onOpenChange, group, onSave }: Varia
     const finalData: VariationGroup = {
       id: group?.id || `group_${Date.now()}`,
       name: data.name,
-      sortOrder: data.sortOrder,
+      sortOrder: group?.sortOrder || 0,
       multiple: data.multiple,
       required: data.required,
       maxChoices: data.multiple ? data.maxChoices : undefined,
-      options: data.options.map((opt, i) => ({
+      options: data.options.map((opt, i): VariationOption => ({
         id: opt.id || `opt_${Date.now()}_${i}`,
         value: opt.value,
         sortOrder: i,
@@ -360,26 +420,23 @@ export function VariationGroupSheet({ open, onOpenChange, group, onSave }: Varia
           <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col h-[calc(100%-4rem)]">
             <ScrollArea className="flex-grow p-6">
               <div className="space-y-8">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <FormField control={form.control} name="name" render={({ field }) => (<FormItem><FormLabel>Group Name</FormLabel><FormControl><Input placeholder="e.g., Size, Color" {...field} /></FormControl><FormMessage /></FormItem>)} />
-                  <FormField control={form.control} name="sortOrder" render={({ field }) => (<FormItem><FormLabel>Sort Order</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>)} />
-                </div>
+                <FormField control={form.control} name="name" render={({ field }) => (<FormItem><FormLabel>Group Name</FormLabel><FormControl><Input placeholder="e.g., Size, Toppings, Doneness" {...field} /></FormControl><FormMessage /></FormItem>)} />
                 
                 <div className="space-y-4 rounded-lg border p-4">
-                  <FormField control={form.control} name="required" render={({ field }) => (<FormItem className="flex flex-row items-start space-x-3 space-y-0"><FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange} /></FormControl><div className="space-y-1 leading-none"><FormLabel>Required</FormLabel><FormDescription>If checked, this variation will be required to be selected before adding to cart.</FormDescription></div></FormItem>)} />
+                  <FormField control={form.control} name="required" render={({ field }) => (<FormItem className="flex flex-row items-start space-x-3 space-y-0"><FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange} /></FormControl><div className="space-y-1 leading-none"><FormLabel>Required</FormLabel><FormDescription>If checked, a selection from this group will be mandatory.</FormDescription></div></FormItem>)} />
                   <FormField control={form.control} name="multiple" render={({ field }) => (<FormItem className="flex flex-row items-start space-x-3 space-y-0"><FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange} /></FormControl><div className="space-y-1 leading-none"><FormLabel>Enable Multiple Selection</FormLabel></div></FormItem>)} />
                   {multipleSelection && (
                     <FormField
                       control={form.control}
                       name="maxChoices"
                       render={({ field }) => (
-                        <FormItem className="pl-6">
+                        <FormItem className="pl-6 pt-2">
                           <FormLabel>Max Choices Allowed</FormLabel>
                           <FormControl>
-                            <Input type="number" {...field} />
+                            <Input type="number" {...field} value={field.value ?? ''} placeholder="Leave blank for unlimited"/>
                           </FormControl>
                           <FormDescription>
-                            Allow max choice selection. Set to 0 to allow unlimited.
+                            The maximum number of options a customer can select.
                           </FormDescription>
                           <FormMessage />
                         </FormItem>
@@ -415,6 +472,11 @@ export function VariationGroupSheet({ open, onOpenChange, group, onSave }: Varia
                       description: '',
                       allowMultiQuantity: false,
                       maxQuantity: undefined,
+                      priceMode: 'override',
+                      priceValue: 0,
+                      hidden: false,
+                      categoryPage: true,
+                      productPage: true,
                   })}>
                     <PlusCircle className="mr-2 h-4 w-4" />
                     Add Option

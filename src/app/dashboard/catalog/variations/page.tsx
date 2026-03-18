@@ -28,7 +28,7 @@ import { VariationGroupSheet } from './variation-group-sheet';
 import { useToast } from '@/hooks/use-toast';
 
 export default function VariationsPage() {
-  const [variationGroups, setVariationGroups] = useState<VariationGroup[]>(mockDataStore.variationGroups.sort((a, b) => a.sortOrder - b.sortOrder));
+  const [variationGroups, setVariationGroups] = useState<VariationGroup[]>(mockDataStore.variationGroups);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [editingGroup, setEditingGroup] = useState<VariationGroup | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<VariationGroup | null>(null);
@@ -61,15 +61,12 @@ export default function VariationsPage() {
     
     setVariationGroups(groups => {
       const index = groups.findIndex(g => g.id === data.id);
-      let newGroups;
       if (index > -1) {
-        newGroups = [...groups];
+        const newGroups = [...groups];
         newGroups[index] = data;
-      } else {
-        newGroups = [data, ...groups];
+        return newGroups;
       }
-      // Sort groups by their sortOrder
-      return newGroups.sort((a,b) => a.sortOrder - b.sortOrder);
+      return [data, ...groups];
     });
   };
 
