@@ -51,7 +51,6 @@ import Image from 'next/image';
 
 const variationOptionSchema = z.object({
   id: z.string().optional(),
-  sortOrder: z.coerce.number().default(0),
   value: z.string().min(1, 'Option value cannot be empty'),
   photoUrl: z.string().url().optional().or(z.literal('')),
   regularPrice: z.coerce.number().optional(),
@@ -165,10 +164,10 @@ const SortableOptionItem = ({
                 </div>
 
                 <div className="md:col-span-2 grid grid-cols-2 gap-4">
-                  <FormField control={form.control} name={`options.${index}.stock`} render={({ field }) => (<FormItem><FormLabel>Stock Quantity</FormLabel><FormControl><Input type="number" placeholder="e.g. 100" {...field} /></FormControl></FormItem>)} />
+                  <FormField control={form.control} name={`options.${index}.stock`} render={({ field }) => (<FormItem><FormLabel>Stock Quantity</FormLabel><FormControl><Input type="number" placeholder="e.g. 100" {...field} value={field.value ?? ''} /></FormControl></FormItem>)} />
                   <div />
-                  <FormField control={form.control} name={`options.${index}.regularPrice`} render={({ field }) => (<FormItem><FormLabel>Regular Price (AED)</FormLabel><FormControl><Input type="number" step="0.01" placeholder="0.00" {...field} /></FormControl></FormItem>)} />
-                  <FormField control={form.control} name={`options.${index}.salePrice`} render={({ field }) => (<FormItem><FormLabel>Sale Price (AED)</FormLabel><FormControl><Input type="number" step="0.01" placeholder="0.00" {...field} /></FormControl></FormItem>)} />
+                  <FormField control={form.control} name={`options.${index}.regularPrice`} render={({ field }) => (<FormItem><FormLabel>Regular Price (AED)</FormLabel><FormControl><Input type="number" step="0.01" placeholder="0.00" {...field} value={field.value ?? ''} /></FormControl></FormItem>)} />
+                  <FormField control={form.control} name={`options.${index}.salePrice`} render={({ field }) => (<FormItem><FormLabel>Sale Price (AED)</FormLabel><FormControl><Input type="number" step="0.01" placeholder="0.00" {...field} value={field.value ?? ''} /></FormControl></FormItem>)} />
                 </div>
             </div>
             
@@ -202,7 +201,6 @@ export function VariationGroupSheet({ open, onOpenChange, group, onSave }: Varia
       maxChoices: 0,
       options: [{ 
         value: '', 
-        sortOrder: 0,
         photoUrl: '',
         regularPrice: undefined,
         salePrice: undefined,
@@ -247,7 +245,6 @@ export function VariationGroupSheet({ open, onOpenChange, group, onSave }: Varia
         options: group.options.map(opt => ({
           id: opt.id,
           value: opt.value,
-          sortOrder: opt.sortOrder,
           photoUrl: opt.photoUrl || '',
           regularPrice: opt.regularPrice,
           salePrice: opt.salePrice,
@@ -264,7 +261,6 @@ export function VariationGroupSheet({ open, onOpenChange, group, onSave }: Varia
         maxChoices: 0,
         options: [{ 
           value: '', 
-          sortOrder: 0,
           photoUrl: '',
           regularPrice: undefined,
           salePrice: undefined,
@@ -364,7 +360,6 @@ export function VariationGroupSheet({ open, onOpenChange, group, onSave }: Varia
                   </DndContext>
                   <Button type="button" variant="outline" size="sm" onClick={() => append({ 
                       value: '', 
-                      sortOrder: fields.length,
                       photoUrl: '',
                       regularPrice: undefined,
                       salePrice: undefined,
