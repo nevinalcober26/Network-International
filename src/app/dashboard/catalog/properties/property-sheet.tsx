@@ -18,6 +18,7 @@ import { Input } from '@/components/ui/input';
 import {
   Form,
   FormControl,
+  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -164,6 +165,9 @@ export function PropertySheet({ open, onOpenChange, property, onSave }: Property
                         )}
                     </div>
                   </div>
+                  <FormDescription>
+                    Recommended size: 96x96 pixels. Use a transparent PNG or SVG for best results.
+                  </FormDescription>
                    <FormMessage />
                 </FormItem>
               )}
