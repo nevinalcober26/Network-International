@@ -22,6 +22,7 @@ export default {
     'bg-teal-400',
     'bg-teal-100',
     'text-teal-600',
+    'text-teal-700',
     'bg-green-50',
     'border-green-500',
     'text-green-700',

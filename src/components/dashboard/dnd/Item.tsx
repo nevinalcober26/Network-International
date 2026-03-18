@@ -44,44 +44,49 @@ export const Item = React.forwardRef<HTMLDivElement, ItemProps>(
           </div>
           <div className="cursor-pointer" onClick={onClick}>
             <p className="font-medium text-sm">{name}</p>
-            {childCount !== undefined && childCount > 0 && (
-              <p className="text-xs text-muted-foreground">{childCount} sub-categor{childCount > 1 ? 'ies' : 'y'}</p>
-            )}
           </div>
         </div>
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8"
+
+        <div className="flex items-center gap-2">
+            {childCount !== undefined && childCount > 0 && (
+                <div className="flex items-center justify-center h-6 w-6 rounded-full bg-teal-100">
+                    <span className="text-sm font-bold text-teal-700">{childCount}</span>
+                </div>
+            )}
+            <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+                <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8"
+                >
+                <MoreHorizontal className="h-4 w-4" />
+                </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent
+                align="end"
             >
-              <MoreHorizontal className="h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent
-            align="end"
-          >
-            <DropdownMenuItem onSelect={onSchedule} className="cursor-pointer">
-              <Clock className="mr-2 h-4 w-4" />
-              Schedule
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              onSelect={onClick}
-              className="cursor-pointer"
-            >
-              <Edit className="mr-2 h-4 w-4" />
-              Edit
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              onSelect={onDelete}
-              className="text-destructive cursor-pointer"
-            >
-              <Trash className="mr-2 h-4 w-4" />
-              Delete
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+                <DropdownMenuItem onSelect={onSchedule} className="cursor-pointer">
+                <Clock className="mr-2 h-4 w-4" />
+                Schedule
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                onSelect={onClick}
+                className="cursor-pointer"
+                >
+                <Edit className="mr-2 h-4 w-4" />
+                Edit
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                onSelect={onDelete}
+                className="text-destructive cursor-pointer"
+                >
+                <Trash className="mr-2 h-4 w-4" />
+                Delete
+                </DropdownMenuItem>
+            </DropdownMenuContent>
+            </DropdownMenu>
+        </div>
       </Card>
     );
   }
