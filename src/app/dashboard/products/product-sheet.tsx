@@ -1118,6 +1118,9 @@ export function ProductSheet({
                                                                       const selectedOption = allOptions.find(o => o.id === optionId);
                                                                       if (selectedOption) {
                                                                           field.onChange(selectedOption.value);
+                                                                          const priceToSet = selectedOption.salePrice ?? selectedOption.regularPrice ?? 0;
+                                                                          form.setValue(`variations.${index}.priceValue`, priceToSet);
+                                                                          form.setValue(`variations.${index}.priceMode`, 'override');
                                                                       }
                                                                   }}
                                                                   value={mockDataStore.variationGroups.flatMap(g => g.options).find(o => o.value === field.value)?.id}
