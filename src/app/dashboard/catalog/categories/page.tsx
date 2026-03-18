@@ -407,7 +407,7 @@ export default function CategoriesPage() {
             >
                 <ScrollArea className="flex-1 -mb-8">
                   <div className="flex gap-8 pb-8">
-                      <SortableContext items={boardContainerIds} strategy={horizontalListSortingStrategy}>
+                      <SortableContext items={boardContainerIds} strategy={horizontalListSortingStrategy} disabled={isAnyDrawerOpen}>
                           {board.map((column) => (
                               <Container
                                   key={column.id}

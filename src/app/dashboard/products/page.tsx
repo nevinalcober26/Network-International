@@ -1,3 +1,4 @@
+
 'use client';
 import { useState, useMemo, useEffect } from 'react';
 import Image from 'next/image';
@@ -162,6 +163,7 @@ const SortableProductRow = ({
               Edit
             </DropdownMenuItem>
             <DropdownMenuItem>Duplicate</DropdownMenuItem>
+            <DropdownMenuSeparator />
             <DropdownMenuItem className="text-destructive">
               Delete
             </DropdownMenuItem>
@@ -193,6 +195,8 @@ export default function ProductsPage() {
     key: keyof Product;
     direction: 'ascending' | 'descending';
   } | null>({ key: 'name', direction: 'ascending' });
+
+  const isAnySheetOpen = isSheetOpen || isInfoSheetOpen;
 
   useEffect(() => {
     // Simulate fetching data
@@ -525,6 +529,7 @@ export default function ProductsPage() {
                   <SortableContext
                     items={paginatedProducts.map((p) => p.id)}
                     strategy={verticalListSortingStrategy}
+                    disabled={isAnySheetOpen}
                   >
                     <TableBody>
                       {isLoading ? (
