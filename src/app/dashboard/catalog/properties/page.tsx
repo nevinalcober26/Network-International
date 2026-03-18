@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { DashboardHeader } from "@/components/dashboard/header";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from '@/components/ui/button';
 import { PlusCircle, Edit, Trash, Image as ImageIcon } from 'lucide-react';
 import Image from 'next/image';
@@ -19,6 +19,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
 
 const initialPropertiesData: Omit<Property, 'id'>[] = [
@@ -105,41 +106,59 @@ export default function PropertiesPage() {
                   </Button>
                 </div>
 
-                {properties.length > 0 ? (
-                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-6">
-                      {properties.map(prop => (
-                          <Card key={prop.id} className="group relative aspect-[4/5] flex flex-col justify-center items-center text-center hover:shadow-lg transition-shadow">
-                              <CardContent className="p-4 flex flex-col items-center text-center gap-4">
-                                  <div className="w-24 h-24 rounded-full bg-muted flex items-center justify-center border-2 border-dashed overflow-hidden">
-                                      {prop.imageUrl ? (
-                                          <Image src={prop.imageUrl} alt={prop.name} width={96} height={96} className="object-contain" />
-                                      ) : (
-                                          <ImageIcon className="h-10 w-10 text-muted-foreground" />
-                                      )}
-                                  </div>
-                                  <h3 className="font-bold text-lg">{prop.name}</h3>
-                              </CardContent>
-                              <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity flex gap-1">
-                                  <Button variant="secondary" size="icon" className="h-8 w-8" onClick={() => handleEdit(prop)}>
-                                      <Edit className="h-4 w-4" />
-                                  </Button>
-                                  <Button variant="destructive" size="icon" className="h-8 w-8" onClick={() => setDeleteTarget(prop)}>
-                                      <Trash className="h-4 w-4" />
-                                  </Button>
-                              </div>
-                          </Card>
-                      ))}
-                  </div>
-                ) : (
-                   <Card className="text-center py-20 col-span-full">
-                      <h2 className="text-2xl font-semibold">No Properties Found</h2>
-                      <p className="text-muted-foreground mt-2 mb-4">Get started by creating your first property.</p>
-                      <Button onClick={handleAdd}>
-                          <PlusCircle className="mr-2 h-4 w-4" />
-                          Add Property
-                      </Button>
-                  </Card>
-                )}
+                <Card>
+                    <CardHeader>
+                        <CardTitle>All Properties</CardTitle>
+                        <CardDescription>
+                            A list of all available properties in your restaurant.
+                        </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <Table>
+                            <TableHeader>
+                                <TableRow>
+                                    <TableHead className="w-[80px]">Icon</TableHead>
+                                    <TableHead>Property Name</TableHead>
+                                    <TableHead className="text-right w-[250px]">Actions</TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                {properties.length > 0 ? (
+                                    properties.map(prop => (
+                                        <TableRow key={prop.id}>
+                                            <TableCell>
+                                                <div className="w-12 h-12 rounded-md bg-muted flex items-center justify-center border overflow-hidden">
+                                                    {prop.imageUrl ? (
+                                                        <Image src={prop.imageUrl} alt={prop.name} width={48} height={48} className="object-contain" />
+                                                    ) : (
+                                                        <ImageIcon className="h-6 w-6 text-muted-foreground" />
+                                                    )}
+                                                </div>
+                                            </TableCell>
+                                            <TableCell className="font-medium text-base">{prop.name}</TableCell>
+                                            <TableCell className="text-right">
+                                                <div className="flex gap-2 justify-end">
+                                                    <Button variant="outline" size="sm" onClick={() => handleEdit(prop)}>
+                                                        <Edit className="h-4 w-4 mr-2" /> Edit
+                                                    </Button>
+                                                    <Button variant="outline" size="sm" className="text-destructive hover:text-destructive hover:bg-destructive/5" onClick={() => setDeleteTarget(prop)}>
+                                                        <Trash className="h-4 w-4 mr-2" /> Delete
+                                                    </Button>
+                                                </div>
+                                            </TableCell>
+                                        </TableRow>
+                                    ))
+                                ) : (
+                                    <TableRow>
+                                        <TableCell colSpan={3} className="h-24 text-center">
+                                            No properties found. Get started by adding a new one.
+                                        </TableCell>
+                                    </TableRow>
+                                )}
+                            </TableBody>
+                        </Table>
+                    </CardContent>
+                </Card>
             </main>
             
             <PropertySheet
