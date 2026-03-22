@@ -72,10 +72,9 @@ const generateChartData = () => [
 export default function DashboardPage() {
   const [statCardsData, setStatCardsData] = useState(initialStatCards);
   const [chartData, setChartData] = useState(generateChartData);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    const loadTimer = setTimeout(() => setIsLoading(false), 1500);
 
     const handleBranchChange = () => {
       setIsLoading(true);
@@ -110,7 +109,6 @@ export default function DashboardPage() {
     }, 3000); // Update every 3 seconds
 
     return () => {
-      clearTimeout(loadTimer);
       clearInterval(interval);
       window.removeEventListener('branch-changed', handleBranchChange);
     };

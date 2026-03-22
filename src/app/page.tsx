@@ -43,8 +43,6 @@ export default function LoginPage() {
     setError('');
     setIsSubmitting(true);
 
-    // Simulate network delay
-    await new Promise(resolve => setTimeout(resolve, 800));
 
     // Admin backdoor
     if (email === 'admin@domain.com' && password === 'admin') {
