@@ -19,11 +19,12 @@ export type CategoryBase = {
   cardShadow?: boolean;
   // advanced
   hidden?: boolean;
-  disableLink?: boolean;
+  enableLink?: boolean;
   externalLink?: string;
   viewFormat?: string;
   promotions?: string;
   sortOrder?: number;
+  enableSpecial?: boolean;
 }
 
 export type Item = CategoryBase & {

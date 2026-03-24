@@ -45,10 +45,11 @@ const categorySchema = z.object({
   viewFormat: z.string().optional(),
   // advanced
   hidden: z.boolean().default(false),
-  disableLink: z.boolean().default(false),
+  enableLink: z.boolean().default(true),
   externalLink: z.string().url().optional().or(z.literal('')),
   promotions: z.string().optional(),
   sortOrder: z.coerce.number().optional(),
+  enableSpecial: z.boolean().default(false),
 });
 
 export type CategoryFormValues = z.infer<typeof categorySchema>;
@@ -99,10 +100,11 @@ export function AddCategorySheet({
       cardShadow: true,
       viewFormat: 'list_with_images',
       hidden: false,
-      disableLink: false,
+      enableLink: true,
       externalLink: '',
       promotions: 'none',
       sortOrder: 0,
+      enableSpecial: false,
     },
   });
   
@@ -119,10 +121,11 @@ export function AddCategorySheet({
         cardShadow: true,
         viewFormat: 'list_with_images',
         hidden: false,
-        disableLink: false,
+        enableLink: true,
         externalLink: '',
         promotions: 'none',
         sortOrder: 0,
+        enableSpecial: false,
       });
     }
   }, [open, initialParentId, form]);
@@ -132,8 +135,6 @@ export function AddCategorySheet({
     onOpenChange(false);
   };
   
-  const disableLink = form.watch('disableLink');
-
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent className="sm:max-w-lg w-full p-0">
@@ -222,12 +223,13 @@ export function AddCategorySheet({
                 </TabsContent>
 
                 <TabsContent value="advanced" className="mt-0 space-y-4 outline-none">
-                    <FormField control={form.control} name="displayFullwidth" render={({ field }) => (<FormItem className="flex items-center justify-between rounded-lg border p-3"><div className="space-y-0.5"><FormLabel>Display Fullwidth</FormLabel></div><FormControl><Switch checked={field.value} onCheckedChange={field.onChange} /></FormControl></FormItem>)} />
-                    <FormField control={form.control} name="cardShadow" render={({ field }) => (<FormItem className="flex items-center justify-between rounded-lg border p-3"><div className="space-y-0.5"><FormLabel>Enable Card Shadow</FormLabel></div><FormControl><Switch checked={field.value} onCheckedChange={field.onChange} /></FormControl></FormItem>)} />
+                    <FormField control={form.control} name="displayFullwidth" render={({ field }) => (<FormItem className="flex items-center justify-between rounded-lg border p-3"><div className="space-y-0.5"><FormLabel>Fullwidth</FormLabel></div><FormControl><Switch checked={field.value} onCheckedChange={field.onChange} /></FormControl></FormItem>)} />
+                    <FormField control={form.control} name="cardShadow" render={({ field }) => (<FormItem className="flex items-center justify-between rounded-lg border p-3"><div className="space-y-0.5"><FormLabel>Card Shadow</FormLabel></div><FormControl><Switch checked={field.value} onCheckedChange={field.onChange} /></FormControl></FormItem>)} />
                     <FormField control={form.control} name="hidden" render={({ field }) => (<FormItem className="flex items-center justify-between rounded-lg border p-3"><div className="space-y-0.5"><FormLabel>Hide Category Entirely</FormLabel></div><FormControl><Switch checked={field.value} onCheckedChange={field.onChange} /></FormControl></FormItem>)} />
+                    <FormField control={form.control} name="enableSpecial" render={({ field }) => (<FormItem className="flex items-center justify-between rounded-lg border p-3"><div className="space-y-0.5"><FormLabel>Enable Special</FormLabel></div><FormControl><Switch checked={field.value} onCheckedChange={field.onChange} /></FormControl></FormItem>)} />
                     <div className="rounded-lg border p-3 space-y-4">
-                        <FormField control={form.control} name="disableLink" render={({ field }) => (<FormItem className="flex items-center justify-between"><div className="space-y-0.5"><FormLabel>Disable Category Link</FormLabel></div><FormControl><Switch checked={field.value} onCheckedChange={field.onChange} /></FormControl></FormItem>)} />
-                        {disableLink && (<FormField control={form.control} name="externalLink" render={({ field }) => (<FormItem className="pt-3 border-t"><FormLabel>External Link URL</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>)} />)}
+                        <FormField control={form.control} name="enableLink" render={({ field }) => (<FormItem className="flex items-center justify-between"><div className="space-y-0.5"><FormLabel>Enable Link</FormLabel><FormDescription>If disabled, you can provide an external URL.</FormDescription></div><FormControl><Switch checked={field.value} onCheckedChange={field.onChange} /></FormControl></FormItem>)} />
+                        {!form.watch('enableLink') && (<FormField control={form.control} name="externalLink" render={({ field }) => (<FormItem className="pt-3 border-t"><FormLabel>External Link URL</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>)} />)}
                     </div>
                     <FormField control={form.control} name="promotions" render={({ field }) => (<FormItem><FormLabel>Apply Promotions</FormLabel><Select onValueChange={field.onChange} defaultValue={field.value}><FormControl><SelectTrigger><SelectValue placeholder="Select promotions" /></SelectTrigger></FormControl><SelectContent><SelectItem value="none">No Promotions</SelectItem><SelectItem value="summer_sale">Summer Sale</SelectItem></SelectContent></Select></FormItem>)} />
                 </TabsContent>
