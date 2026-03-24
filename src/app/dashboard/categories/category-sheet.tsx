@@ -265,15 +265,85 @@ export function CategorySheet({
                         </TabsContent>
 
                         <TabsContent value="advanced" className="mt-0 space-y-4 outline-none">
-                            <FormField control={form.control} name="displayFullwidth" render={({ field }) => (<FormItem className="flex items-center justify-between rounded-lg border p-3"><div className="space-y-0.5"><FormLabel>Fullwidth</FormLabel></div><FormControl><Switch checked={field.value} onCheckedChange={field.onChange} /></FormControl></FormItem>)} />
-                            <FormField control={form.control} name="cardShadow" render={({ field }) => (<FormItem className="flex items-center justify-between rounded-lg border p-3"><div className="space-y-0.5"><FormLabel>Card Shadow</FormLabel></div><FormControl><Switch checked={field.value} onCheckedChange={field.onChange} /></FormControl></FormItem>)} />
-                            <FormField control={form.control} name="hidden" render={({ field }) => (<FormItem className="flex items-center justify-between rounded-lg border p-3"><div className="space-y-0.5"><FormLabel>Hide Category Entirely</FormLabel></div><FormControl><Switch checked={field.value} onCheckedChange={field.onChange} /></FormControl></FormItem>)} />
-                            <FormField control={form.control} name="enableSpecial" render={({ field }) => (<FormItem className="flex items-center justify-between rounded-lg border p-3"><div className="space-y-0.5"><FormLabel>Enable Special</FormLabel></div><FormControl><Switch checked={field.value} onCheckedChange={field.onChange} /></FormControl></FormItem>)} />
-                            <div className="rounded-lg border p-3 space-y-4">
-                                <FormField control={form.control} name="enableLink" render={({ field }) => (<FormItem className="flex items-center justify-between"><div className="space-y-0.5"><FormLabel>Enable Link</FormLabel><FormDescription>If disabled, you can provide an external URL.</FormDescription></div><FormControl><Switch checked={field.value} onCheckedChange={field.onChange} /></FormControl></FormItem>)} />
-                                {!form.watch('enableLink') && (<FormField control={form.control} name="externalLink" render={({ field }) => (<FormItem className="pt-3 border-t"><FormLabel>External Link URL</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>)} />)}
+                            <FormField control={form.control} name="hidden" render={({ field }) => (
+                                <FormItem className="flex items-center justify-between rounded-lg border p-4 bg-red-50/50 border-red-200/80">
+                                    <div className="space-y-0.5">
+                                        <FormLabel className="text-red-900">Hide from Menu</FormLabel>
+                                        <FormDescription className="text-red-700/80">
+                                            Completely hide this category and all its products from your customers.
+                                        </FormDescription>
+                                    </div>
+                                    <FormControl><Switch checked={field.value} onCheckedChange={field.onChange} /></FormControl>
+                                </FormItem>
+                            )} />
+                            <FormField control={form.control} name="displayFullwidth" render={({ field }) => (
+                                <FormItem className="flex items-center justify-between rounded-lg border p-4">
+                                    <div className="space-y-0.5">
+                                        <FormLabel>Full-Width Display</FormLabel>
+                                        <FormDescription>
+                                            Allow this category's items to span the entire screen width on the menu.
+                                        </FormDescription>
+                                    </div>
+                                    <FormControl><Switch checked={field.value} onCheckedChange={field.onChange} /></FormControl>
+                                </FormItem>
+                            )} />
+                            <FormField control={form.control} name="cardShadow" render={({ field }) => (
+                                <FormItem className="flex items-center justify-between rounded-lg border p-4">
+                                    <div className="space-y-0.5">
+                                        <FormLabel>Enable Card Shadow</FormLabel>
+                                        <FormDescription>
+                                            Add a subtle shadow for a modern, layered appearance.
+                                        </FormDescription>
+                                    </div>
+                                    <FormControl><Switch checked={field.value} onCheckedChange={field.onChange} /></FormControl>
+                                </FormItem>
+                            )} />
+                            <FormField control={form.control} name="enableSpecial" render={({ field }) => (
+                                <FormItem className="flex items-center justify-between rounded-lg border p-4">
+                                    <div className="space-y-0.5">
+                                        <FormLabel>Mark as Special</FormLabel>
+                                        <FormDescription>
+                                            Highlight this category with a special badge or styling on the menu.
+                                        </FormDescription>
+                                    </div>
+                                    <FormControl><Switch checked={field.value} onCheckedChange={field.onChange} /></FormControl>
+                                </FormItem>
+                            )} />
+                            <div className="rounded-lg border p-4 space-y-4">
+                                <FormField control={form.control} name="enableLink" render={({ field }) => (
+                                    <FormItem className="flex items-center justify-between">
+                                        <div className="space-y-0.5">
+                                            <FormLabel>Enable Category Link</FormLabel>
+                                            <FormDescription>
+                                                Allow users to click this category to view its products inside.
+                                            </FormDescription>
+                                        </div>
+                                        <FormControl><Switch checked={field.value} onCheckedChange={field.onChange} /></FormControl>
+                                    </FormItem>
+                                )} />
+                                {!form.watch('enableLink') && (
+                                    <FormField control={form.control} name="externalLink" render={({ field }) => (
+                                        <FormItem className="pt-4 border-t">
+                                            <FormLabel>External Website Link</FormLabel>
+                                            <FormControl><Input placeholder="https://example.com" {...field} /></FormControl>
+                                            <FormDescription>
+                                                When the category link is disabled, customers will be sent to this URL.
+                                            </FormDescription>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )} />
+                                )}
                             </div>
-                            <FormField control={form.control} name="promotions" render={({ field }) => (<FormItem><FormLabel>Apply Promotions</FormLabel><Select onValueChange={field.onChange} value={field.value}><FormControl><SelectTrigger><SelectValue placeholder="Select promotions" /></SelectTrigger></FormControl><SelectContent><SelectItem value="none">No Promotions</SelectItem><SelectItem value="summer_sale">Summer Sale</SelectItem></SelectContent></Select></FormItem>)} />
+                            <FormField control={form.control} name="promotions" render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Apply Promotions</FormLabel>
+                                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                        <FormControl><SelectTrigger><SelectValue placeholder="Select promotions" /></SelectTrigger></FormControl>
+                                        <SelectContent><SelectItem value="none">No Promotions</SelectItem><SelectItem value="summer_sale">Summer Sale</SelectItem></SelectContent>
+                                    </Select>
+                                    <FormDescription>Automatically apply a discount to all items in this category.</FormDescription>
+                                </FormItem>
+                            )} />
                         </TabsContent>
                     </ScrollArea>
                     <SheetFooter className="p-6 border-t bg-background flex flex-row items-center justify-between sm:justify-between space-x-0">
