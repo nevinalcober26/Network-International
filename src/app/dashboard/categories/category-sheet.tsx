@@ -51,10 +51,6 @@ const categorySchema = z.object({
   externalLink: z.string().url().optional().or(z.literal('')),
   promotions: z.string().optional(),
   sortOrder: z.coerce.number().optional(),
-  // special
-  enableSpecial: z.boolean().default(false),
-  specialType: z.string().optional(),
-  displaySeparate: z.boolean().default(false),
 });
 
 export type CategoryFormValues = z.infer<typeof categorySchema>;
@@ -113,7 +109,7 @@ export function CategorySheet({
 }: CategorySheetProps) {
 
   const [activeTab, setActiveTab] = useState("general");
-  const tabOrder = ["general", "display", "advanced", "special"];
+  const tabOrder = ["general", "display", "advanced"];
   
   const handleNext = () => {
     const currentIndex = tabOrder.indexOf(activeTab);
@@ -157,9 +153,6 @@ export function CategorySheet({
         externalLink: category.externalLink || '',
         promotions: category.promotions || 'none',
         sortOrder: category.sortOrder || 0,
-        enableSpecial: category.enableSpecial || false,
-        displaySeparate: category.displaySeparate || false,
-        specialType: category.specialType || undefined,
       });
     }
   }, [open, category, board, form]);
@@ -177,7 +170,6 @@ export function CategorySheet({
   };
   
   const disableLink = form.watch('disableLink');
-  const enableSpecial = form.watch('enableSpecial');
 
 
   return (
@@ -206,10 +198,6 @@ export function CategorySheet({
                           <TabsTrigger value="advanced" className="group relative rounded-none py-3 px-2 flex items-center gap-2 font-semibold text-muted-foreground data-[state=active]:text-foreground bg-transparent data-[state=active]:bg-primary/[0.04] data-[state=active]:shadow-none border-b-2 border-transparent data-[state=active]:border-primary hover:bg-muted/30 transition-none -mb-[1px]">
                             <div className="flex h-6 w-6 items-center justify-center rounded border border-muted-foreground/30 text-xs transition-colors group-data-[state=active]:bg-primary group-data-[state=active]:border-primary group-data-[state=active]:text-primary-foreground">3</div>
                             Advanced
-                          </TabsTrigger>
-                          <TabsTrigger value="special" className="group relative rounded-none py-3 px-2 flex items-center gap-2 font-semibold text-muted-foreground data-[state=active]:text-foreground bg-transparent data-[state=active]:bg-primary/[0.04] data-[state=active]:shadow-none border-b-2 border-transparent data-[state=active]:border-primary hover:bg-muted/30 transition-none -mb-[1px]">
-                            <div className="flex h-6 w-6 items-center justify-center rounded border border-muted-foreground/30 text-xs transition-colors group-data-[state=active]:bg-primary group-data-[state=active]:border-primary group-data-[state=active]:text-primary-foreground">4</div>
-                            Special
                           </TabsTrigger>
                         </TabsList>
                     </div>
@@ -287,16 +275,6 @@ export function CategorySheet({
                             </div>
                             <FormField control={form.control} name="promotions" render={({ field }) => (<FormItem><FormLabel>Apply Promotions</FormLabel><Select onValueChange={field.onChange} value={field.value}><FormControl><SelectTrigger><SelectValue placeholder="Select promotions" /></SelectTrigger></FormControl><SelectContent><SelectItem value="none">No Promotions</SelectItem><SelectItem value="summer_sale">Summer Sale</SelectItem></SelectContent></Select></FormItem>)} />
                         </TabsContent>
-
-                        <TabsContent value="special" className="mt-0 space-y-4 outline-none">
-                            <FormField control={form.control} name="enableSpecial" render={({ field }) => (<FormItem className="flex items-center justify-between rounded-lg border p-3"><div className="space-y-0.5"><FormLabel>Enable as a Special Category</FormLabel></div><FormControl><Switch checked={field.value} onCheckedChange={field.onChange} /></FormControl></FormItem>)} />
-                            {enableSpecial && (
-                                <div className="pt-4 border-t space-y-6">
-                                    <FormField control={form.control} name="specialType" render={({ field }) => (<FormItem><FormLabel>Special Category Type</FormLabel><Select onValueChange={field.onChange} value={field.value}><FormControl><SelectTrigger><SelectValue placeholder="Select type" /></SelectTrigger></FormControl><SelectContent><SelectItem value="popular">Popular</SelectItem><SelectItem value="new">New</SelectItem><SelectItem value="featured">Featured</SelectItem></SelectContent></Select><FormMessage /></FormItem>)} />
-                                    <FormField control={form.control} name="displaySeparate" render={({ field }) => (<FormItem className="flex items-center justify-between rounded-lg border p-4"><div className="space-y-0.5"><FormLabel>Display products in separate categories</FormLabel></div><FormControl><Switch checked={field.value} onCheckedChange={field.onChange} /></FormControl></FormItem>)} />
-                                </div>
-                            )}
-                        </TabsContent>
                     </ScrollArea>
                     <SheetFooter className="p-6 border-t bg-background flex flex-row items-center justify-between sm:justify-between space-x-0">
                         <SheetClose asChild><Button variant="ghost" type="button">Cancel</Button></SheetClose>
@@ -304,7 +282,7 @@ export function CategorySheet({
                             {activeTab !== 'general' && (
                                 <Button variant="outline" type="button" onClick={handlePrevious}>Back</Button>
                             )}
-                            {activeTab !== 'special' ? (
+                            {activeTab !== 'advanced' ? (
                                 <Button type="button" onClick={handleNext}>Next</Button>
                             ) : (
                                 <>

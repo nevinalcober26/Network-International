@@ -21,9 +21,6 @@ export type CategoryBase = {
   hidden?: boolean;
   disableLink?: boolean;
   externalLink?: string;
-  enableSpecial?: boolean;
-  specialType?: string;
-  displaySeparate?: boolean;
   viewFormat?: string;
   promotions?: string;
   sortOrder?: number;
