@@ -24,7 +24,7 @@ const menuData = {
     { id: 'item-2', name: 'Chicken Alfredo Pizza - 12 inches', description: 'Homemade dough, white sauce base, marinated...', price: 48.00, category: 'Bestsellers', image: getImageUrl('pizza-alfredo'), isCustomisable: true },
     { id: 'item-3', name: 'Pizza Margherita - 10 inches', description: 'Homemade dough, homemade pizza sauce, shredded mozzarella cheese, and shredded cheddar cheese.', price: 27.00, category: 'Pizza', image: getImageUrl('pizza-margherita'), isCustomisable: false },
     { id: 'item-4', name: 'Hawaiian Pizza - 10 inches', description: 'Homemade dough, pizza sauce, mozzarella, ham,...', price: 32.00, category: 'Pizza', image: getImageUrl('pizza-hawaiian'), isCustomisable: true },
-    { id: 'item-5', name: 'Soft Drink', description: 'Choose your favorite flavor.', price: 3.00, category: 'Drinks', image: getImageUrl('soft-drink'), isCustomisable: true },
+    { id: 'item-5', name: 'Soft Drink', description: 'Choose your favorite flavor.', price: 3.00, category: 'Drinks', image: getImageUrl('soft-drink'), isCustomisable: true, options: { title: 'Flavor', required: true, items: ['Coke', 'Diet Coke', 'Sprite', 'Fanta'] } },
     { id: 'item-6', name: 'Bottled Water', description: 'Still or sparkling water.', price: 2.50, category: 'Drinks', image: getImageUrl('bottled-water'), isCustomisable: false },
   ]
 };
@@ -32,16 +32,9 @@ const menuData = {
 type MenuItem = typeof menuData.items[0];
 
 const MenuItemCard = ({ item, onAdd }: { item: MenuItem; onAdd: (item: MenuItem) => void; }) => {
-  const [quantity, setQuantity] = useState(0);
 
   const handleAddClick = () => {
-    if (!item.isCustomisable) {
-      onAdd(item);
-    } else {
-      // Handle customizable items differently if needed
-      // For now, let's just increment quantity
-      setQuantity(1);
-    }
+    onAdd(item);
   };
 
   return (
@@ -57,24 +50,12 @@ const MenuItemCard = ({ item, onAdd }: { item: MenuItem; onAdd: (item: MenuItem)
         <Image src={item.image} alt={item.name} fill className="object-cover rounded-xl" />
         <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent rounded-xl" />
         <div className="absolute bottom-2 right-2 left-2 flex flex-col items-center">
-            {quantity === 0 ? (
-                 <Button 
-                    className="w-full h-9 rounded-lg bg-teal-500 text-white font-bold text-sm shadow-md hover:bg-teal-600"
-                    onClick={handleAddClick}
-                >
-                    Add
-                </Button>
-            ) : (
-                <div className="flex items-center justify-between bg-white/95 rounded-lg p-1 shadow-md backdrop-blur-sm w-full">
-                    <Button size="icon" variant="ghost" className="h-7 w-7 rounded-md text-gray-700" onClick={() => setQuantity(q => Math.max(0, q - 1))}>
-                        {quantity === 1 ? <Trash2 className="h-4 w-4 text-red-500"/> : <Minus className="h-4 w-4" />}
-                    </Button>
-                    <span className="font-bold text-lg text-gray-800">{quantity}</span>
-                    <Button size="icon" variant="ghost" className="h-7 w-7 rounded-md text-gray-700" onClick={() => setQuantity(q => q + 1)}>
-                        <Plus className="h-4 w-4" />
-                    </Button>
-                </div>
-            )}
+            <Button 
+                className="w-full h-9 rounded-lg bg-teal-500 text-white font-bold text-sm shadow-md hover:bg-teal-600"
+                onClick={handleAddClick}
+            >
+                Add
+            </Button>
            {item.isCustomisable && (
                <p className="text-center text-white text-[10px] font-semibold mt-1">Customisable</p>
            )}
