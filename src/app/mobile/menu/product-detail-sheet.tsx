@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import Image from 'next/image';
-import { Sheet, SheetContent, SheetClose } from '@/components/ui/sheet';
+import { Sheet, SheetContent, SheetClose, SheetHeader, SheetTitle, SheetDescription } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { X, Edit, Minus, Plus, Check } from 'lucide-react';
@@ -115,11 +115,15 @@ export function ProductDetailSheet({ product, isOpen, onOpenChange }: ProductDet
 
   return (
     <Sheet open={isOpen} onOpenChange={onOpenChange}>
-      <SheetContent 
-        ref={sheetContentRef} 
-        side="bottom" 
+      <SheetContent
+        ref={sheetContentRef}
+        side="bottom"
         className="w-full max-w-md mx-auto p-0 rounded-t-3xl border-0 bg-white overflow-hidden flex flex-col max-h-[90vh]"
       >
+        <SheetHeader className="sr-only">
+            <SheetTitle>{product.name}</SheetTitle>
+            <SheetDescription>{product.description}</SheetDescription>
+        </SheetHeader>
         {/* --- Sticky Shrinkable Header --- */}
         <div className={cn(
             "absolute top-0 left-0 right-0 z-20 flex items-start justify-between p-4 bg-white border-b shadow-sm transition-all duration-300",
