@@ -9,6 +9,7 @@ import { ArrowLeft, Search, Flame, Minus, Plus, Trash2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { ProductDetailSheet } from './product-detail-sheet';
+import { Card } from '@/components/ui/card';
 
 // Helper to find image URL by ID
 const getImageUrl = (id: string) => {
@@ -109,10 +110,7 @@ const MenuItemCard = ({
 
 export default function MobileMenuPage() {
   const sections = useMemo(() => {
-    // Only include categories that have at least one item.
-    return menuData.categories.filter(category => 
-      menuData.items.some(item => item.category === category)
-    );
+    return menuData.categories;
   }, []);
   
   const [activeTab, setActiveTab] = useState(sections[0] || '');
@@ -260,27 +258,37 @@ export default function MobileMenuPage() {
         
         {/* Menu Items */}
         <main className="p-4 space-y-8">
-          {sections.map(section => (
-              <div 
-                key={section} 
-                id={section}
-                ref={(el) => (sectionRefs.current[section] = el)}
-              >
-                  <h2 className="text-2xl font-bold text-gray-900 mb-4">{section}</h2>
-                  <div className="space-y-4">
-                      {menuData.items.filter(item => item.category === section).map(item => (
-                          <MenuItemCard 
-                            key={item.id} 
-                            item={item} 
-                            onAdd={() => handleAddClick(item)}
-                            quantity={cart[item.id] || 0}
-                            onIncrement={handleIncrement}
-                            onDecrement={handleDecrement}
-                          />
-                      ))}
+          {sections.map(section => {
+              const itemsForSection = menuData.items.filter(item => item.category === section);
+              return (
+                  <div 
+                    key={section} 
+                    id={section}
+                    ref={(el) => (sectionRefs.current[section] = el)}
+                  >
+                      <h2 className="text-2xl font-bold text-gray-900 mb-4">{section}</h2>
+                      <div className="space-y-4">
+                          {itemsForSection.length > 0 ? (
+                            itemsForSection.map(item => (
+                              <MenuItemCard 
+                                key={item.id} 
+                                item={item} 
+                                onAdd={() => handleAddClick(item)}
+                                quantity={cart[item.id] || 0}
+                                onIncrement={handleIncrement}
+                                onDecrement={handleDecrement}
+                              />
+                            ))
+                          ) : (
+                            <Card className="flex flex-col items-center justify-center p-8 text-center text-muted-foreground bg-white rounded-2xl shadow-sm border border-gray-100/80">
+                                <p className="font-semibold">No items available in this category yet.</p>
+                                <p className="text-sm mt-1">Please check back later!</p>
+                            </Card>
+                          )}
+                      </div>
                   </div>
-              </div>
-          ))}
+              );
+          })}
         </main>
       </div>
       <ProductDetailSheet 
