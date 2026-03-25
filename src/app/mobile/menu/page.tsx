@@ -113,7 +113,7 @@ export default function MobileMenuPage() {
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [cart, setCart] = useState<Record<string, number>>({});
   
-  const sections = ['Bestsellers', 'Pizza', 'Drinks'];
+  const sections = ['Bestsellers', 'Pizza', 'Sides', 'Desserts', 'Drinks'];
   const sectionRefs = useRef<{[key: string]: HTMLElement | null}>({});
   const isTabClickScrolling = useRef(false);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -124,21 +124,22 @@ export default function MobileMenuPage() {
       (entries) => {
         if (isTabClickScrolling.current) return;
 
-        const intersectingEntries = entries.filter(e => e.isIntersecting);
+        const visibleEntries = entries.filter((entry) => entry.isIntersecting);
 
-        if (intersectingEntries.length > 0) {
-            // Find the entry that is most visible at the top of the viewport
-            const topEntry = intersectingEntries.reduce((prev, current) => {
-                return (prev.boundingClientRect.top < current.boundingClientRect.top) ? prev : current;
-            });
-            if (activeTab !== topEntry.target.id) {
-              setActiveTab(topEntry.target.id);
-            }
+        if (visibleEntries.length > 0) {
+          // Find the entry that is closest to the top of the viewport
+          const topEntry = visibleEntries.reduce((prev, current) => {
+            return prev.boundingClientRect.top < current.boundingClientRect.top
+              ? prev
+              : current;
+          });
+          
+          setActiveTab(topEntry.target.id);
         }
       },
       {
-        root: null, // observe intersections in the viewport
-        rootMargin: "-120px 0px -50% 0px", // top offset for sticky header
+        root: null, 
+        rootMargin: "-120px 0px -50% 0px",
         threshold: 0,
       }
     );
@@ -153,7 +154,7 @@ export default function MobileMenuPage() {
         if (ref) observer.unobserve(ref);
       });
     };
-  }, [activeTab]);
+  }, []);
 
   const handleTabClick = (tab: string) => {
     isTabClickScrolling.current = true;
