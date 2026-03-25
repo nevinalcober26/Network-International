@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
@@ -114,6 +114,70 @@ export default function MobileMenuPage() {
   const [cart, setCart] = useState<Record<string, number>>({});
   
   const sections = ['Bestsellers', 'Pizza', 'Drinks'];
+  const sectionRefs = useRef<{[key: string]: HTMLElement | null}>({});
+  const isTabClickScrolling = useRef(false);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (isTabClickScrolling.current) return;
+
+        const intersectingEntries = entries.filter(e => e.isIntersecting);
+
+        if (intersectingEntries.length > 0) {
+            // Find the entry that is most visible at the top of the viewport
+            const topEntry = intersectingEntries.reduce((prev, current) => {
+                return (prev.boundingClientRect.top < current.boundingClientRect.top) ? prev : current;
+            });
+            if (activeTab !== topEntry.target.id) {
+              setActiveTab(topEntry.target.id);
+            }
+        }
+      },
+      {
+        root: null, // observe intersections in the viewport
+        rootMargin: "-120px 0px -50% 0px", // top offset for sticky header
+        threshold: 0,
+      }
+    );
+
+    const currentRefs = sectionRefs.current;
+    Object.values(currentRefs).forEach(ref => {
+      if (ref) observer.observe(ref);
+    });
+
+    return () => {
+       Object.values(currentRefs).forEach(ref => {
+        if (ref) observer.unobserve(ref);
+      });
+    };
+  }, [activeTab]);
+
+  const handleTabClick = (tab: string) => {
+    isTabClickScrolling.current = true;
+    setActiveTab(tab);
+    const element = sectionRefs.current[tab];
+    if (element) {
+        const header = document.querySelector('header');
+        const headerHeight = header ? header.offsetHeight : 0;
+        const elementPosition = element.getBoundingClientRect().top;
+        const offsetPosition = elementPosition + window.scrollY - headerHeight;
+
+        window.scrollTo({
+            top: offsetPosition,
+            behavior: 'smooth'
+        });
+
+        setTimeout(() => {
+            isTabClickScrolling.current = false;
+        }, 1000); 
+    } else {
+        isTabClickScrolling.current = false;
+    }
+  };
+  
 
   const handleAddToCart = (item: MenuItem, quantity: number) => {
     setCart(prevCart => ({
@@ -150,7 +214,7 @@ export default function MobileMenuPage() {
 
   return (
     <>
-      <div className="bg-[#F7F9FB] min-h-screen">
+      <div className="bg-[#F7F9FB] min-h-screen" ref={scrollContainerRef}>
         {/* Header */}
         <header className="sticky top-0 z-20 bg-white/80 backdrop-blur-lg p-4 pb-0">
           <div className="flex items-center justify-between mb-4">
@@ -172,7 +236,7 @@ export default function MobileMenuPage() {
               {menuData.categories.map((cat) => (
                 <button
                   key={cat}
-                  onClick={() => setActiveTab(cat)}
+                  onClick={() => handleTabClick(cat)}
                   className={cn(
                     "flex items-center gap-1.5 whitespace-nowrap px-4 py-3 text-sm font-bold transition-colors relative",
                     activeTab === cat
@@ -193,7 +257,11 @@ export default function MobileMenuPage() {
         {/* Menu Items */}
         <main className="p-4 space-y-8">
           {sections.map(section => (
-              <div key={section}>
+              <div 
+                key={section} 
+                id={section}
+                ref={(el) => (sectionRefs.current[section] = el)}
+              >
                   <h2 className="text-2xl font-bold text-gray-900 mb-4">{section}</h2>
                   <div className="space-y-4">
                       {menuData.items.filter(item => item.category === section).map(item => (
