@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
@@ -13,7 +14,6 @@ import { ProductDetailSheet } from './product-detail-sheet';
 import { CartSheet } from './cart-sheet';
 import { Card } from '@/components/ui/card';
 import { PaymentSheet } from './payment-sheet';
-import { PaymentRedirectSheet } from './payment-redirect-sheet';
 
 // Helper to find image URL by ID
 const getImageUrl = (id: string) => {
@@ -115,6 +115,7 @@ const MenuItemCard = ({
 
 
 export default function MobileMenuPage() {
+  const router = useRouter();
   const sections = useMemo(() => {
     return menuData.categories;
   }, []);
@@ -126,7 +127,6 @@ export default function MobileMenuPage() {
   const [isCartAnimating, setIsCartAnimating] = useState(false);
   const [isCartSheetOpen, setIsCartSheetOpen] = useState(false);
   const [isPaymentSheetOpen, setIsPaymentSheetOpen] = useState(false);
-  const [isRedirectingSheetOpen, setIsRedirectingSheetOpen] = useState(false);
   const [selectedTip, setSelectedTip] = useState<number | 'custom' | null>(4);
 
   
@@ -289,9 +289,7 @@ export default function MobileMenuPage() {
 
   const handlePayNow = () => {
     setIsPaymentSheetOpen(false);
-    setTimeout(() => {
-        setIsRedirectingSheetOpen(true);
-    }, 300);
+    router.push(`/mobile/menu/payment-redirect?total=${total}`);
   };
 
   return (
@@ -417,11 +415,6 @@ export default function MobileMenuPage() {
         onPayNow={handlePayNow}
         selectedTip={selectedTip}
         onTipChange={setSelectedTip}
-      />
-       <PaymentRedirectSheet
-        isOpen={isRedirectingSheetOpen}
-        onOpenChange={setIsRedirectingSheetOpen}
-        total={total}
       />
     </>
   );
