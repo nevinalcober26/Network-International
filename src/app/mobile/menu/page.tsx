@@ -144,12 +144,8 @@ export default function MobileMenuPage() {
   };
 
   const handleAddClick = (item: MenuItem) => {
-    if (item.isCustomisable) {
-      setSelectedItem(item);
-      setIsSheetOpen(true);
-    } else {
-      handleIncrement(item.id);
-    }
+    setSelectedItem(item);
+    setIsSheetOpen(true);
   };
 
   return (
