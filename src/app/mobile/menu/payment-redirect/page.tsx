@@ -12,12 +12,11 @@ function PaymentRedirectContent() {
 
   useEffect(() => {
     const timer = setTimeout(() => {
-      // In a real app, you would check payment status.
-      // For this prototype, we'll redirect to the welcome page on "success".
-      router.push('/mobile/welcome');
-    }, 4000); // Simulate a 4-second redirect
+      // Redirect to the new checkout page
+      router.push(`/mobile/menu/checkout?total=${totalAmount}`);
+    }, 2000); // Shortened redirect time
     return () => clearTimeout(timer);
-  }, [router]);
+  }, [router, totalAmount]);
 
   return (
     <div className="flex flex-col min-h-screen w-full max-w-md mx-auto bg-[#F7F9FB] justify-center items-center text-center p-8">
@@ -27,7 +26,7 @@ function PaymentRedirectContent() {
           <Loader2 className="w-full h-full text-blue-500 animate-spin" style={{ animationDuration: '1.5s' }} />
         </div>
         <div className="space-y-1">
-          <h2 className="text-2xl font-bold text-gray-800">Redirecting Payment</h2>
+          <h2 className="text-2xl font-bold text-gray-800">Redirecting to Payment</h2>
           <p className="text-gray-500">Please wait a moment...</p>
         </div>
 
