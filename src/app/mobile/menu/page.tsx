@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
@@ -108,16 +108,20 @@ const MenuItemCard = ({
 
 
 export default function MobileMenuPage() {
-  const [activeTab, setActiveTab] = useState('Bestsellers');
+  const sections = useMemo(() => {
+    // Only include categories that have at least one item.
+    return menuData.categories.filter(category => 
+      menuData.items.some(item => item.category === category)
+    );
+  }, []);
+  
+  const [activeTab, setActiveTab] = useState(sections[0] || '');
   const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [cart, setCart] = useState<Record<string, number>>({});
   
-  const sections = ['Bestsellers', 'Pizza', 'Sides', 'Desserts', 'Drinks'];
   const sectionRefs = useRef<{[key: string]: HTMLElement | null}>({});
   const isTabClickScrolling = useRef(false);
-  const scrollContainerRef = useRef<HTMLDivElement>(null);
-
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -127,7 +131,6 @@ export default function MobileMenuPage() {
         const visibleEntries = entries.filter((entry) => entry.isIntersecting);
 
         if (visibleEntries.length > 0) {
-          // Find the entry that is closest to the top of the viewport
           const topEntry = visibleEntries.reduce((prev, current) => {
             return prev.boundingClientRect.top < current.boundingClientRect.top
               ? prev
@@ -154,7 +157,7 @@ export default function MobileMenuPage() {
         if (ref) observer.unobserve(ref);
       });
     };
-  }, []);
+  }, [sections]);
 
   const handleTabClick = (tab: string) => {
     isTabClickScrolling.current = true;
@@ -215,7 +218,7 @@ export default function MobileMenuPage() {
 
   return (
     <>
-      <div className="bg-[#F7F9FB] min-h-screen" ref={scrollContainerRef}>
+      <div className="bg-[#F7F9FB] min-h-screen">
         {/* Header */}
         <header className="sticky top-0 z-20 bg-white/80 backdrop-blur-lg p-4 pb-0">
           <div className="flex items-center justify-between mb-4">
@@ -234,7 +237,7 @@ export default function MobileMenuPage() {
           {/* Category Tabs */}
           <ScrollArea className="w-full whitespace-nowrap">
             <div className="flex items-center space-x-1 border-b">
-              {menuData.categories.map((cat) => (
+              {sections.map((cat) => (
                 <button
                   key={cat}
                   onClick={() => handleTabClick(cat)}
