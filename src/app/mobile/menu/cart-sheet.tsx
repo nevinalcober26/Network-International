@@ -132,7 +132,7 @@ export function CartSheet({ isOpen, onOpenChange, cartItems, onIncrement, onDecr
             </div>
         </div>
 
-        <div className="p-4 pt-2 shrink-0 bg-transparent">
+        <div className="p-4 pt-2 pb-0 shrink-0 bg-transparent">
           <div className="flex items-center justify-between p-3 bg-gradient-to-r from-yellow-100 to-amber-200 rounded-2xl border border-yellow-300/50">
               <div className="flex items-center gap-3">
                   <div className="relative">
