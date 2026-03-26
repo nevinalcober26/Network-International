@@ -106,14 +106,10 @@ export function OrderDetailsSheet({
                     <div className="space-y-4">
                       {order.items.map((item, index) => (
                         <React.Fragment key={item.id}>
-                          <div className="flex justify-between items-start">
-                            <div>
-                              <p className="font-medium">{item.name}</p>
-                              <p className="text-sm text-muted-foreground">
-                                Qty: {item.quantity}
-                              </p>
-                            </div>
-                            <p className="font-mono">
+                          <div className="grid grid-cols-[1fr_auto_auto] items-center gap-4">
+                            <p className="font-medium">{item.name}</p>
+                            <p className="text-sm text-muted-foreground">x{item.quantity}</p>
+                            <p className="font-mono text-right">
                               ${(item.price * item.quantity).toFixed(2)}
                             </p>
                           </div>
@@ -137,30 +133,30 @@ export function OrderDetailsSheet({
                     <div className="space-y-2 text-sm">
                       <div className="flex justify-between">
                         <span className="text-muted-foreground">Subtotal</span>
-                        <span>${subtotal.toFixed(2)}</span>
+                        <span className="font-mono">${subtotal.toFixed(2)}</span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-muted-foreground">Tax (5%)</span>
-                        <span>${taxAmount.toFixed(2)}</span>
+                        <span className="font-mono">${taxAmount.toFixed(2)}</span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-muted-foreground">
                           Discount
                         </span>
-                        <span>$0.00</span>
+                        <span className="font-mono">$0.00</span>
                       </div>
                       <Separator className="my-2" />
                       <div className="flex justify-between font-bold text-base">
                         <span>Total</span>
-                        <span>${totalWithTax.toFixed(2)}</span>
+                        <span className="font-mono">${totalWithTax.toFixed(2)}</span>
                       </div>
                       <div className="flex justify-between font-semibold text-green-600">
                         <span>Paid</span>
-                        <span>${order.paidAmount.toFixed(2)}</span>
+                        <span className="font-mono">${order.paidAmount.toFixed(2)}</span>
                       </div>
                       <div className="flex justify-between font-semibold text-red-600">
                         <span>Pending</span>
-                        <span>
+                        <span className="font-mono">
                           $
                           {pendingAmount > 0.01 ? pendingAmount.toFixed(2) : '0.00'}
                         </span>
@@ -239,35 +235,40 @@ export function OrderDetailsSheet({
                                             </Badge>
                                         </div>
                                         {order.splitType === 'byItem' && payment.items && payment.items.length > 0 && (
-                                            <div className="mt-3 p-4 bg-card rounded-lg border">
-                                                <div className="space-y-2">
-                                                    <p className="text-sm font-semibold text-foreground">Items Paid For:</p>
-                                                    <ul className="list-disc pl-5 space-y-1 text-sm text-muted-foreground">
-                                                        {payment.items.map((item, idx) => (
-                                                        <li key={idx}>{item.quantity}x {item.name}</li>
-                                                        ))}
-                                                    </ul>
+                                            <Card className="mt-3 bg-card border">
+                                              <CardContent className="p-4 space-y-3">
+                                                <div>
+                                                  <p className="text-sm font-semibold text-foreground mb-2">Items Paid For:</p>
+                                                  <ul className="space-y-2 text-sm text-muted-foreground">
+                                                      {payment.items.map((item, idx) => (
+                                                      <li key={idx} className="flex justify-between items-center">
+                                                          <span>{item.quantity}x {item.name}</span>
+                                                      </li>
+                                                      ))}
+                                                  </ul>
                                                 </div>
-                                                {payment.tip && payment.tip > 0 && (
-                                                    <>
-                                                        <Separator className="my-3"/>
-                                                        <div className="flex justify-between items-center text-sm">
-                                                            <span className="font-medium text-muted-foreground">Tip Amount:</span>
-                                                            <span className="font-mono font-semibold text-foreground">${payment.tip.toFixed(2)}</span>
-                                                        </div>
-                                                    </>
+                                                {(payment.tip && payment.tip > 0) && (
+                                                  <>
+                                                    <Separator/>
+                                                    <div className="flex justify-between items-center text-sm font-medium">
+                                                      <span className="text-muted-foreground">Tip Amount:</span>
+                                                      <span className="font-mono text-foreground">${payment.tip.toFixed(2)}</span>
+                                                    </div>
+                                                  </>
                                                 )}
-                                            </div>
+                                                <Separator/>
+                                                <div className="space-y-1 text-xs text-muted-foreground">
+                                                    <p>Transaction ID: {payment.transactionId}</p>
+                                                    {order.staffReference?.employee_reference_code && (
+                                                        <p>Terminal ID: {order.staffReference.employee_reference_code}</p>
+                                                    )}
+                                                    {order.source && (
+                                                        <p>Source: {order.source === 'POS' ? 'POS Machine' : order.source}</p>
+                                                    )}
+                                                </div>
+                                              </CardContent>
+                                            </Card>
                                         )}
-                                        <div className="mt-4 space-y-1 text-sm text-muted-foreground">
-                                            <p>Transaction ID: {payment.transactionId}</p>
-                                            {order.staffReference?.employee_reference_code && (
-                                                <p>Terminal ID: {order.staffReference.employee_reference_code}</p>
-                                            )}
-                                            {order.source && (
-                                                <p>Source: {order.source === 'POS' ? 'POS Machine' : order.source}</p>
-                                            )}
-                                        </div>
                                       </div>
                                     </div>
                                   </div>
@@ -325,19 +326,19 @@ export function OrderDetailsSheet({
                   <CardContent className="p-8 pt-0 text-sm space-y-4">
                     <div className="flex justify-between items-center">
                       <p className="text-muted-foreground">Name</p>
-                      <p className="font-medium">
+                      <p className="font-medium text-right">
                         {order.customer?.name || 'Guest Customer'}
                       </p>
                     </div>
                     <div className="flex justify-between items-center">
                       <p className="text-muted-foreground">Email</p>
-                      <p className="font-medium">
+                      <p className="font-medium text-right">
                         {order.customer?.email || 'N/A'}
                       </p>
                     </div>
                     <div className="flex justify-between items-center">
                       <p className="text-muted-foreground">Phone</p>
-                      <p className="font-medium">
+                      <p className="font-medium text-right">
                         {order.customer?.phone || 'N/A'}
                       </p>
                     </div>
@@ -463,7 +464,7 @@ export function OrderDetailsSheet({
                                     </div>
                                      <div>
                                         <span className="text-sm font-bold text-gray-900">{order.staffReference.currency}</span>
-                                        <p className="text-3xl font-bold text-gray-900 leading-none">
+                                        <p className="text-4xl font-black text-gray-900 leading-none">
                                             {order.staffReference.total_sale_amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                         </p>
                                     </div>
@@ -475,7 +476,7 @@ export function OrderDetailsSheet({
                                         <FileText className="h-4 w-4 text-orange-500"/>
                                         Total Orders
                                     </div>
-                                    <p className="text-5xl font-bold text-gray-900">
+                                    <p className="text-4xl font-black text-gray-900">
                                         {order.staffReference.order_count}
                                     </p>
                                 </CardContent>
