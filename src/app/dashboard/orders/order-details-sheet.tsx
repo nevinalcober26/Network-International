@@ -172,10 +172,10 @@ export function OrderDetailsSheet({
 
                       {order.splitType ? (
                         <div className="flex items-center gap-2 text-sm text-muted-foreground mb-3 p-3 bg-secondary rounded-md border">
-                          {order.splitType === 'equally' ? (
-                            <Users className="h-5 w-5" />
-                          ) : (
+                          {order.splitType === 'byItem' ? (
                             <Package className="h-5 w-5" />
+                          ) : (
+                            <Users className="h-5 w-5" />
                           )}
                           <span>
                             Payment split <strong>{order.splitType === 'byItem' ? 'by Item' : 'Equally'}</strong>.
@@ -236,51 +236,46 @@ export function OrderDetailsSheet({
                                               Success
                                               </Badge>
                                           </div>
-                                          {order.splitType && (() => {
-                                              const hasItems = order.splitType === 'byItem' && payment.items && payment.items.length > 0;
-                                              const hasTip = payment.tip && payment.tip > 0;
-
-                                              return (
-                                                  <Card className="mt-3 bg-card border">
-                                                      <CardContent className="p-4 space-y-3">
-                                                          {hasItems && (
-                                                              <div>
-                                                                  <p className="text-sm font-semibold text-foreground mb-2">Items Paid For:</p>
-                                                                  <ul className="space-y-2 text-sm text-muted-foreground">
-                                                                      {payment.items!.map((item, idx) => (
-                                                                          <li key={idx} className="flex justify-between items-center">
-                                                                              <span>{item.quantity}x {item.name}</span>
-                                                                          </li>
-                                                                      ))}
-                                                                  </ul>
-                                                              </div>
-                                                          )}
-
-                                                          {hasTip && (
-                                                              <>
-                                                                  {hasItems && <Separator />}
-                                                                  <div className="flex justify-between items-center text-sm font-medium">
-                                                                      <span className="text-muted-foreground">Tip Amount:</span>
-                                                                      <span className="font-mono text-foreground">${payment.tip!.toFixed(2)}</span>
-                                                                  </div>
-                                                              </>
-                                                          )}
-
-                                                          {(hasItems || hasTip) && <Separator />}
-
-                                                          <div className="space-y-1 text-xs text-muted-foreground">
-                                                              <p>Transaction ID: {payment.transactionId}</p>
-                                                              {order.staffReference?.employee_reference_code && (
-                                                                  <p>Terminal ID: {order.staffReference.employee_reference_code}</p>
-                                                              )}
-                                                              {order.source && (
-                                                                  <p>Source: {order.source === 'POS' ? 'POS Machine' : order.source}</p>
-                                                              )}
+                                          {order.splitType && (
+                                              <Card className="mt-3 bg-card border">
+                                                  <CardContent className="p-4 space-y-3">
+                                                      {order.splitType === 'byItem' && payment.items && payment.items.length > 0 && (
+                                                          <div>
+                                                              <p className="text-sm font-semibold text-foreground mb-2">Items Paid For:</p>
+                                                              <ul className="space-y-2 text-sm text-muted-foreground">
+                                                                  {payment.items.map((item, idx) => (
+                                                                      <li key={idx} className="flex justify-between items-center">
+                                                                          <span>{item.quantity}x {item.name}</span>
+                                                                      </li>
+                                                                  ))}
+                                                              </ul>
                                                           </div>
-                                                      </CardContent>
-                                                  </Card>
-                                              );
-                                          })()}
+                                                      )}
+
+                                                      {payment.tip && payment.tip > 0 && (
+                                                          <>
+                                                              {order.splitType === 'byItem' && payment.items && payment.items.length > 0 && <Separator />}
+                                                              <div className="flex justify-between items-center text-sm font-medium">
+                                                                  <span className="text-muted-foreground">Tip Amount:</span>
+                                                                  <span className="font-mono text-foreground">${payment.tip.toFixed(2)}</span>
+                                                              </div>
+                                                          </>
+                                                      )}
+                                                      
+                                                      {((order.splitType === 'byItem' && payment.items && payment.items.length > 0) || (payment.tip && payment.tip > 0)) && <Separator />}
+
+                                                      <div className="space-y-1 text-xs text-muted-foreground">
+                                                          <p>Transaction ID: {payment.transactionId}</p>
+                                                          {order.staffReference?.employee_reference_code && (
+                                                              <p>Terminal ID: {order.staffReference.employee_reference_code}</p>
+                                                          )}
+                                                          {order.source && (
+                                                              <p>Source: {order.source === 'POS' ? 'POS Machine' : order.source}</p>
+                                                          )}
+                                                      </div>
+                                                  </CardContent>
+                                              </Card>
+                                          )}
                                       </div>
                                     </div>
                                   </div>
