@@ -1,12 +1,13 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetClose, SheetFooter } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { X, Minus, Plus, Trash2, ChevronRight, Edit, ShoppingBasket, Gift } from 'lucide-react';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
+import gsap from 'gsap';
 
 // Duplicating type to avoid circular dependency issues
 type MenuItem = {
@@ -43,12 +44,33 @@ interface CartSheetProps {
 
 export function CartSheet({ isOpen, onOpenChange, cartItems, onIncrement, onDecrement, onRemove, onCheckout, onBecomeVip }: CartSheetProps) {
   const [isVip, setIsVip] = useState(false);
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  const shineRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (isOpen) {
-      setIsVip(localStorage.getItem('isVip') === 'true');
+      const vipStatus = localStorage.getItem('isVip') === 'true';
+      setIsVip(vipStatus);
     }
   }, [isOpen]);
+
+  useEffect(() => {
+    if (isOpen && !isVip && buttonRef.current && shineRef.current) {
+      const tl = gsap.timeline({ repeat: -1, repeatDelay: 2 });
+      tl.fromTo(
+        shineRef.current,
+        { x: '-150%' },
+        {
+          x: '150%',
+          duration: 1.5,
+          ease: 'power1.inOut',
+        }
+      );
+      return () => {
+        tl.kill();
+      };
+    }
+  }, [isOpen, isVip]);
 
   const subtotal = cartItems.reduce((sum, { item, quantity }) => sum + item.price * quantity, 0);
   const tax = subtotal * 0.05;
@@ -145,7 +167,6 @@ export function CartSheet({ isOpen, onOpenChange, cartItems, onIncrement, onDecr
         {!isVip && (
           <div className="p-4 pt-2 pb-0 shrink-0 bg-transparent">
             <div className="relative overflow-hidden flex items-center justify-between p-3 bg-gradient-to-r from-yellow-100 to-amber-200 rounded-2xl border border-yellow-300/50">
-                <div className="absolute top-0 -left-full h-full w-1/2 bg-gradient-to-r from-transparent via-white/50 to-transparent animate-shine-loop z-10" />
                 <div className="flex items-center gap-3 z-20">
                     <div className="relative">
                         <Gift className="h-10 w-10 text-yellow-600 opacity-20"/>
@@ -156,7 +177,10 @@ export function CartSheet({ isOpen, onOpenChange, cartItems, onIncrement, onDecr
                         <p className="text-xs text-yellow-800 font-medium">Join VIP for extra perks</p>
                     </div>
                 </div>
-                <Button className="rounded-full h-8 px-4 bg-yellow-400 text-yellow-900 font-bold text-xs hover:bg-yellow-500 shadow-md z-20" onClick={onBecomeVip}>Become a VIP</Button>
+                <Button ref={buttonRef} className="relative overflow-hidden rounded-full h-8 px-4 bg-yellow-400 text-yellow-900 font-bold text-xs hover:bg-yellow-500 shadow-md z-20" onClick={onBecomeVip}>
+                    <div ref={shineRef} className="absolute top-0 -left-full h-full w-1/2 bg-gradient-to-r from-transparent via-white/60 to-transparent transform -skew-x-[30deg]" />
+                    Become a VIP
+                </Button>
                 <button className="self-start -mt-1 -mr-1 z-20">
                     <X className="h-4 w-4 text-yellow-900/50"/>
                 </button>
