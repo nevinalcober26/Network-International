@@ -14,6 +14,8 @@ import { ProductDetailSheet } from './product-detail-sheet';
 import { CartSheet } from './cart-sheet';
 import { Card } from '@/components/ui/card';
 import { PaymentSheet } from './payment-sheet';
+import { VipClubSheet } from './vip-club-sheet';
+import { useToast } from '@/hooks/use-toast';
 
 // Helper to find image URL by ID
 const getImageUrl = (id: string) => {
@@ -153,6 +155,7 @@ const PaymentRedirectContent = ({ totalAmount }: { totalAmount: number }) => (
 
 export default function MobileMenuPage() {
   const router = useRouter();
+  const { toast } = useToast();
   const sections = useMemo(() => {
     return menuData.categories;
   }, []);
@@ -164,6 +167,7 @@ export default function MobileMenuPage() {
   const [isCartAnimating, setIsCartAnimating] = useState(false);
   const [isCartSheetOpen, setIsCartSheetOpen] = useState(false);
   const [isPaymentSheetOpen, setIsPaymentSheetOpen] = useState(false);
+  const [isVipSheetOpen, setIsVipSheetOpen] = useState(false);
   const [selectedTip, setSelectedTip] = useState<number | 'custom' | null>(4);
   const [isRedirecting, setIsRedirecting] = useState(false);
 
@@ -325,14 +329,25 @@ export default function MobileMenuPage() {
     setIsCartSheetOpen(true);
   };
 
-  const handlePayNow = () => {
+  const handleInitiateVipSignup = () => {
     setIsPaymentSheetOpen(false);
-    setIsRedirecting(true); // Show the redirecting overlay
+    setIsVipSheetOpen(true);
+  };
 
-    // Navigate to the final checkout page after a short delay
+  const handleVipSignupAndPay = () => {
+    setIsVipSheetOpen(false);
+
+    toast({
+      title: "You're In!",
+      description: "You're now part of our VIP Dining circle.",
+    });
+
     setTimeout(() => {
-      router.push(`/mobile/menu/checkout?total=${total}`);
-    }, 1500); // Show redirecting UI for 1.5s
+      setIsRedirecting(true);
+      setTimeout(() => {
+        router.push(`/mobile/menu/checkout?total=${total}`);
+      }, 1500);
+    }, 3000);
   };
 
   return (
@@ -456,9 +471,14 @@ export default function MobileMenuPage() {
         tax={tax}
         serviceCharge={serviceCharge}
         onBack={handleBackToCart}
-        onPayNow={handlePayNow}
+        onPayNow={handleInitiateVipSignup}
         selectedTip={selectedTip}
         onTipChange={setSelectedTip}
+      />
+      <VipClubSheet
+        isOpen={isVipSheetOpen}
+        onOpenChange={setIsVipSheetOpen}
+        onSignup={handleVipSignupAndPay}
       />
     </>
   );

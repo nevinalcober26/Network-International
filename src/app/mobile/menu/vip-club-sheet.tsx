@@ -18,6 +18,7 @@ import Image from 'next/image';
 interface VipClubSheetProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
+  onSignup: () => void;
 }
 
 const benefits = [
@@ -27,7 +28,7 @@ const benefits = [
   'Grab exclusive vouchers fast',
 ];
 
-export function VipClubSheet({ isOpen, onOpenChange }: VipClubSheetProps) {
+export function VipClubSheet({ isOpen, onOpenChange, onSignup }: VipClubSheetProps) {
   return (
     <Sheet open={isOpen} onOpenChange={onOpenChange}>
       <SheetContent
@@ -106,8 +107,11 @@ export function VipClubSheet({ isOpen, onOpenChange }: VipClubSheetProps) {
             
           {/* Footer Button */}
           <SheetFooter className="p-4 bg-white border-t border-gray-200/80 shadow-[0_-4px_12px_rgba(0,0,0,0.05)] w-full shrink-0">
-            <Button className="w-full h-14 rounded-2xl text-lg font-bold bg-teal-500 hover:bg-teal-600 shadow-lg shadow-teal-500/20">
-              Sign Me Up For Exclusive Deals
+            <Button
+              className="w-full h-14 rounded-2xl text-lg font-bold bg-teal-500 hover:bg-teal-600 shadow-lg shadow-teal-500/20"
+              onClick={onSignup}
+            >
+              Sign Me Up for Exclusive Deals
               <ArrowRight className="ml-2 h-5 w-5" />
             </Button>
           </SheetFooter>

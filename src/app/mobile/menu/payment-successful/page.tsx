@@ -97,7 +97,11 @@ export default function PaymentSuccessfulPage() {
 
         </main>
       </div>
-      <VipClubSheet isOpen={isVipSheetOpen} onOpenChange={setIsVipSheetOpen} />
+      <VipClubSheet isOpen={isVipSheetOpen} onOpenChange={setIsVipSheetOpen} onSignup={() => {
+        // This is a simplified signup for the post-payment flow
+        setIsVipSheetOpen(false);
+        // You might want to show a toast here as well
+      }} />
     </>
   );
 }
