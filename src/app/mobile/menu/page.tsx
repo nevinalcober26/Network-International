@@ -170,7 +170,11 @@ export default function MobileMenuPage() {
   const [isVipSheetOpen, setIsVipSheetOpen] = useState(false);
   const [selectedTip, setSelectedTip] = useState<number | 'custom' | null>(4);
   const [isRedirecting, setIsRedirecting] = useState(false);
+  const [isVip, setIsVip] = useState(false);
 
+  useEffect(() => {
+    setIsVip(localStorage.getItem('isVip') === 'true');
+  }, []);
   
   const sectionRefs = useRef<{[key: string]: HTMLElement | null}>({});
   const tabRefs = useRef<{[key: string]: HTMLButtonElement | null}>({});
@@ -331,7 +335,14 @@ export default function MobileMenuPage() {
 
   const handleInitiateVipSignup = () => {
     setIsPaymentSheetOpen(false);
-    setIsVipSheetOpen(true);
+    if (isVip) {
+      setIsRedirecting(true);
+      setTimeout(() => {
+        router.push(`/mobile/menu/checkout?total=${total}`);
+      }, 1500);
+    } else {
+      setIsVipSheetOpen(true);
+    }
   };
 
   const handleVipSignupAndPay = () => {
@@ -341,6 +352,9 @@ export default function MobileMenuPage() {
       title: "You're In!",
       description: "You're now part of our VIP Dining circle.",
     });
+
+    localStorage.setItem('isVip', 'true');
+    setIsVip(true);
 
     setTimeout(() => {
       setIsRedirecting(true);
@@ -475,11 +489,13 @@ export default function MobileMenuPage() {
         selectedTip={selectedTip}
         onTipChange={setSelectedTip}
       />
-      <VipClubSheet
-        isOpen={isVipSheetOpen}
-        onOpenChange={setIsVipSheetOpen}
-        onSignup={handleVipSignupAndPay}
-      />
+      {!isVip && (
+        <VipClubSheet
+          isOpen={isVipSheetOpen}
+          onOpenChange={setIsVipSheetOpen}
+          onSignup={handleVipSignupAndPay}
+        />
+      )}
     </>
   );
 }

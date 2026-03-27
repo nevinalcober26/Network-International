@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetClose, SheetFooter } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
@@ -41,6 +41,14 @@ interface CartSheetProps {
 }
 
 export function CartSheet({ isOpen, onOpenChange, cartItems, onIncrement, onDecrement, onRemove, onCheckout }: CartSheetProps) {
+  const [isVip, setIsVip] = useState(false);
+
+  useEffect(() => {
+    if (isOpen) {
+      setIsVip(localStorage.getItem('isVip') === 'true');
+    }
+  }, [isOpen]);
+
   const subtotal = cartItems.reduce((sum, { item, quantity }) => sum + item.price * quantity, 0);
   const tax = subtotal * 0.05;
   const serviceCharge = subtotal * 0.10;
@@ -133,24 +141,26 @@ export function CartSheet({ isOpen, onOpenChange, cartItems, onIncrement, onDecr
             </div>
         </div>
 
-        <div className="p-4 pt-2 pb-0 shrink-0 bg-transparent">
-          <div className="flex items-center justify-between p-3 bg-gradient-to-r from-yellow-100 to-amber-200 rounded-2xl border border-yellow-300/50">
-              <div className="flex items-center gap-3">
-                  <div className="relative">
-                      <Gift className="h-10 w-10 text-yellow-600 opacity-20"/>
-                      {giftIcon && <Image src={giftIcon.imageUrl} alt={giftIcon.description} width={24} height={24} className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" data-ai-hint={giftIcon.imageHint} />}
-                  </div>
-                  <div>
-                      <p className="font-extrabold text-yellow-900 uppercase">Unlock VIP Perks</p>
-                      <p className="text-xs text-yellow-800 font-medium">Join VIP for extra perks</p>
-                  </div>
-              </div>
-              <Button className="rounded-full h-8 px-4 bg-yellow-400 text-yellow-900 font-bold text-xs hover:bg-yellow-500 shadow-md">Become a VIP</Button>
-              <button className="self-start -mt-1 -mr-1">
-                  <X className="h-4 w-4 text-yellow-900/50"/>
-              </button>
+        {!isVip && (
+          <div className="p-4 pt-2 pb-0 shrink-0 bg-transparent">
+            <div className="flex items-center justify-between p-3 bg-gradient-to-r from-yellow-100 to-amber-200 rounded-2xl border border-yellow-300/50">
+                <div className="flex items-center gap-3">
+                    <div className="relative">
+                        <Gift className="h-10 w-10 text-yellow-600 opacity-20"/>
+                        {giftIcon && <Image src={giftIcon.imageUrl} alt={giftIcon.description} width={24} height={24} className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" data-ai-hint={giftIcon.imageHint} />}
+                    </div>
+                    <div>
+                        <p className="font-extrabold text-yellow-900 uppercase">Unlock VIP Perks</p>
+                        <p className="text-xs text-yellow-800 font-medium">Join VIP for extra perks</p>
+                    </div>
+                </div>
+                <Button className="rounded-full h-8 px-4 bg-yellow-400 text-yellow-900 font-bold text-xs hover:bg-yellow-500 shadow-md">Become a VIP</Button>
+                <button className="self-start -mt-1 -mr-1">
+                    <X className="h-4 w-4 text-yellow-900/50"/>
+                </button>
+            </div>
           </div>
-        </div>
+        )}
         
         <SheetFooter className="p-4 pt-[15px] bg-white border-t border-gray-200/80 shadow-[0_-4px_12px_rgba(0,0,0,0.05)] w-full shrink-0">
             <Button className="w-full h-14 rounded-2xl text-lg font-bold bg-teal-500 hover:bg-teal-600 shadow-lg shadow-teal-500/20" onClick={onCheckout}>

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
@@ -22,7 +22,12 @@ export default function PaymentSuccessfulPage() {
   const router = useRouter();
   const [selectedFeedback, setSelectedFeedback] = useState<string | null>(null);
   const [isVipSheetOpen, setIsVipSheetOpen] = useState(false);
+  const [isVip, setIsVip] = useState(false);
   const giftIcon = PlaceHolderImages.find(img => img.id === 'gift-icon');
+
+  useEffect(() => {
+    setIsVip(localStorage.getItem('isVip') === 'true');
+  }, []);
 
   return (
     <>
@@ -63,25 +68,27 @@ export default function PaymentSuccessfulPage() {
               </div>
             </div>
             
-            <div className="p-4 bg-gray-800 rounded-2xl flex items-center justify-between text-white my-4">
-                <div className="flex items-center gap-3 text-left">
-                    {giftIcon && (
-                        <div className="relative h-12 w-12 flex-shrink-0">
-                            <Image src={giftIcon.imageUrl} alt={giftIcon.description} fill sizes="48px" className="object-contain" data-ai-hint={giftIcon.imageHint} />
-                        </div>
-                    )}
-                    <div>
-                        <p className="font-extrabold uppercase">Join VIP Club</p>
-                        <p className="text-xs text-gray-300">Get special <span className="font-bold text-yellow-300">discounts +</span> exclusive perks</p>
-                    </div>
-                </div>
-                <Button 
-                  className="rounded-lg h-9 px-4 bg-white text-gray-900 font-bold text-sm hover:bg-gray-200"
-                  onClick={() => setIsVipSheetOpen(true)}
-                >
-                  Join Free
-                </Button>
-            </div>
+            {!isVip && (
+              <div className="p-4 bg-gray-800 rounded-2xl flex items-center justify-between text-white my-4">
+                  <div className="flex items-center gap-3 text-left">
+                      {giftIcon && (
+                          <div className="relative h-12 w-12 flex-shrink-0">
+                              <Image src={giftIcon.imageUrl} alt={giftIcon.description} fill sizes="48px" className="object-contain" data-ai-hint={giftIcon.imageHint} />
+                          </div>
+                      )}
+                      <div>
+                          <p className="font-extrabold uppercase">Join VIP Club</p>
+                          <p className="text-xs text-gray-300">Get special <span className="font-bold text-yellow-300">discounts +</span> exclusive perks</p>
+                      </div>
+                  </div>
+                  <Button 
+                    className="rounded-lg h-9 px-4 bg-white text-gray-900 font-bold text-sm hover:bg-gray-200"
+                    onClick={() => setIsVipSheetOpen(true)}
+                  >
+                    Join Free
+                  </Button>
+              </div>
+            )}
             
           </Card>
 
@@ -97,11 +104,13 @@ export default function PaymentSuccessfulPage() {
 
         </main>
       </div>
-      <VipClubSheet isOpen={isVipSheetOpen} onOpenChange={setIsVipSheetOpen} onSignup={() => {
-        // This is a simplified signup for the post-payment flow
-        setIsVipSheetOpen(false);
-        // You might want to show a toast here as well
-      }} />
+      {!isVip && (
+        <VipClubSheet isOpen={isVipSheetOpen} onOpenChange={setIsVipSheetOpen} onSignup={() => {
+          localStorage.setItem('isVip', 'true');
+          setIsVip(true);
+          setIsVipSheetOpen(false);
+        }} />
+      )}
     </>
   );
 }
