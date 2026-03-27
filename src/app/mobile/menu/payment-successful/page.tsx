@@ -8,7 +8,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Check, Mail } from 'lucide-react';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { cn } from '@/lib/utils';
-import { VipClubSheet } from './vip-club-sheet';
+import { VipClubSheet } from '../vip-club-sheet';
 
 const feedbackOptions = [
   { level: 'Poor', emoji: '😔' },
