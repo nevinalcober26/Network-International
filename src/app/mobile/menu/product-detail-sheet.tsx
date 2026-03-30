@@ -44,6 +44,7 @@ export function ProductDetailSheet({ product, isOpen, onOpenChange, onAddToCart 
   
   const sheetContentRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const imageRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (isOpen) {
@@ -53,9 +54,9 @@ export function ProductDetailSheet({ product, isOpen, onOpenChange, onAddToCart 
       setSpecialRequest('');
       setIsHeaderShrunk(false);
       setSelectedOption(null);
-      // Ensure GSAP props are cleared when sheet opens
+      // Ensure sheet is visible and in its default position when opening
       if (sheetContentRef.current) {
-        gsap.set(sheetContentRef.current, { clearProps: "all" });
+          gsap.set(sheetContentRef.current, { opacity: 1, x: 0, y: 0, scale: 1 });
       }
       if(scrollContainerRef.current) {
           scrollContainerRef.current.scrollTop = 0;
@@ -78,39 +79,49 @@ export function ProductDetailSheet({ product, isOpen, onOpenChange, onAddToCart 
       return;
     }
     
-    // Update cart state immediately for visual feedback on the cart icon
-    onAddToCart(quantity);
     setIsAdding(true);
 
     const cartIcon = document.getElementById('floating-cart-icon');
-    const sheetElement = sheetContentRef.current;
+    const imageElement = imageRef.current;
 
-    if (cartIcon && sheetElement) {
+    if (cartIcon && imageElement) {
+        const imageRect = imageElement.getBoundingClientRect();
         const cartRect = cartIcon.getBoundingClientRect();
-        const sheetRect = sheetElement.getBoundingClientRect();
 
-        // Calculate destination coordinates (center of the cart icon)
-        const targetX = cartRect.left + cartRect.width / 2;
-        const targetY = cartRect.top + cartRect.height / 2;
+        // Create a clone of the image element to animate
+        const clone = imageElement.cloneNode(true) as HTMLElement;
+        clone.style.position = 'fixed';
+        clone.style.top = `${imageRect.top}px`;
+        clone.style.left = `${imageRect.left}px`;
+        clone.style.width = `${imageRect.width}px`;
+        clone.style.height = `${imageRect.height}px`;
+        clone.style.zIndex = '9999';
+        clone.style.borderRadius = '0'; // Start with the original border-radius
+        clone.style.overflow = 'hidden';
+        document.body.appendChild(clone);
 
-        // Calculate the distance the sheet needs to travel
-        const travelX = targetX - (sheetRect.left + sheetRect.width / 2);
-        const travelY = targetY - (sheetRect.top + sheetRect.height / 2);
+        // Hide original sheet content to avoid flicker/overlap during animation
+        if (sheetContentRef.current) {
+            sheetContentRef.current.style.opacity = '0';
+        }
 
-        gsap.to(sheetElement, {
-            duration: 0.6,
-            x: travelX,
-            y: travelY,
+        gsap.to(clone, {
+            duration: 0.7,
+            x: cartRect.left - imageRect.left + (cartRect.width / 2 - imageRect.width / 2),
+            y: cartRect.top - imageRect.top + (cartRect.height / 2 - imageRect.height / 2),
             scale: 0.1,
-            opacity: 0,
-            transformOrigin: "center center",
+            borderRadius: '50%',
+            opacity: 0.5,
             ease: 'power2.in',
             onComplete: () => {
-                onOpenChange(false);
+                clone.remove();
+                onAddToCart(quantity);
+                onOpenChange(false); // This will trigger the useEffect to reset state
             }
         });
     } else {
-        // Fallback if animation targets aren't ready
+        // Fallback for safety
+        onAddToCart(quantity);
         onOpenChange(false);
     }
   };
@@ -152,7 +163,7 @@ export function ProductDetailSheet({ product, isOpen, onOpenChange, onAddToCart 
         {/* --- Main Scrollable Content --- */}
         <div ref={scrollContainerRef} onScroll={handleScroll} className="flex-1 overflow-y-auto">
           {/* Large Image Header */}
-          <div className="relative h-56 w-full">
+          <div ref={imageRef} className="relative h-56 w-full">
             <Image
               src={product.image}
               alt={product.name}
