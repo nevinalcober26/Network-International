@@ -15,7 +15,7 @@ import { useEffect, useState } from 'react';
 
 const popularItemsData = [
   {
-    id: 'classic-cheese-burger',
+    id: 'classic-cheeseburger',
     name: 'Classic Cheese Burger',
     orders: 142,
     revenue: 1240,

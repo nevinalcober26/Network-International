@@ -49,7 +49,7 @@
       "imageHint": "burger joint"
     },
     {
-      "id": "classic-cheese-burger",
+      "id": "classic-cheeseburger",
       "description": "Classic Cheese Burger",
       "imageUrl": "https://images.unsplash.com/photo-1508736793122-f516e3ba5569?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw5fHxjaGVlc2UlMjBidXJnZXJ8ZW58MHx8fHwxNzcwOTIxNTA4fDA&ixlib=rb-4.1.0&q=80&w=1080",
       "imageHint": "cheese burger"
