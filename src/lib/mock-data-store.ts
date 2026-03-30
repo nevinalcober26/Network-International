@@ -185,6 +185,9 @@ const generateMockProducts = (count: number): Product[] => {
             { id: `var_${i}_1`, value: 'Small', matrix: `S-${i}`, priceMode: 'override', priceValue: price * 0.8, hidden: false, categoryPage: true, productPage: true },
             { id: `var_${i}_2`, value: 'Large', matrix: `L-${i}`, priceMode: 'override', priceValue: price * 1.2, hidden: false, categoryPage: true, productPage: true }
         ] : undefined;
+        
+        const imageId = name.toLowerCase().replace(/ /g, '-');
+        const image = PlaceHolderImages.find(p => p.id === imageId);
 
         products.push({
             id: `prod_${i}`,
@@ -194,7 +197,7 @@ const generateMockProducts = (count: number): Product[] => {
             price,
             stock,
             status,
-            mainImage: i % 3 !== 0 ? `https://picsum.photos/seed/prod${i}/100/100` : undefined,
+            mainImage: image?.imageUrl || `https://picsum.photos/seed/prod${i}/400/400`,
             description: 'A detailed description of the product goes here, including ingredients and preparation methods.',
             smallDescription: 'A short and catchy description for the product.',
             discountedPrice: status === 'Active' && i % 4 === 0 ? parseFloat((price * 0.8).toFixed(2)) : undefined,

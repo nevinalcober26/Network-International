@@ -73,51 +73,51 @@
       "imageHint": "dessert display"
     },
     {
-      "id": "pizza-margherita",
+      "id": "margherita-pizza",
       "description": "Pizza margherita",
-      "imageUrl": "https://picsum.photos/seed/margherita/400/400",
+      "imageUrl": "https://images.unsplash.com/photo-1595854337163-97926e2df2ca?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxtYXJnaGVyaXRhJTIwcGl6emF8ZW58MHx8fHwxNzcxMDM2OTg4fDA&ixlib=rb-4.1.0&q=80&w=1080",
       "imageHint": "margherita pizza"
     },
     {
-      "id": "pizza-alfredo",
+      "id": "alfredo-pizza",
       "description": "Chicken alfredo pizza",
-      "imageUrl": "https://picsum.photos/seed/alfredo/400/400",
+      "imageUrl": "https://images.unsplash.com/photo-1627443440375-9e6b5e5c2c42?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxhbGZyZWRvJTIwcGl6emF8ZW58MHx8fHwxNzcxMDM3MDA0fDA&ixlib=rb-4.1.0&q=80&w=1080",
       "imageHint": "alfredo pizza"
     },
     {
-      "id": "pizza-hawaiian",
+      "id": "hawaiian-pizza",
       "description": "Hawaiian pizza",
-      "imageUrl": "https://picsum.photos/seed/hawaiian/400/400",
+      "imageUrl": "https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxwaXp6YSUyMGhhawUlQzMlQUFpZW5uZXxlbnwwfHx8fDE3NzEwMzcwMjJ8MA&ixlib=rb-4.1.0&q=80&w=1080",
       "imageHint": "hawaiian pizza"
     },
     {
       "id": "soft-drink",
       "description": "Soft drink can",
-      "imageUrl": "https://picsum.photos/seed/soda/400/400",
+      "imageUrl": "https://images.unsplash.com/photo-1581636625402-29b2a7046508?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxzb2RhJTIwY2FufGVufDB8fHx8fDE3NzEwMzcwNDF8MA&ixlib=rb-4.1.0&q=80&w=1080",
       "imageHint": "soda can"
     },
     {
       "id": "bottled-water",
       "description": "Bottled water",
-      "imageUrl": "https://picsum.photos/seed/water/400/400",
+      "imageUrl": "https://images.unsplash.com/photo-1523961131990-5ea7c61b2107?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxib3R0bGUlMjBvZiUyMHdhdGVyfGVufDB8fHx8fDE3NzEwMzcwNTl8MA&ixlib=rb-4.1.0&q=80&w=1080",
       "imageHint": "water bottle"
     },
     {
       "id": "french-fries",
       "description": "French Fries",
-      "imageUrl": "https://picsum.photos/seed/fries/400/400",
+      "imageUrl": "https://images.unsplash.com/photo-1576107232684-1279f39e0793?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxmcmVuY2glMjBmcmllc3xlbnwwfHx8fDE3NzEwMzcwNzh8MA&ixlib=rb-4.1.0&q=80&w=1080",
       "imageHint": "french fries"
     },
     {
       "id": "garlic-bread",
       "description": "Garlic Bread Sticks",
-      "imageUrl": "https://picsum.photos/seed/garlicbread/100",
+      "imageUrl": "https://images.unsplash.com/photo-1626078298468-52541353f479?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxnYXJsaWMlMjBicmVhZHxlbnwwfHx8fDE3NzA4NTYyMTB8MA&ixlib=rb-4.1.0&q=80&w=1080",
       "imageHint": "garlic bread"
     },
     {
       "id": "lava-cake",
       "description": "Chocolate Lava Cake",
-      "imageUrl": "https://picsum.photos/seed/lavacake/100",
+      "imageUrl": "https://images.unsplash.com/photo-1586985289933-60a6d0371447?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxsYXZhJTIwY2FrZXxlbnwwfHx8fDE3NzA4NTYzODF8MA&ixlib=rb-4.1.0&q=80&w=1080",
       "imageHint": "lava cake"
     },
     {
@@ -125,6 +125,78 @@
       "description": "A wrapped gift icon",
       "imageUrl": "https://emojipedia-us.s3.amazonaws.com/source/skype/289/wrapped-gift_1f381.png",
       "imageHint": "gift box"
+    },
+    {
+      "id": "truffle-fries",
+      "description": "Truffle Fries",
+      "imageUrl": "https://images.unsplash.com/photo-1623334057111-2c81525a7e3a?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHx0cnVmZmxlJTIwZnJpZXN8ZW58MHx8fHwxNzcxMDM3MzA5fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "truffle fries"
+    },
+    {
+      "id": "seasonal-berry-crumble",
+      "description": "Seasonal Berry Crumble",
+      "imageUrl": "https://images.unsplash.com/photo-1615937691194-97dbd349dc2d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxiZXJyeSUyMGNydW1ibGV8ZW58MHx8fHwxNzcxMDM3MzI3fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "berry crumble"
+    },
+    {
+      "id": "artisanal-pizza",
+      "description": "Artisanal Pizza",
+      "imageUrl": "https://images.unsplash.com/photo-1593560708920-61dd98c46a4e?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxhcnRpc2FuYWwlMjBwaXp6YXxlbnwwfHx8fDE3NzEwMzc0MjZ8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "artisanal pizza"
+    },
+    {
+      "id": "fresh-garden-salad",
+      "description": "Fresh Garden Salad",
+      "imageUrl": "https://images.unsplash.com/photo-1551248429-4573a9159523?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxmcmVzaCUyMGdhcmRlbiUyMHNhbGFkfGVufDB8fHx8MTc3MTAzNzQ0M3ww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "garden salad"
+    },
+    {
+      "id": "spicy-chicken-wings",
+      "description": "Spicy Chicken Wings",
+      "imageUrl": "https://images.unsplash.com/photo-1541592106381-b31e9677c0e5?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxjaGlja2VuJTIwd2luZ3N8ZW58MHx8fHwxNzcxMDM3NDYyfDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "chicken wings"
+    },
+    {
+      "id": "avocado-toast",
+      "description": "Avocado Toast",
+      "imageUrl": "https://images.unsplash.com/photo-1582576161399-dbf8a1133375?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxhdm9jYWRvJTIwdG9hc3R8ZW58MHx8fHwxNzcxMDM3NDc5fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "avocado toast"
+    },
+    {
+      "id": "ribeye-steak",
+      "description": "Ribeye Steak",
+      "imageUrl": "https://images.unsplash.com/photo-1598530374092-e421446a6f64?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxyaWJleGUlMjBzdGVha3xlbnwwfHx8fDE3NzEwMzc0OTd8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "ribeye steak"
+    },
+    {
+      "id": "classic-pancakes",
+      "description": "Classic Pancakes",
+      "imageUrl": "https://images.unsplash.com/photo-1528207776546-365bb710ee93?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxwYW5jYWtlc3xlbnwwfHx8fDE3NzEwMzc1MTN8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "pancakes"
+    },
+    {
+      "id": "orange-juice",
+      "description": "Orange Juice",
+      "imageUrl": "https://images.unsplash.com/photo-1600271886742-f049cd451bba?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxvcmFuZ2UlMjBqdWljZXxlbnwwfHx8fDE3NzEwMzc1MzB8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "orange juice"
+    },
+    {
+      "id": "espresso",
+      "description": "Espresso",
+      "imageUrl": "https://images.unsplash.com/photo-1509042239860-f550ce710b93?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxlc3ByZXNzb3xlbnwwfHx8fDE3NzEwMzc1NDd8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "espresso"
+    },
+    {
+      "id": "latte",
+      "description": "Latte",
+      "imageUrl": "https://images.unsplash.com/photo-1587080413959-06b859fb107d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxsYXR0ZXxlbnwwfHx8fDE3NzEwMzc1NjR8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "latte"
+    },
+    {
+      "id": "cheesecake",
+      "description": "Cheesecake",
+      "imageUrl": "https://images.unsplash.com/photo-1587314168485-90334d95bc93?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxjaGVlc2VjYWtlfGVufDB8fHx8fDE3NzEwMzc1ODF8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "cheesecake"
     }
   ]
 }
