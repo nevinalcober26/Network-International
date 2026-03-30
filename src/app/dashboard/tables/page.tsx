@@ -14,7 +14,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Users, Circle, Hourglass, CirclePercent, User } from 'lucide-react';
 import { OrderDetailsSheet } from '@/app/dashboard/orders/order-details-sheet';
-import { mockDataStore } from '@/lib/mock-data-store';
+import { mockOrders } from '@/lib/mock-data-store';
 import type { Order } from '@/app/dashboard/orders/types';
 import { TablesPageSkeleton } from '@/components/dashboard/skeletons';
 import { AiSummary } from '@/components/dashboard/ai-summary';
@@ -123,8 +123,7 @@ export default function TablesPage() {
   const [isSheetOpen, setIsSheetOpen] = useState(false);
 
   useEffect(() => {
-    
-      const allOrders = mockDataStore.orders;
+      const allOrders = mockOrders;
       const uniqueTableIds = [
         ...new Set(allOrders.map((order) => order.table)),
       ].sort((a, b) => parseInt(a.substring(1)) - parseInt(b.substring(1)));

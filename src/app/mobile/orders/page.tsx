@@ -10,7 +10,7 @@ import { PlaceHolderImages } from '@/lib/placeholder-images';
 import Link from 'next/link';
 import { useOrders } from '@/firebase';
 import type { Order } from '@/app/dashboard/orders/types';
-import { mockDataStore } from '@/lib/mock-data-store';
+import { mockProducts } from '@/lib/mock-data-store';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 
 const getImageUrl = (id: string) => {
@@ -50,7 +50,7 @@ const OrderCard = ({ order }: { order: Order }) => {
               <div className="flex items-center gap-2">
                   <div className="flex -space-x-4">
                       {items.slice(0,2).map(item => {
-                          const product = mockDataStore.products.find(p => p.id === item.id);
+                          const product = mockProducts.find(p => p.id === item.id);
                           const image = product?.mainImage || getImageUrl(item.id);
                           return <Image key={item.id} src={image} alt={item.name} width={40} height={40} className="rounded-full border-2 border-white object-cover" />
                       })}

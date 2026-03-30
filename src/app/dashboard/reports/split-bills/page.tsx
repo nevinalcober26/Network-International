@@ -70,7 +70,7 @@ import {
 import { type DateRange } from 'react-day-picker';
 import { DateRangePicker } from '@/components/dashboard/reports/date-range-picker';
 import type { Order } from '@/app/dashboard/orders/types';
-import { mockDataStore } from '@/lib/mock-data-store';
+import { mockOrders, mockBranches } from '@/lib/mock-data-store';
 import { OrderDetailsSheet } from '@/app/dashboard/orders/order-details-sheet';
 import {
   TooltipProvider,
@@ -222,13 +222,10 @@ export default function SplitBillsReportPage() {
 
   useEffect(() => {
     setIsLoading(true);
-    
-      const mockOrders = mockDataStore.orders;
       const logs = generateSettlementLogs(mockOrders);
       setSettlementLogs(logs);
       setAllOrders(mockOrders);
       setIsLoading(false);
-    
   }, []);
 
   const handleViewDetails = (log: SplitSettlementLog) => {
@@ -274,7 +271,7 @@ export default function SplitBillsReportPage() {
   const handleSelectAllBranches = (isChecked: boolean) => {
     setFilters(prev => ({
         ...prev,
-        branches: isChecked ? mockDataStore.branches.map(b => b.name) : []
+        branches: isChecked ? mockBranches.map(b => b.name) : []
     }));
     setCurrentPage(1);
   };
@@ -380,7 +377,7 @@ export default function SplitBillsReportPage() {
                 <DropdownMenuTrigger asChild>
                   <Button variant="outline" className="w-full justify-between">
                     <span className="truncate">
-                      {filters.branches.length === mockDataStore.branches.length
+                      {filters.branches.length === mockBranches.length
                         ? 'All Branches'
                         : filters.branches.length === 0
                         ? 'Select Branch'
@@ -393,13 +390,13 @@ export default function SplitBillsReportPage() {
                 </DropdownMenuTrigger>
                 <DropdownMenuContent className="w-[220px]">
                   <DropdownMenuCheckboxItem
-                    checked={filters.branches.length === mockDataStore.branches.length}
+                    checked={filters.branches.length === mockBranches.length}
                     onCheckedChange={handleSelectAllBranches}
                   >
                     All Branches
                   </DropdownMenuCheckboxItem>
                   <DropdownMenuSeparator />
-                  {mockDataStore.branches.map((branch) => (
+                  {mockBranches.map((branch) => (
                     <DropdownMenuCheckboxItem
                       key={branch.id}
                       checked={filters.branches.includes(branch.name)}

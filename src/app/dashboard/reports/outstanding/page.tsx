@@ -86,7 +86,7 @@ import {
 import { type DateRange } from 'react-day-picker';
 import { DateRangePicker } from '@/components/dashboard/reports/date-range-picker';
 import type { Order } from '@/app/dashboard/orders/types';
-import { mockDataStore } from '@/lib/mock-data-store';
+import { mockOrders } from '@/lib/mock-data-store';
 import { OrderDetailsSheet } from '@/app/dashboard/orders/order-details-sheet';
 import { StatCards, type StatCardData } from '@/components/dashboard/stat-cards';
 import { AiSummary } from '@/components/dashboard/ai-summary';
@@ -267,13 +267,10 @@ export default function OutstandingReportPage() {
 
   useEffect(() => {
     setIsLoading(true);
-    
-      const mockOrders = mockDataStore.orders;
-      const mockTransactions = generateTransactionsFromOrders(mockOrders);
-      setTransactions(mockTransactions);
-      setAllOrders(mockOrders);
-      setIsLoading(false);
-    
+    const mockTransactions = generateTransactionsFromOrders(mockOrders);
+    setTransactions(mockTransactions);
+    setAllOrders(mockOrders);
+    setIsLoading(false);
   }, [filters.dateRange]);
   
   const handleViewDetails = (transaction: Transaction) => {

@@ -70,7 +70,7 @@ import {
 } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
 import type { Order } from './types';
-import { mockDataStore } from '@/lib/mock-data-store';
+import { mockOrders, mockBranches } from '@/lib/mock-data-store';
 import { getStatusBadgeVariant } from './utils';
 import { OrderDetailsSheet } from './order-details-sheet';
 import { OrdersPageSkeleton } from '@/components/dashboard/skeletons';
@@ -189,7 +189,7 @@ export default function OrdersPage() {
 
   useEffect(() => {
     
-      setAllOrders(mockDataStore.orders);
+      setAllOrders(mockOrders);
       setIsLoading(false);
     
   }, []);
@@ -437,7 +437,7 @@ export default function OrdersPage() {
                     </SelectTrigger>
                     <SelectContent>
                         <SelectItem value="all">All Branches</SelectItem>
-                        {mockDataStore.branches.map(branch => (
+                        {mockBranches.map(branch => (
                           <SelectItem key={branch.id} value={branch.name}>{branch.name}</SelectItem>
                         ))}
                     </SelectContent>

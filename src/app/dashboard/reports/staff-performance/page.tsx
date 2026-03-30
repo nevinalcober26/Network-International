@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useMemo, useEffect } from 'react';
@@ -61,7 +60,7 @@ import {
 } from 'date-fns';
 
 import type { Order } from '@/app/dashboard/orders/types';
-import { mockDataStore } from '@/lib/mock-data-store';
+import { mockOrders, mockBranches } from '@/lib/mock-data-store';
 import { OrdersPageSkeleton } from '@/components/dashboard/skeletons';
 
 type Transaction = {
@@ -185,11 +184,9 @@ export default function AnalyticsPage() {
 
   useEffect(() => {
     setIsLoading(true);
-    
-        const mockTransactions = getAdjustedTransactions(mockDataStore.orders);
-        setTransactions(mockTransactions);
-        setIsLoading(false);
-    
+    const mockTransactions = getAdjustedTransactions(mockOrders);
+    setTransactions(mockTransactions);
+    setIsLoading(false);
   }, []);
   
   const { filteredTransactions, previousPeriodFilteredTransactions } = useMemo(() => {
@@ -381,7 +378,7 @@ export default function AnalyticsPage() {
                         </SelectTrigger>
                         <SelectContent>
                             <SelectItem value="all">All Outlets</SelectItem>
-                            {mockDataStore.branches.map(branch => (
+                            {mockBranches.map(branch => (
                               <SelectItem key={branch.id} value={branch.name}>{branch.name}</SelectItem>
                             ))}
                         </SelectContent>

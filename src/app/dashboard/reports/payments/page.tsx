@@ -69,7 +69,7 @@ import { useToast } from '@/hooks/use-toast';
 import { type DateRange } from 'react-day-picker';
 import { DateRangePicker } from '@/components/dashboard/reports/date-range-picker';
 import type { Order } from '@/app/dashboard/orders/types';
-import { mockDataStore } from '@/lib/mock-data-store';
+import { mockOrders, mockBranches } from '@/lib/mock-data-store';
 import { OrderDetailsSheet } from '@/app/dashboard/orders/order-details-sheet';
 import {
   TooltipProvider,
@@ -238,13 +238,10 @@ export default function OrderReportPage() {
 
   useEffect(() => {
     setIsLoading(true);
-    
-      const mockOrders = mockDataStore.orders;
-      const mockTransactions = generateTransactionsFromOrders(mockOrders);
-      setTransactions(mockTransactions);
-      setAllOrders(mockOrders);
-      setIsLoading(false);
-    
+    const mockTransactions = generateTransactionsFromOrders(mockOrders);
+    setTransactions(mockTransactions);
+    setAllOrders(mockOrders);
+    setIsLoading(false);
   }, [filters.dateRange]);
   
   const handleViewDetails = (transaction: Transaction) => {
@@ -290,7 +287,7 @@ export default function OrderReportPage() {
   const handleSelectAllBranches = (isChecked: boolean) => {
     setFilters(prev => ({
         ...prev,
-        branches: isChecked ? mockDataStore.branches.map(b => b.name) : []
+        branches: isChecked ? mockBranches.map(b => b.name) : []
     }));
     setCurrentPage(1);
   };
@@ -337,7 +334,7 @@ export default function OrderReportPage() {
             { title: 'Total Orders', value: totalOrders.toLocaleString(), changeDescription: 'Processed', icon: ShoppingCart, color: 'orange', tooltipText: 'Total number of orders processed within the selected period.' },
             { title: 'Gross Sales', value: `AED ${grossSales.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, changeDescription: 'Before Voids', icon: DollarSign, color: 'pink', tooltipText: 'Total sales value from all orders, including unpaid amounts.' },
             { title: 'Paid Amount', value: `AED ${paidAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, changeDescription: 'Revenue Collected', icon: WalletCards, color: 'green', tooltipText: 'Total revenue successfully collected from customers.' },
-            { title: 'Outstanding', value: `AED ${outstandingAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, changeDescription: 'Revenue at Risk', icon: AlertTriangle, color: 'orange', tooltipText: 'Total amount from orders that has not yet been paid.' },
+            { title: 'Outstanding', value: `AED ${outstandingAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, changeDescription: 'Revenue at Risk', icon: AlertTriangle, color: 'orange', tooltipText: 'Total amount from orders that are not fully paid.' },
             { title: 'Voided Orders', value: voidedOrders.toLocaleString(), changeDescription: 'Non-Revenue', icon: Ban, color: 'red', tooltipText: 'Total number of orders that were voided and resulted in no revenue.' },
         ]
     }, [filteredTransactions]);
@@ -458,7 +455,7 @@ export default function OrderReportPage() {
                   <DropdownMenuTrigger asChild>
                     <Button variant="outline" className="w-full justify-between">
                       <span className="truncate">
-                        {filters.branches.length === mockDataStore.branches.length
+                        {filters.branches.length === mockBranches.length
                           ? 'All Branches'
                           : filters.branches.length === 0
                           ? 'Select Branch'
@@ -471,13 +468,13 @@ export default function OrderReportPage() {
                   </DropdownMenuTrigger>
                   <DropdownMenuContent className="w-[220px]">
                     <DropdownMenuCheckboxItem
-                      checked={filters.branches.length === mockDataStore.branches.length}
+                      checked={filters.branches.length === mockBranches.length}
                       onCheckedChange={handleSelectAllBranches}
                     >
                       All Branches
                     </DropdownMenuCheckboxItem>
                     <DropdownMenuSeparator />
-                    {mockDataStore.branches.map((branch) => (
+                    {mockBranches.map((branch) => (
                       <DropdownMenuCheckboxItem
                         key={branch.id}
                         checked={filters.branches.includes(branch.name)}
