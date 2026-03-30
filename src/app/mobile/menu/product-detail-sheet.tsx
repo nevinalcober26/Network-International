@@ -53,7 +53,7 @@ export function ProductDetailSheet({ product, isOpen, onOpenChange, onAddToCart 
       setSpecialRequest('');
       setIsHeaderShrunk(false);
       setSelectedOption(null);
-      // Reset GSAP styles in case they were left over from a previous animation
+      // Ensure GSAP props are cleared when sheet opens
       if (sheetContentRef.current) {
         gsap.set(sheetContentRef.current, { clearProps: "all" });
       }
@@ -78,6 +78,9 @@ export function ProductDetailSheet({ product, isOpen, onOpenChange, onAddToCart 
       return;
     }
     setIsAdding(true);
+    
+    // Update cart state immediately for visual feedback on the cart icon
+    onAddToCart(quantity);
 
     const cartIcon = document.getElementById('floating-cart-icon');
     const sheetElement = sheetContentRef.current;
@@ -95,7 +98,7 @@ export function ProductDetailSheet({ product, isOpen, onOpenChange, onAddToCart 
         const travelY = targetY - (sheetRect.top + sheetRect.height / 2);
 
         gsap.to(sheetElement, {
-            duration: 0.5, // "superfast"
+            duration: 0.6,
             x: travelX,
             y: travelY,
             scale: 0.1,
@@ -103,15 +106,13 @@ export function ProductDetailSheet({ product, isOpen, onOpenChange, onAddToCart 
             transformOrigin: "center center",
             ease: 'power2.in',
             onComplete: () => {
-                onAddToCart(quantity);
+                // Now that animation is done, tell React to close the sheet.
+                // The component will be unmounted.
                 onOpenChange(false);
-                 // IMPORTANT: Reset GSAP's inline styles after animation
-                gsap.set(sheetElement, { clearProps: "all" });
             }
         });
     } else {
         // Fallback if animation targets aren't ready
-        onAddToCart(quantity);
         onOpenChange(false);
     }
   };
