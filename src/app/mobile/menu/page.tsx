@@ -162,7 +162,7 @@ export default function MobileMenuPage() {
     name: p.name,
     description: p.description || p.smallDescription || 'No description available.',
     price: p.price,
-    image: p.mainImage || 'https://picsum.photos/seed/placeholder/400/400',
+    image: p.mainImage || 'https://picsum.photos/seed/food/400/400',
     isCustomisable: p.variations && p.variations.length > 0,
     options: (p.variations && p.variations.length > 0)
         ? { title: 'Options', required: true, items: p.variations.map(v => v.value) }

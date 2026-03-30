@@ -9,115 +9,115 @@
     {
       "id": "restaurant-logo",
       "description": "Bloomsbury's logo reference",
-      "imageUrl": "https://images.unsplash.com/photo-1550367363-ea12860cc124?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwyfHxyZXN0YXVyYW50JTIwZm9vZHxlbnwwfHx8fDE3Njk5NzU0NzJ8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageUrl": "https://picsum.photos/seed/restaurantfood/400/400",
       "imageHint": "restaurant food"
     },
     {
       "id": "restaurant-1",
       "description": "Bloomsbury's Ras Al Khaimah",
-      "imageUrl": "https://images.unsplash.com/photo-1643879397174-4f10ac503566?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw1fHxmaW5lJTIwZGluaW5nfGVufDB8fHx8MTc3MDgwODUwMnww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageUrl": "https://picsum.photos/seed/finedining/600/400",
       "imageHint": "fine dining"
     },
     {
       "id": "restaurant-2",
       "description": "Bloomsbury's Dubai Mall",
-      "imageUrl": "https://images.unsplash.com/photo-1648808694138-6706c5efc80a?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw2fHxtb2Rlcm4lMjBjYWZlfGVufDB8fHx8MTc3MDgwODUwMnww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageUrl": "https://picsum.photos/seed/moderncafe/600/400",
       "imageHint": "modern cafe"
     },
     {
       "id": "restaurant-3",
       "description": "Bloomsbury's Al Ain",
-      "imageUrl": "https://images.unsplash.com/photo-1511920170033-f8396924c348?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw2fHxjb2ZmZWUlMjBzaG9wfGVufDB8fHx8MTc3MDcyOTY5MXww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageUrl": "https://picsum.photos/seed/coffeeshop/600/400",
       "imageHint": "coffee shop"
     },
     {
       "id": "restaurant-4",
       "description": "Bloomsbury's Abu Dhabi",
-      "imageUrl": "https://images.unsplash.com/photo-1579926545913-448d525562db?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw0fHxpdGFsaWFuJTIwcmVzdGF1cmFudHxlbnwwfHx8fDE3NzA3NTE2MDZ8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageUrl": "https://picsum.photos/seed/italianrestaurant/600/400",
       "imageHint": "italian restaurant"
     },
     {
       "id": "restaurant-5",
       "description": "Bloomsbury's Sharjah",
-      "imageUrl": "https://images.unsplash.com/photo-1634714434666-ef41b76b9cc9?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw5fHxzdXNoaSUyMHJlc3RhdXJhbnR8ZW58MHx8fHwxNzcwNzUxNjA2fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageUrl": "https://picsum.photos/seed/sushirestaurant/600/400",
       "imageHint": "sushi restaurant"
     },
     {
       "id": "restaurant-6",
       "description": "Bloomsbury's Ajman",
-      "imageUrl": "https://images.unsplash.com/photo-1695606392868-b9ed053e1c0c?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw5fHxidXJnZXIlMjBqb2ludHxlbnwwfHx8fDE3NzA4MDg1MDJ8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageUrl": "https://picsum.photos/seed/burgerjoint/600/400",
       "imageHint": "burger joint"
     },
     {
       "id": "classic-cheeseburger",
       "description": "Classic Cheese Burger",
-      "imageUrl": "https://images.unsplash.com/photo-1508736793122-f516e3ba5569?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw5fHxjaGVlc2UlMjBidXJnZXJ8ZW58MHx8fHwxNzcwOTIxNTA4fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageUrl": "https://picsum.photos/seed/cheeseburger/400/400",
       "imageHint": "cheese burger"
     },
     {
       "id": "caesar-salad",
       "description": "Caesar Salad",
-      "imageUrl": "https://images.unsplash.com/photo-1669283714145-f97867f6c238?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwzfHxjYWVzYXIlMjBzYWxhZHxlbnwwfHx8fDE3NzA4NTYxMjN8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageUrl": "https://picsum.photos/seed/caesarsalad/400/400",
       "imageHint": "caesar salad"
     },
     {
       "id": "red-velvet-cupcake",
       "description": "Red Velvet Cupcake",
-      "imageUrl": "https://images.unsplash.com/photo-1645366188121-2a19e02fcbd5?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwzfHxyZWQlMjB2ZWx2ZXR8ZW58MHx8fHwxNzcwOTIxNTA4fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageUrl": "https://picsum.photos/seed/redvelvet/400/400",
       "imageHint": "red velvet"
     },
     {
       "id": "red-velvet-cupcake-2",
       "description": "Red Velvet Cupcake Duplicate",
-      "imageUrl": "https://images.unsplash.com/photo-1760124056888-8ae3ec14b978?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw2fHxkZXNzZXJ0JTIwZGlzcGxheXxlbnwwfHx8fDE3NzA5MjE1MDh8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageUrl": "https://picsum.photos/seed/dessertdisplay/400/400",
       "imageHint": "dessert display"
     },
     {
       "id": "margherita-pizza",
       "description": "Pizza margherita",
-      "imageUrl": "https://images.unsplash.com/photo-1595854337163-97926e2df2ca?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxtYXJnaGVyaXRhJTIwcGl6emF8ZW58MHx8fHwxNzcxMDM2OTg4fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageUrl": "https://picsum.photos/seed/margherita/400/400",
       "imageHint": "margherita pizza"
     },
     {
       "id": "alfredo-pizza",
       "description": "Chicken alfredo pizza",
-      "imageUrl": "https://images.unsplash.com/photo-1627443440375-9e6b5e5c2c42?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxhbGZyZWRvJTIwcGl6emF8ZW58MHx8fHwxNzcxMDM3MDA0fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageUrl": "https://picsum.photos/seed/alfredo/400/400",
       "imageHint": "alfredo pizza"
     },
     {
       "id": "hawaiian-pizza",
       "description": "Hawaiian pizza",
-      "imageUrl": "https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxwaXp6YSUyMGhhawUlQzMlQUFpZW5uZXxlbnwwfHx8fDE3NzEwMzcwMjJ8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageUrl": "https://picsum.photos/seed/hawaiian/400/400",
       "imageHint": "hawaiian pizza"
     },
     {
       "id": "soft-drink",
       "description": "Soft drink can",
-      "imageUrl": "https://images.unsplash.com/photo-1581636625402-29b2a7046508?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxzb2RhJTIwY2FufGVufDB8fHx8fDE3NzEwMzcwNDF8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageUrl": "https://picsum.photos/seed/soda/400/400",
       "imageHint": "soda can"
     },
     {
       "id": "bottled-water",
       "description": "Bottled water",
-      "imageUrl": "https://images.unsplash.com/photo-1523961131990-5ea7c61b2107?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxib3R0bGUlMjBvZiUyMHdhdGVyfGVufDB8fHx8fDE3NzEwMzcwNTl8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageUrl": "https://picsum.photos/seed/water/400/400",
       "imageHint": "water bottle"
     },
     {
       "id": "french-fries",
       "description": "French Fries",
-      "imageUrl": "https://images.unsplash.com/photo-1576107232684-1279f39e0793?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxmcmVuY2glMjBmcmllc3xlbnwwfHx8fDE3NzEwMzcwNzh8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageUrl": "https://picsum.photos/seed/frenchfries/400/400",
       "imageHint": "french fries"
     },
     {
       "id": "garlic-bread",
       "description": "Garlic Bread Sticks",
-      "imageUrl": "https://images.unsplash.com/photo-1626078298468-52541353f479?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxnYXJsaWMlMjBicmVhZHxlbnwwfHx8fDE3NzA4NTYyMTB8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageUrl": "https://picsum.photos/seed/garlicbread/400/400",
       "imageHint": "garlic bread"
     },
     {
       "id": "lava-cake",
       "description": "Chocolate Lava Cake",
-      "imageUrl": "https://images.unsplash.com/photo-1586985289933-60a6d0371447?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxsYXZhJTIwY2FrZXxlbnwwfHx8fDE3NzA4NTYzODF8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageUrl": "https://picsum.photos/seed/lavacake/400/400",
       "imageHint": "lava cake"
     },
     {
@@ -129,73 +129,73 @@
     {
       "id": "truffle-fries",
       "description": "Truffle Fries",
-      "imageUrl": "https://images.unsplash.com/photo-1623334057111-2c81525a7e3a?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHx0cnVmZmxlJTIwZnJpZXN8ZW58MHx8fHwxNzcxMDM3MzA5fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageUrl": "https://picsum.photos/seed/trufflefries/400/400",
       "imageHint": "truffle fries"
     },
     {
       "id": "seasonal-berry-crumble",
       "description": "Seasonal Berry Crumble",
-      "imageUrl": "https://images.unsplash.com/photo-1615937691194-97dbd349dc2d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxiZXJyeSUyMGNydW1ibGV8ZW58MHx8fHwxNzcxMDM3MzI3fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageUrl": "https://picsum.photos/seed/berrycrumble/400/400",
       "imageHint": "berry crumble"
     },
     {
       "id": "artisanal-pizza",
       "description": "Artisanal Pizza",
-      "imageUrl": "https://images.unsplash.com/photo-1593560708920-61dd98c46a4e?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxhcnRpc2FuYWwlMjBwaXp6YXxlbnwwfHx8fDE3NzEwMzc0MjZ8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageUrl": "https://picsum.photos/seed/artisanpizza/400/400",
       "imageHint": "artisanal pizza"
     },
     {
       "id": "fresh-garden-salad",
       "description": "Fresh Garden Salad",
-      "imageUrl": "https://images.unsplash.com/photo-1551248429-4573a9159523?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxmcmVzaCUyMGdhcmRlbiUyMHNhbGFkfGVufDB8fHx8MTc3MTAzNzQ0M3ww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageUrl": "https://picsum.photos/seed/gardensalad/400/400",
       "imageHint": "garden salad"
     },
     {
       "id": "spicy-chicken-wings",
       "description": "Spicy Chicken Wings",
-      "imageUrl": "https://images.unsplash.com/photo-1541592106381-b31e9677c0e5?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHjaGlja2VuJTIwd2luZ3N8ZW58MHx8fHwxNzcxMDM3NDYyfDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageUrl": "https://picsum.photos/seed/chickenwings/400/400",
       "imageHint": "chicken wings"
     },
     {
       "id": "avocado-toast",
       "description": "Avocado Toast",
-      "imageUrl": "https://images.unsplash.com/photo-1582576161399-dbf8a1133375?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxhdm9jYWRvJTIwdG9hc3R8ZW58MHx8fHwxNzcxMDM3NDc5fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageUrl": "https://picsum.photos/seed/avocadotoast/400/400",
       "imageHint": "avocado toast"
     },
     {
       "id": "ribeye-steak",
       "description": "Ribeye Steak",
-      "imageUrl": "https://images.unsplash.com/photo-1598530374092-e421446a6f64?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxyaWJleGUlMjBzdGVha3xlbnwwfHx8fDE3NzEwMzc0OTd8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageUrl": "https://picsum.photos/seed/ribeye/400/400",
       "imageHint": "ribeye steak"
     },
     {
       "id": "classic-pancakes",
       "description": "Classic Pancakes",
-      "imageUrl": "https://images.unsplash.com/photo-1528207776546-365bb710ee93?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxwYW5jYWtlc3xlbnwwfHx8fDE3NzEwMzc1MTN8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageUrl": "https://picsum.photos/seed/pancakes/400/400",
       "imageHint": "pancakes"
     },
     {
       "id": "orange-juice",
       "description": "Orange Juice",
-      "imageUrl": "https://images.unsplash.com/photo-1600271886742-f049cd451bba?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxvcmFuZ2UlMjBqdWljZXxlbnwwfHx8fDE3NzEwMzc1MzB8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageUrl": "https://picsum.photos/seed/orangejuice/400/400",
       "imageHint": "orange juice"
     },
     {
       "id": "espresso",
       "description": "Espresso",
-      "imageUrl": "https://images.unsplash.com/photo-1509042239860-f550ce710b93?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxlc3ByZXNzb3xlbnwwfHx8fDE3NzEwMzc1NDd8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageUrl": "https://picsum.photos/seed/espresso/400/400",
       "imageHint": "espresso"
     },
     {
       "id": "latte",
       "description": "Latte",
-      "imageUrl": "https://images.unsplash.com/photo-1587080413959-06b859fb107d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxsYXR0ZXxlbnwwfHx8fDE3NzEwMzc1NjR8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageUrl": "https://picsum.photos/seed/latte/400/400",
       "imageHint": "latte"
     },
     {
       "id": "cheesecake",
       "description": "Cheesecake",
-      "imageUrl": "https://images.unsplash.com/photo-1587314168485-90334d95bc93?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxjaGVlc2VjYWtlfGVufDB8fHx8fDE3NzEwMzc1ODF8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageUrl": "https://picsum.photos/seed/cheesecake/400/400",
       "imageHint": "cheesecake"
     }
   ]

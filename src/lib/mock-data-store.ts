@@ -191,13 +191,13 @@ const generateMockProducts = (count: number): Product[] => {
 
         products.push({
             id: `prod_${i}`,
-            name: `${name} ${i < productNames.length ? '' : `#${Math.floor(i / productNames.length)}`}`,
+            name: `${name} ${i < productNames.length ? '' : `#${Math.floor(i / productNames.length)}`}`.trim(),
             category: categories[i % categories.length],
             branch: branchNames[i % branchNames.length],
             price,
             stock,
             status,
-            mainImage: image?.imageUrl || `https://picsum.photos/seed/prod${i}/400/400`,
+            mainImage: image?.imageUrl || `https://picsum.photos/seed/food/400/400`,
             description: 'A detailed description of the product goes here, including ingredients and preparation methods.',
             smallDescription: 'A short and catchy description for the product.',
             discountedPrice: status === 'Active' && i % 4 === 0 ? parseFloat((price * 0.8).toFixed(2)) : undefined,
