@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
@@ -23,11 +23,14 @@ export default function PaymentSuccessfulPage() {
 
   const { cart, clearCart } = useCart();
   const { addOrder } = useOrders();
+  const orderCreatedRef = useRef(false);
 
   useEffect(() => {
     setIsVip(localStorage.getItem('isVip') === 'true');
 
-    if (Object.keys(cart).length > 0) {
+    if (Object.keys(cart).length > 0 && !orderCreatedRef.current) {
+      orderCreatedRef.current = true; // Prevent duplicate order creation on re-render
+
       const menuItems: Product[] = mockDataStore.products;
 
       const cartItems = Object.entries(cart).map(([id, quantity]) => {
