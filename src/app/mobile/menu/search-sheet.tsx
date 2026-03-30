@@ -1,6 +1,6 @@
 'use client';
 
-import { Sheet, SheetContent, SheetHeader, SheetClose } from '@/components/ui/sheet';
+import { Sheet, SheetContent, SheetHeader, SheetClose, SheetTitle, SheetDescription } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Search, X, TrendingUp } from 'lucide-react';
@@ -17,6 +17,8 @@ export function SearchSheet({ isOpen, onOpenChange }: SearchSheetProps) {
     <Sheet open={isOpen} onOpenChange={onOpenChange}>
       <SheetContent side="bottom" className="w-full h-full p-0 bg-white flex flex-col">
         <SheetHeader className="p-4 border-b">
+          <SheetTitle className="sr-only">Search Menu</SheetTitle>
+          <SheetDescription className="sr-only">Search for items in the menu.</SheetDescription>
           <div className="flex items-center gap-2">
             <Search className="h-5 w-5 text-gray-500" />
             <Input
