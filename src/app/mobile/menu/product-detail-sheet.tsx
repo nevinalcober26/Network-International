@@ -100,9 +100,13 @@ export function ProductDetailSheet({ product, isOpen, onOpenChange, onAddToCart 
         clone.style.overflow = 'hidden';
         document.body.appendChild(clone);
 
-        // Hide original sheet content to avoid flicker/overlap during animation
+        // Animate sheet content fade out
         if (sheetContentRef.current) {
-            sheetContentRef.current.style.opacity = '0';
+            gsap.to(sheetContentRef.current, {
+                opacity: 0,
+                duration: 0.3,
+                ease: 'power1.in'
+            });
         }
 
         gsap.to(clone, {
