@@ -9,7 +9,6 @@ import { Badge } from '@/components/ui/badge';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { ArrowLeft, Search, Flame, Minus, Plus, Trash2, ShoppingCart, Loader2, Lock } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { ProductDetailSheet } from './product-detail-sheet';
 import { CartSheet } from './cart-sheet';
 import { Card } from '@/components/ui/card';
@@ -19,29 +18,24 @@ import { useToast } from '@/hooks/use-toast';
 import gsap from 'gsap';
 import { SearchSheet } from './search-sheet';
 import { useCart } from '@/firebase';
+import { mockDataStore } from '@/lib/mock-data-store';
+import type { Product as SourceProduct } from '@/app/dashboard/products/types';
 
-// Helper to find image URL by ID
-const getImageUrl = (id: string) => {
-  const image = PlaceHolderImages.find(img => img.id === id);
-  return image?.imageUrl || 'https://picsum.photos/seed/placeholder/400/400';
+type MenuItem = {
+  id: string;
+  name: string;
+  description: string;
+  price: number;
+  image: string;
+  isCustomisable?: boolean;
+  options?: {
+    title: string;
+    required: boolean;
+    items: string[];
+  };
+  category: string;
 };
 
-// Mock Data - Adjusted to match design
-const menuData = {
-  categories: ['Bestsellers', 'Pizza', 'Sides', 'Desserts', 'Drinks'],
-  items: [
-    { id: 'item-1', name: 'Pizza Margherita - 12 inches', description: 'Homemade dough, homemade pizza sauce, shredded mozzarella cheese, and shredded cheddar cheese.', price: 36.00, category: 'Bestsellers', image: getImageUrl('pizza-margherita'), isCustomisable: false },
-    { id: 'item-2', name: 'Chicken Alfredo Pizza - 12 inches', description: 'Homemade dough, white sauce base, marinated...', price: 48.00, category: 'Bestsellers', image: getImageUrl('pizza-alfredo'), isCustomisable: true },
-    { id: 'item-3', name: 'Pizza Margherita - 10 inches', description: 'Homemade dough, homemade pizza sauce, shredded mozzarella cheese, and shredded cheddar cheese.', price: 27.00, category: 'Pizza', image: getImageUrl('pizza-margherita'), isCustomisable: false },
-    { id: 'item-4', name: 'Hawaiian Pizza - 10 inches', description: 'Homemade dough, pizza sauce, mozzarella, ham,...', price: 32.00, category: 'Pizza', image: getImageUrl('pizza-hawaiian'), isCustomisable: true, options: { title: 'Crust', required: true, items: ['Regular', 'Thin', 'Stuffed'] } },
-    { id: 'item-5', name: 'Soft Drink', description: 'Choose your favorite flavor.', price: 3.00, category: 'Drinks', image: getImageUrl('soft-drink'), isCustomisable: true, options: { title: 'Flavor', required: true, items: ['Coke', 'Diet Coke', 'Sprite', 'Fanta'] } },
-    { id: 'item-6', name: 'Bottled Water', description: 'Still or sparkling water.', price: 2.50, category: 'Drinks', image: getImageUrl('bottled-water'), isCustomisable: false },
-    { id: 'item-7', name: 'Red Velvet Cupcake', description: 'A rich and moist cupcake with a hint of cocoa, topped with cream cheese frosting.', price: 15.00, category: 'Desserts', image: getImageUrl('red-velvet-cupcake'), isCustomisable: false },
-    { id: 'item-8', name: 'French Fries', description: 'Crispy golden french fries.', price: 10.00, category: 'Sides', image: getImageUrl('french-fries'), isCustomisable: false },
-  ]
-};
-
-type MenuItem = typeof menuData.items[0];
 
 const MenuItemCard = ({ 
   item, 
@@ -160,10 +154,33 @@ export default function MobileMenuPage() {
   const router = useRouter();
   const { toast } = useToast();
   const { cart, addToCart, incrementItem, decrementItem } = useCart();
+
+  const menuItems: MenuItem[] = useMemo(() => mockDataStore.products.map((p: SourceProduct) => ({
+    id: p.id,
+    name: p.name,
+    description: p.description || p.smallDescription || 'No description available.',
+    price: p.price,
+    image: p.mainImage || 'https://picsum.photos/seed/placeholder/400/400',
+    isCustomisable: p.variations && p.variations.length > 0,
+    options: (p.variations && p.variations.length > 0)
+        ? { title: 'Options', required: true, items: p.variations.map(v => v.value) }
+        : undefined,
+    category: p.category,
+  })), []);
   
   const sections = useMemo(() => {
-    return menuData.categories;
-  }, []);
+    const categoriesFromProducts = [...new Set(menuItems.map(p => p.category))];
+    const orderedCategories = ['Burgers', 'Mains', 'Pizza', 'Salads', 'Sides', 'Desserts', 'Breakfast', 'Beverages', 'Drinks'];
+    const sorted = categoriesFromProducts.sort((a, b) => {
+        const indexA = orderedCategories.indexOf(a);
+        const indexB = orderedCategories.indexOf(b);
+        if (indexA > -1 && indexB > -1) return indexA - indexB;
+        if (indexA > -1) return -1;
+        if (indexB > -1) return 1;
+        return a.localeCompare(b);
+    });
+    return ['Bestsellers', ...sorted];
+  }, [menuItems]);
   
   const [activeTab, setActiveTab] = useState(sections[0] || '');
   const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null);
@@ -191,11 +208,11 @@ export default function MobileMenuPage() {
   const cartItemsForSheet = useMemo(() => {
     return Object.entries(cart)
       .map(([id, quantity]) => {
-        const item = menuData.items.find(i => i.id === id);
+        const item = menuItems.find(i => i.id === id);
         return item ? { item, quantity } : null;
       })
       .filter((i): i is { item: MenuItem; quantity: number } => i !== null);
-  }, [cart]);
+  }, [cart, menuItems]);
 
   const subtotal = useMemo(() => cartItemsForSheet.reduce((sum, { item, quantity }) => sum + item.price * quantity, 0), [cartItemsForSheet]);
   const tax = useMemo(() => subtotal * 0.05, [subtotal]);
@@ -423,7 +440,10 @@ export default function MobileMenuPage() {
         {/* Menu Items */}
         <main className="p-4 space-y-8">
           {sections.map(section => {
-              const itemsForSection = menuData.items.filter(item => item.category === section);
+              const itemsForSection = section === 'Bestsellers'
+                ? menuItems.slice(0, 4)
+                : menuItems.filter(item => item.category === section);
+
               return (
                   <div 
                     key={section} 
