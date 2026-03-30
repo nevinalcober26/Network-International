@@ -4,51 +4,30 @@ import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Armchair, CalendarDays } from 'lucide-react';
+import { Armchair, CalendarDays, Receipt } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
+import Link from 'next/link';
 
 const getImageUrl = (id: string) => {
   const image = PlaceHolderImages.find(img => img.id === id);
   return image?.imageUrl || 'https://picsum.photos/seed/placeholder/100/100';
 };
 
+type Order = {
+    id: string;
+    table: string;
+    date: string;
+    items: {
+        id: string;
+        image: string;
+    }[];
+    itemCount: number;
+    total: number;
+    status: 'Preparing' | 'Served' | 'Completed';
+};
 
-const mockOrders = [
-  {
-    id: '#198992',
-    table: '12',
-    date: 'Mar 17, 2026 at 10:27 AM',
-    items: [
-      { id: 'burger', image: getImageUrl('classic-cheese-burger') },
-      { id: 'coffee', image: 'https://picsum.photos/seed/coffee/100/100' },
-    ],
-    itemCount: 4,
-    total: 139.52,
-    status: 'Preparing',
-  },
-  {
-    id: '#198765',
-    table: '5',
-    date: 'Mar 16, 2026 at 06:45 PM',
-    items: [
-      { id: 'pizza', image: getImageUrl('pizza-margherita') },
-      { id: 'wine', image: 'https://picsum.photos/seed/wine/100/100' },
-    ],
-    itemCount: 3,
-    total: 87.30,
-    status: 'Served',
-  },
-  {
-    id: '#828854',
-    table: '8',
-    date: 'Mar 15, 2026 at 02:15 PM',
-    items: [],
-    itemCount: 1,
-    total: 45.00,
-    status: 'Completed',
-  },
-];
+const mockOrders: Order[] = [];
 
 type OrderStatus = 'Preparing' | 'Served' | 'Completed' | 'All Orders';
 
@@ -58,7 +37,7 @@ const statusStyles: Record<string, { badge: string; border: string }> = {
   'Completed': { badge: 'bg-gray-100 text-gray-700 border-gray-200', border: 'border-l-4 border-gray-200' },
 };
 
-const OrderCard = ({ order }: { order: typeof mockOrders[0] }) => {
+const OrderCard = ({ order }: { order: Order }) => {
   const { id, table, date, items, itemCount, total, status } = order;
   const style = statusStyles[status];
 
@@ -146,9 +125,22 @@ export default function MobileOrdersPage() {
       </header>
 
       <main className="p-4 space-y-4">
-        {filteredOrders.map(order => (
-          <OrderCard key={order.id} order={order} />
-        ))}
+        {filteredOrders.length > 0 ? (
+          filteredOrders.map(order => (
+            <OrderCard key={order.id} order={order} />
+          ))
+        ) : (
+            <div className="text-center pt-20 flex flex-col items-center">
+                <div className="inline-block bg-gray-200 p-5 rounded-full mb-6">
+                <Receipt className="h-12 w-12 text-gray-400" />
+                </div>
+                <h2 className="text-xl font-bold text-gray-800">No Orders Yet</h2>
+                <p className="mt-2 text-base text-gray-500 max-w-xs">Your past and current orders will appear here.</p>
+                <Button asChild className="mt-6 bg-teal-500 hover:bg-teal-600 rounded-full px-6">
+                    <Link href="/mobile/menu">Start Ordering</Link>
+                </Button>
+          </div>
+        )}
       </main>
     </div>
   );
