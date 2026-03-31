@@ -162,6 +162,69 @@ export const mockBranches: Branch[] = [
   },
 ];
 
+const productDescriptions: Record<string, { description: string; smallDescription: string }> = {
+    'Classic Cheeseburger': {
+        description: 'A succulent beef patty topped with melted cheddar, crisp lettuce, ripe tomatoes, and our signature sauce, all nestled in a toasted brioche bun.',
+        smallDescription: 'Juicy, cheesy, classic perfection.'
+    },
+    'Truffle Fries': {
+        description: 'Crispy golden fries tossed in aromatic truffle oil, generously sprinkled with grated Parmesan and fresh parsley.',
+        smallDescription: 'Crispy fries with a truffle twist.'
+    },
+    'Seasonal Berry Crumble': {
+        description: 'A warm and comforting dessert featuring a medley of seasonal berries baked under a sweet, crunchy oat topping.',
+        smallDescription: 'Warm, fruity, and comforting.'
+    },
+    'Artisanal Pizza': {
+        description: 'Hand-stretched dough with a rich tomato base, creamy mozzarella, fresh basil, and a drizzle of extra-virgin olive oil.',
+        smallDescription: 'Authentic Italian pizza simplicity.'
+    },
+    'Fresh Garden Salad': {
+        description: 'A refreshing mix of crisp lettuce, cherry tomatoes, cucumbers, and bell peppers, tossed in a light vinaigrette dressing.',
+        smallDescription: 'Crisp, fresh, and healthy.'
+    },
+    'Spicy Chicken Wings': {
+        description: 'Crispy, juicy chicken wings coated in a fiery and tangy buffalo sauce, served with a cool blue cheese dip.',
+        smallDescription: 'Fiery, tangy, and addictive.'
+    },
+    'Avocado Toast': {
+        description: 'Creamy mashed avocado on a thick slice of toasted sourdough, topped with chili flakes and a squeeze of lime.',
+        smallDescription: 'Creamy avocado on toasted sourdough.'
+    },
+    'Margherita Pizza': {
+        description: 'The classic pizza with a simple yet delicious combination of San Marzano tomatoes, fresh mozzarella, basil, and olive oil.',
+        smallDescription: 'The timeless Italian classic.'
+    },
+    'Ribeye Steak': {
+        description: 'A perfectly seared 10oz Ribeye steak, cooked to your liking and served with a side of roasted garlic mashed potatoes.',
+        smallDescription: 'Juicy, tender, and full of flavor.'
+    },
+    'Lava Cake': {
+        description: 'A decadent chocolate cake with a molten chocolate center, served warm with a scoop of vanilla ice cream.',
+        smallDescription: 'A chocolate lover\'s dream.'
+    },
+    'Classic Pancakes': {
+        description: 'A stack of fluffy buttermilk pancakes served with a pat of butter and a generous drizzle of maple syrup.',
+        smallDescription: 'Fluffy pancakes with maple syrup.'
+    },
+    'Orange Juice': {
+        description: 'Freshly squeezed orange juice, packed with vitamins and a burst of citrus flavor.',
+        smallDescription: 'Freshly squeezed sunshine.'
+    },
+    'Espresso': {
+        description: 'A rich and intense shot of freshly brewed espresso, the perfect pick-me-up.',
+        smallDescription: 'A rich and intense coffee shot.'
+    },
+    'Latte': {
+        description: 'A smooth and creamy coffee made with a shot of espresso and steamed milk, topped with a light layer of foam.',
+        smallDescription: 'Smooth, creamy, and satisfying.'
+    },
+    'Cheesecake': {
+        description: 'A rich and creamy New York-style cheesecake with a graham cracker crust, served plain or with a berry coulis.',
+        smallDescription: 'Rich, creamy, and decadent.'
+    }
+};
+
 // --- Product Generation ---
 const productNames = [
     'Classic Cheeseburger', 'Truffle Fries', 'Seasonal Berry Crumble', 'Artisanal Pizza',
@@ -189,6 +252,11 @@ const generateMockProducts = (count: number): Product[] => {
         const imageId = name.toLowerCase().replace(/ /g, '-');
         const image = PlaceHolderImages.find(p => p.id === imageId);
 
+        const descriptionDetails = productDescriptions[name] || {
+            description: 'A delicious dish prepared with the finest ingredients by our expert chefs.',
+            smallDescription: 'A true delight for your taste buds.'
+        };
+
         products.push({
             id: `prod_${i}`,
             name: `${name} ${i < productNames.length ? '' : `#${Math.floor(i / productNames.length)}`}`.trim(),
@@ -197,9 +265,9 @@ const generateMockProducts = (count: number): Product[] => {
             price,
             stock,
             status,
-            mainImage: image?.imageUrl || `https://picsum.photos/seed/food/400/400`,
-            description: 'A detailed description of the product goes here, including ingredients and preparation methods.',
-            smallDescription: 'A short and catchy description for the product.',
+            mainImage: image?.imageUrl || `https://picsum.photos/seed/${name.replace(/\s+/g, '-').toLowerCase()}/400/400`,
+            description: descriptionDetails.description,
+            smallDescription: descriptionDetails.smallDescription,
             discountedPrice: status === 'Active' && i % 4 === 0 ? parseFloat((price * 0.8).toFixed(2)) : undefined,
             variations
         });
