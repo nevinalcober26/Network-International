@@ -6,18 +6,7 @@ import * as AlertDialogPrimitive from "@radix-ui/react-alert-dialog"
 import { cn } from "@/lib/utils"
 import { buttonVariants } from "@/components/ui/button"
 
-const AlertDialog = ({ onOpenChange, ...props }: React.ComponentProps<typeof AlertDialogPrimitive.Root>) => {
-  const handleOpenChange = React.useCallback((open: boolean) => {
-    onOpenChange?.(open);
-    if (!open) {
-      setTimeout(() => {
-        document.body.style.pointerEvents = '';
-      }, 300);
-    }
-  }, [onOpenChange]);
-
-  return <AlertDialogPrimitive.Root onOpenChange={handleOpenChange} {...props} />;
-};
+const AlertDialog = AlertDialogPrimitive.Root
 
 const AlertDialogTrigger = AlertDialogPrimitive.Trigger
 
