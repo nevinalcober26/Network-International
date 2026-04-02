@@ -1,3 +1,4 @@
+
 'use client';
 
 import { Home, Receipt } from 'lucide-react';
@@ -26,14 +27,14 @@ export default function MobileMenuLayout({
           <div className="flex justify-around items-center h-20">
             <Link
               href="/mobile/menu"
-              className={cn('flex flex-col items-center gap-1', isMenu ? 'text-primary' : 'text-gray-500')}
+              className={cn('flex flex-col items-center gap-1', isMenu ? 'text-teal-500' : 'text-gray-500')}
             >
               <Home className="h-6 w-6" />
               <span className="text-xs font-bold">Menu</span>
             </Link>
             <Link
               href="/mobile/orders"
-              className={cn('flex flex-col items-center gap-1', isOrders ? 'text-primary' : 'text-gray-500')}
+              className={cn('flex flex-col items-center gap-1', isOrders ? 'text-teal-500' : 'text-gray-500')}
             >
               <Receipt className="h-6 w-6" />
               <span className="text-xs font-bold">Orders</span>

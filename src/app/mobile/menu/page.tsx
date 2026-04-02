@@ -39,8 +39,10 @@ const screenshotMenuItems: MenuItem[] = [
   { id: 'hawaiian-pizza-10', name: 'Hawaiian Pizza - 10 inches', description: 'Homemade dough, pizza sauce, mozzarella, ham,...', price: 32.00, category: 'Pizza', isCustomisable: true, image: getImageUrl('hawaiian-pizza') },
   { id: 'soft-drink', name: 'Soft Drink', description: 'Choose your favorite flavor.', price: 3.00, category: 'Drinks', isCustomisable: true, image: getImageUrl('soft-drink') },
   { id: 'bottled-water', name: 'Bottled Water', description: 'Still or sparkling water.', price: 2.50, category: 'Drinks', image: getImageUrl('bottled-water') },
-  { id: 'steak-frites', name: 'Steak Frites', description: 'Juicy steak served with a side of crispy french fries.', price: 25.00, category: 'Bestsellers', mainImage: getImageUrl('ribeye-steak') } as any,
-  { id: 'classic-cheeseburger', name: 'Classic Cheeseburger', description: 'A succulent beef patty with melted cheddar.', price: 35.00, category: 'Bestsellers', mainImage: getImageUrl('classic-cheeseburger') } as any
+  { id: 'steak-frites', name: 'Steak Frites', description: 'Juicy steak served with a side of crispy french fries.', price: 25.00, category: 'Main Courses', image: getImageUrl('ribeye-steak') } as any,
+  { id: 'classic-cheeseburger', name: 'Classic Cheeseburger', description: 'A succulent beef patty with melted cheddar.', price: 35.00, category: 'Bestsellers', image: getImageUrl('classic-cheeseburger') } as any,
+    { id: 'truffle-fries', name: 'Truffle Fries', description: 'Crispy fries with a truffle twist.', price: 15.00, category: 'Sides', image: getImageUrl('truffle-fries') } as any,
+    { id: 'lava-cake', name: 'Chocolate Lava Cake', description: 'A chocolate lover\'s dream.', price: 22.00, category: 'Desserts', image: getImageUrl('lava-cake') } as any
 ];
 
 const PaymentRedirectContent = ({ totalAmount }: { totalAmount: number }) => (
@@ -106,14 +108,12 @@ export default function MobileMenuPage() {
 
     checkPurchasingStatus();
 
-    // Listen for changes from other tabs
     const handleStorageChange = (event: StorageEvent) => {
         if (event.key && event.key.startsWith('onlineOrderingEnabled_')) {
             checkPurchasingStatus();
         }
     };
     
-    // Also listen for direct branch changes from the dashboard
     window.addEventListener('storage', handleStorageChange);
     window.addEventListener('branch-changed', checkPurchasingStatus);
 
@@ -126,7 +126,7 @@ export default function MobileMenuPage() {
   const menuItems: MenuItem[] = useMemo(() => screenshotMenuItems, []);
   
   const sections = useMemo(() => {
-    const sectionOrder = ['Bestsellers', 'Pizza', 'Sides', 'Desserts', 'Drinks'];
+    const sectionOrder = ['Bestsellers', 'Pizza', 'Sides', 'Desserts', 'Drinks', 'Main Courses'];
     const availableCategories = [...new Set(menuItems.map(i => i.category))];
     return sectionOrder.filter(s => availableCategories.includes(s));
   }, [menuItems]);
@@ -284,7 +284,6 @@ export default function MobileMenuPage() {
 
   const handleCheckout = () => {
     setIsCartSheetOpen(false);
-    // Add a small delay to allow the cart sheet to animate out before the payment sheet animates in
     setTimeout(() => {
         setIsPaymentSheetOpen(true);
     }, 300);
@@ -346,7 +345,6 @@ export default function MobileMenuPage() {
   return (
     <>
       <div className="bg-[#F7F9FB] min-h-screen">
-        {/* Header */}
         <header className="sticky top-0 z-20 bg-white/80 backdrop-blur-lg p-4 pb-0">
           <div className="flex items-center justify-between mb-4">
             <Link href="/mobile/welcome" className="p-2 -ml-2">
@@ -363,7 +361,6 @@ export default function MobileMenuPage() {
             </Button>
           </div>
 
-          {/* Category Tabs */}
           <ScrollArea className="w-full whitespace-nowrap">
             <div className="flex items-center space-x-1 border-b">
               {sections.map((cat) => (
@@ -388,7 +385,6 @@ export default function MobileMenuPage() {
           </ScrollArea>
         </header>
         
-        {/* Menu Items */}
         <main className="p-4 space-y-8">
           {sections.map(section => {
               const itemsForSection = menuItems.filter(item => item.category === section);

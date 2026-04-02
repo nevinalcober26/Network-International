@@ -47,27 +47,30 @@ const SUPPORTED_POS = [
   { id: 'clover', name: 'Clover' },
 ];
 
+const getImageUrl = (id: string) => {
+    const image = PlaceHolderImages.find(img => img.id === id);
+    return image?.imageUrl || 'https://picsum.photos/seed/placeholder/400/400';
+};
+
 const mockMenuItems: MenuItem[] = [
-    { id: 'item-1', name: 'Soup of the Day', description: 'Freshly made soup, changes daily.', price: 8, image: 'https://picsum.photos/seed/soup/100/100', category: 'Starters' },
-    { id: 'item-2', name: 'Bruschetta', description: 'Grilled bread with fresh tomatoes, garlic, and basil.', price: 10, image: 'https://picsum.photos/seed/bruschetta/100/100', category: 'Starters' },
-    { id: 'item-3', name: 'Garlic Bread', description: 'Toasted bread with a savory garlic butter spread.', price: 6, image: 'https://picsum.photos/seed/garlicbread/100/100', category: 'Starters' },
-    { id: 'item-4', name: 'Steak Frites', description: 'Juicy steak served with a side of crispy french fries.', price: 25, image: 'https://picsum.photos/seed/steak/100/100', category: 'Main Courses' },
-    { id: 'item-5', name: 'Grilled Salmon', description: 'Perfectly grilled salmon fillet with lemon and herbs.', price: 22, image: 'https://picsum.photos/seed/salmon/100/100', category: 'Main Courses' },
-    { id: 'item-6', name: 'Mushroom Risotto', description: 'Creamy Arborio rice with a mix of wild mushrooms.', price: 18, image: 'https://picsum.photos/seed/risotto/100/100', category: 'Main Courses' },
-    { id: 'item-7', name: 'Chicken Alfredo', description: 'Fettuccine pasta in a rich and creamy Alfredo sauce.', price: 19, image: 'https://picsum.photos/seed/alfredo/100/100', category: 'Main Courses' },
-    { id: 'item-8', name: 'Lava Cake', description: 'Warm chocolate cake with a gooey molten center.', price: 9, image: 'https://picsum.photos/seed/lavacake/100/100', category: 'Desserts' },
-    { id: 'item-9', name: 'Ice Cream', description: 'Two scoops of your favorite flavor.', price: 5, image: 'https://picsum.photos/seed/icecream/100/100', category: 'Desserts' },
-    { id: 'item-10', name: 'Tiramisu', description: 'A classic coffee-flavored Italian dessert.', price: 8, image: 'https://picsum.photos/seed/tiramisu/100/100', category: 'Desserts' },
-    { id: 'item-11', name: 'Coke', description: 'Classic Coca-Cola, served chilled.', price: 3, image: 'https://picsum.photos/seed/coke/100/100', category: 'Beverages' },
-    { id: 'item-12', name: 'Sprite', description: 'Crisp and refreshing lemon-lime soda.', price: 3, image: 'https://picsum.photos/seed/sprite/100/100', category: 'Beverages' },
-    { id: 'item-13', name: 'Iced Tea', description: 'Freshly brewed and chilled iced tea.', price: 4, image: 'https://picsum.photos/seed/icedtea/100/100', category: 'Beverages' },
+    { id: 'pizza-margherita-12', name: 'Pizza Margherita - 12 inches', description: 'Homemade dough, homemade pizza sauce,...', price: 36.00, category: 'Bestsellers', image: getImageUrl('margherita-pizza'), isCustomisable: false },
+    { id: 'chicken-alfredo-pizza-12', name: 'Chicken Alfredo Pizza - 12 inches', description: 'Homemade dough, white sauce base, marinated...', price: 48.00, category: 'Bestsellers', isCustomisable: true, image: getImageUrl('alfredo-pizza') },
+    { id: 'pizza-margherita-10', name: 'Pizza Margherita - 10 inches', description: 'Homemade dough, homemade pizza sauce,...', price: 27.00, category: 'Pizza', image: getImageUrl('margherita-pizza'), isCustomisable: false },
+    { id: 'hawaiian-pizza-10', name: 'Hawaiian Pizza - 10 inches', description: 'Homemade dough, pizza sauce, mozzarella, ham,...', price: 32.00, category: 'Pizza', isCustomisable: true, image: getImageUrl('hawaiian-pizza') },
+    { id: 'soft-drink', name: 'Soft Drink', description: 'Choose your favorite flavor.', price: 3.00, category: 'Drinks', isCustomisable: true, image: getImageUrl('soft-drink') },
+    { id: 'bottled-water', name: 'Bottled Water', description: 'Still or sparkling water.', price: 2.50, category: 'Drinks', image: getImageUrl('bottled-water') },
+    { id: 'steak-frites', name: 'Steak Frites', description: 'Juicy steak served with a side of crispy french fries.', price: 25.00, category: 'Main Courses', image: getImageUrl('ribeye-steak') } as any,
+    { id: 'classic-cheeseburger', name: 'Classic Cheeseburger', description: 'A succulent beef patty with melted cheddar.', price: 35.00, category: 'Bestsellers', image: getImageUrl('classic-cheeseburger') } as any,
+    { id: 'truffle-fries', name: 'Truffle Fries', description: 'Crispy fries with a truffle twist.', price: 15.00, category: 'Sides', image: getImageUrl('truffle-fries') } as any,
+    { id: 'lava-cake', name: 'Chocolate Lava Cake', description: 'A chocolate lover\'s dream.', price: 22.00, category: 'Desserts', image: getImageUrl('lava-cake') } as any
 ];
 
 const mockMenuData = [
-    { id: 'starters', name: 'Starters', items: mockMenuItems.filter(i => i.category === 'Starters') },
-    { id: 'mains', name: 'Main Courses', items: mockMenuItems.filter(i => i.category === 'Main Courses') },
+    { id: 'bestsellers', name: 'Bestsellers', items: mockMenuItems.filter(i => i.category === 'Bestsellers') },
+    { id: 'pizza', name: 'Pizza', items: mockMenuItems.filter(i => i.category === 'Pizza') },
+    { id: 'sides', name: 'Sides', items: mockMenuItems.filter(i => i.category === 'Sides') },
     { id: 'desserts', name: 'Desserts', items: mockMenuItems.filter(i => i.category === 'Desserts') },
-    { id: 'beverages', name: 'Beverages', items: mockMenuItems.filter(i => i.category === 'Beverages') },
+    { id: 'drinks', name: 'Drinks', items: mockMenuItems.filter(i => i.category === 'Drinks') },
 ];
 
 

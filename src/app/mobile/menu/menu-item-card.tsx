@@ -13,11 +13,7 @@ export type MenuItem = {
   price: number;
   image: string;
   isCustomisable?: boolean;
-  options?: {
-    title: string;
-    required: boolean;
-    items: string[];
-  };
+  options?: any;
   category: string;
 };
 
@@ -58,12 +54,12 @@ export const MenuItemCard = ({
         <h3 className="font-bold text-gray-800 leading-snug">{item.name}</h3>
         <p className="text-sm text-gray-500 mt-1 line-clamp-2">{item.description}</p>
         <div className="flex items-center mt-3">
-          <span className="font-bold text-gray-900 text-lg ml-1">AED {item.price.toFixed(2)}</span>
+          <span className="font-bold text-gray-900 text-lg">AED {item.price.toFixed(2)}</span>
         </div>
       </div>
       <div className="relative w-28 h-28 flex-shrink-0">
         <Image src={item.image} alt={item.name} fill className="object-cover rounded-xl" data-ai-hint={item.name.toLowerCase()} />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent rounded-xl" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent rounded-xl" />
         <div className="absolute bottom-2 right-2 left-2 flex flex-col items-center">
             {isPurchasingEnabled ? (
               quantity > 0 ? (
