@@ -1,14 +1,14 @@
 
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { MenuBuilderPreloader } from '@/components/dashboard/menu-builder/preloader';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ScrollArea } from '@/components/ui/scroll-area';
+import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { EMenuIcon } from '@/components/dashboard/app-sidebar';
-import { List, LayoutGrid, X, Plus, Palette, Database, CheckCircle2, Loader2, GripVertical } from 'lucide-react';
+import { List, LayoutGrid, X, Plus, Palette, Database, CheckCircle2, Loader2, GripVertical, Home, Receipt, ArrowLeft, Search, Flame, ShoppingCart } from 'lucide-react';
 import Image from 'next/image';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
@@ -19,6 +19,7 @@ import { arrayMove, SortableContext, useSortable, verticalListSortingStrategy } 
 import { CSS } from '@dnd-kit/utilities';
 import { cn } from '@/lib/utils';
 import { MenuItemCard, type MenuItem } from '@/app/mobile/menu/menu-item-card';
+import { Badge } from '@/components/ui/badge';
 
 const TemplateCard = ({ name, imageHint }: { name: string; imageHint: string }) => {
   const image = PlaceHolderImages.find(img => img.imageHint === imageHint);
@@ -104,6 +105,59 @@ const MenuBuilderMainPage = ({ onClose }: { onClose: () => void }) => {
 
   const [menuSections, setMenuSections] = useState(mockMenuData);
   const sensors = useSensors(useSensor(PointerSensor));
+
+  // State for the interactive preview
+  const [previewCart, setPreviewCart] = useState<Record<string, number>>({
+    'pizza-margherita-12': 1,
+  });
+  const [isCartAnimating, setIsCartAnimating] = useState(false);
+  const prevCartTotalRef = useRef(0);
+
+  const totalItemsInCart = useMemo(() => {
+    return Object.values(previewCart).reduce((sum, quantity) => sum + quantity, 0);
+  }, [previewCart]);
+
+  useEffect(() => {
+    if (totalItemsInCart > prevCartTotalRef.current) {
+        setIsCartAnimating(true);
+    }
+    prevCartTotalRef.current = totalItemsInCart;
+  }, [totalItemsInCart]);
+
+  useEffect(() => {
+    if (isCartAnimating) {
+        const timer = setTimeout(() => setIsCartAnimating(false), 500);
+        return () => clearTimeout(timer);
+    }
+  }, [isCartAnimating]);
+
+  const handlePreviewAddToCart = (item: MenuItem) => {
+    setPreviewCart(prev => ({
+        ...prev,
+        [item.id]: (prev[item.id] || 0) + 1,
+    }));
+  };
+
+  const handlePreviewIncrement = (itemId: string) => {
+    setPreviewCart(prev => ({
+        ...prev,
+        [itemId]: (prev[itemId] || 0) + 1,
+    }));
+  };
+
+  const handlePreviewDecrement = (itemId: string) => {
+    setPreviewCart(prev => {
+      const newQuantity = (prev[itemId] || 0) - 1;
+      if (newQuantity <= 0) {
+        const { [itemId]: _, ...rest } = prev;
+        return rest;
+      }
+      return {
+        ...prev,
+        [itemId]: newQuantity,
+      };
+    });
+  };
 
   const handleImportFromPos = () => {
     setIsAddMenuModalOpen(false);
@@ -329,28 +383,91 @@ const MenuBuilderMainPage = ({ onClose }: { onClose: () => void }) => {
                   </div>
                   <div className="col-span-1 bg-muted/30 p-6 overflow-y-auto">
                       <h2 className="text-xl font-bold mb-4 text-center">Live Preview</h2>
-                       <div className="w-full max-w-sm mx-auto bg-[#F7F9FB] rounded-[40px] shadow-2xl p-2 border-[6px] border-black overflow-hidden">
-                          <div className="h-[600px] overflow-y-auto">
-                              <div className="p-2 space-y-6">
-                                  {menuSections.map(section => (
-                                      <div key={section.id}>
-                                          <h2 className="text-xl font-bold mb-2 px-2">{section.name}</h2>
-                                          <div className="space-y-2">
-                                              {section.items.map(item => (
-                                                  <MenuItemCard
-                                                      key={item.id}
-                                                      item={item}
-                                                      quantity={0}
-                                                      onAdd={() => {}}
-                                                      onIncrement={() => {}}
-                                                      onDecrement={() => {}}
-                                                      isPurchasingEnabled={false}
-                                                  />
-                                              ))}
-                                          </div>
-                                      </div>
-                                  ))}
+                       <div className="w-full max-w-sm mx-auto bg-gray-50 rounded-[40px] shadow-2xl p-2 border-[6px] border-black overflow-hidden">
+                          {/* Replicate the full mobile layout here */}
+                          <div className="relative h-[600px] overflow-hidden bg-[#F7F9FB] flex flex-col">
+                            {/* 1. Header */}
+                            <header className="sticky top-0 z-20 bg-white/80 backdrop-blur-lg p-4 pb-0 flex-shrink-0">
+                                <div className="flex items-center justify-between mb-4">
+                                    <ArrowLeft className="h-6 w-6 text-gray-800" />
+                                    <div className="text-center">
+                                        <h1 className="text-xl font-bold text-gray-900">Drinks</h1>
+                                        <p className="text-sm text-teal-600 font-medium">2 items</p>
+                                    </div>
+                                    <Search className="h-6 w-6 text-gray-800" />
+                                </div>
+                                <ScrollArea className="w-full whitespace-nowrap">
+                                    <div className="flex items-center space-x-1 border-b">
+                                        {['Bestsellers', 'Pizza', 'Sides', 'Desserts', 'Drinks'].map(cat => (
+                                            <button key={cat} className={cn(
+                                                "flex items-center gap-1.5 whitespace-nowrap px-4 py-3 text-sm font-bold transition-colors relative",
+                                                cat === 'Drinks' ? 'text-teal-600' : 'text-gray-500'
+                                            )}>
+                                                {cat === 'Bestsellers' && <Flame className="h-4 w-4 text-red-500" />}
+                                                {cat}
+                                                {cat === 'Drinks' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-teal-500 rounded-full" />}
+                                            </button>
+                                        ))}
+                                    </div>
+                                    <ScrollBar orientation="horizontal" className="hidden" />
+                                </ScrollArea>
+                            </header>
+
+                            {/* 2. Scrollable Body */}
+                            <div className="flex-1 overflow-y-auto">
+                                <main className="p-4 space-y-8">
+                                    {menuSections.map(section => (
+                                        <div key={section.id}>
+                                            <h2 className="text-2xl font-bold text-gray-900 mb-4">{section.name}</h2>
+                                            <div className="space-y-4">
+                                                {section.items.map(item => (
+                                                    <MenuItemCard
+                                                        key={item.id}
+                                                        item={item}
+                                                        quantity={previewCart[item.id] || 0}
+                                                        onAdd={handlePreviewAddToCart}
+                                                        onIncrement={handlePreviewIncrement}
+                                                        onDecrement={handlePreviewDecrement}
+                                                        isPurchasingEnabled={true}
+                                                    />
+                                                ))}
+                                            </div>
+                                        </div>
+                                    ))}
+                                </main>
+                            </div>
+
+                            {/* 3. Floating Cart Icon */}
+                            {totalItemsInCart > 0 && (
+                                <div className="absolute bottom-24 right-6 z-20">
+                                    <div className="relative">
+                                        <div className={cn(
+                                            "rounded-full w-16 h-16 bg-red-500 flex items-center justify-center shadow-lg",
+                                             isCartAnimating && "animate-pulse-once"
+                                        )}>
+                                            <ShoppingCart className="h-8 w-8 text-white" />
+                                        </div>
+                                        <Badge className="absolute -top-1 -right-1 w-6 h-6 flex items-center justify-center bg-gray-800 text-white rounded-full border-2 border-red-500">
+                                            {totalItemsInCart}
+                                        </Badge>
+                                    </div>
+                                </div>
+                            )}
+                            
+                            {/* 4. Footer */}
+                            <nav className="shrink-0 bg-[#F7F9FB] border-t border-gray-200/80">
+                              <div className="flex justify-around items-center h-20">
+                                <div className="flex flex-col items-center gap-1 text-teal-500">
+                                  <Home className="h-6 w-6" />
+                                  <span className="text-xs font-bold">Menu</span>
+                                </div>
+                                <div className="flex flex-col items-center gap-1 text-gray-500">
+                                  <Receipt className="h-6 w-6" />
+                                  <span className="text-xs font-bold">Orders</span>
+                                </div>
                               </div>
+                            </nav>
+
                           </div>
                       </div>
                   </div>
