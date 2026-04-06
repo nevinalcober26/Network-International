@@ -174,6 +174,8 @@ const SortableProductRow = ({ item, onUpdate, onImageUpload, onAvailabilityChang
 
 
 const CategoryItemsSheet = ({ category, isOpen, onOpenChange, onSave }: any) => {
+    if (!category) return null;
+    
     const [items, setItems] = useState<MenuItem[]>([]);
     const [searchQuery, setSearchQuery] = useState('');
     const sensors = useSensors(useSensor(PointerSensor));
@@ -234,8 +236,6 @@ const CategoryItemsSheet = ({ category, isOpen, onOpenChange, onSave }: any) => 
         onSave(category.id, items);
         onOpenChange(false);
     };
-
-    if (!category) return null;
     
     const itemIds = useMemo(() => filteredItems.map(i => i.id), [filteredItems]);
 
@@ -411,8 +411,6 @@ const MenuBuilderMainPage = ({ onClose }: { onClose: () => void }) => {
     );
     setEditingCategory(null);
   };
-
-  const templates = [{ name: 'Default', imageHint: 'abstract red' }];
 
   const userMenus = [
     { name: 'My Ramadan Menu', imageHint: 'abstract red' },
