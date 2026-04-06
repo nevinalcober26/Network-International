@@ -175,10 +175,6 @@ const SortableProductRow = ({ item, onUpdate, onImageUpload, onAvailabilityChang
 
 
 const CategoryItemsSheet = ({ category, isOpen, onOpenChange, onSave }: any) => {
-    if (!category && !isOpen) {
-        return null;
-    }
-
     const [items, setItems] = useState<MenuItem[]>([]);
     const [searchQuery, setSearchQuery] = useState('');
     const sensors = useSensors(useSensor(PointerSensor));
@@ -247,18 +243,6 @@ const CategoryItemsSheet = ({ category, isOpen, onOpenChange, onSave }: any) => 
             });
         }
     };
-    
-    if (!category && isOpen) {
-        return (
-            <Sheet open={isOpen} onOpenChange={onOpenChange}>
-                <SheetContent className="sm:max-w-3xl w-full p-0 flex flex-col">
-                    <div className="flex-1 flex items-center justify-center">
-                        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-                    </div>
-                </SheetContent>
-            </Sheet>
-        );
-    }
     
     return (
         <Sheet open={isOpen} onOpenChange={onOpenChange}>
@@ -438,7 +422,6 @@ const MenuBuilderMainPage = ({ onClose }: { onClose: () => void }) => {
         section.id === categoryId ? { ...section, items: updatedItems } : section
       )
     );
-    // setEditingCategory(null);
   };
 
   const userMenus = [
