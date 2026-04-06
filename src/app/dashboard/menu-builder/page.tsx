@@ -31,7 +31,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Form, FormControl, FormField, FormItem, FormMessage } from '@/components/ui/form';
 
 
 const TemplateCard = ({ name, imageHint }: { name: string; imageHint: string }) => {
@@ -261,10 +261,6 @@ const CategoryItemsSheet = ({ category, isOpen, onOpenChange, onSave }: any) => 
         }
     }, [category, isOpen]);
     
-    if (!isOpen) {
-        return null;
-    }
-    
     const filteredItems = useMemo(() => {
         if (!searchQuery) return items;
         return items.filter(item =>
@@ -430,224 +426,244 @@ const CategoryItemsSheet = ({ category, isOpen, onOpenChange, onSave }: any) => 
 
 const addSectionSchema = z.object({
     name: z.string().min(1, 'Section name is required'),
-    productIds: z.array(z.string()).min(1, 'Please select at least one item.'),
-    isSpecial: z.boolean().default(false),
-    enableLink: z.boolean().default(true),
-    externalLink: z.string().url().optional().or(z.literal('')),
 });
 type AddSectionFormValues = z.infer<typeof addSectionSchema>;
 
-const AddSectionSheet = ({ isOpen, onOpenChange, onAddSection, allProducts, onProductAvailabilityChange }: {
+const AddSectionSheet = ({ 
+    isOpen, 
+    onOpenChange, 
+    onAddSection, 
+    allProducts, 
+    onProductUpdate 
+}: {
     isOpen: boolean;
     onOpenChange: (open: boolean) => void;
-    onAddSection: (values: AddSectionFormValues) => void;
+    onAddSection: (name: string, productIds: string[]) => void;
     allProducts: MenuItem[];
-    onProductAvailabilityChange: (itemId: string, available: boolean) => void;
+    onProductUpdate: (product: MenuItem) => void;
 }) => {
+    const [addedProducts, setAddedProducts] = useState<MenuItem[]>([]);
+    const [editingProduct, setEditingProduct] = useState<MenuItem | null>(null);
     const [searchQuery, setSearchQuery] = useState('');
+    const sensors = useSensors(useSensor(PointerSensor));
+
     const form = useForm<AddSectionFormValues>({
         resolver: zodResolver(addSectionSchema),
-        defaultValues: {
-            name: '',
-            productIds: [],
-            isSpecial: false,
-            enableLink: true,
-            externalLink: '',
-        },
+        defaultValues: { name: '' },
     });
 
     useEffect(() => {
         if (isOpen) {
             form.reset();
+            setAddedProducts([]);
+            setEditingProduct(null);
             setSearchQuery('');
         }
     }, [isOpen, form]);
 
-    const filteredProducts = useMemo(() => {
-        if (!searchQuery) return allProducts;
-        return allProducts.filter(p => p.name.toLowerCase().includes(searchQuery.toLowerCase()));
-    }, [allProducts, searchQuery]);
+    const availableProducts = useMemo(() => {
+        const addedIds = new Set(addedProducts.map(p => p.id));
+        return allProducts.filter(p => 
+            !addedIds.has(p.id) && 
+            p.name.toLowerCase().includes(searchQuery.toLowerCase())
+        );
+    }, [allProducts, addedProducts, searchQuery]);
+
+    const addedProductIds = useMemo(() => addedProducts.map(p => p.id), [addedProducts]);
+
+    const handleAddProduct = (product: MenuItem) => {
+        setAddedProducts(prev => [...prev, product]);
+    };
+
+    const handleRemoveProduct = (productId: string) => {
+        setAddedProducts(prev => prev.filter(p => p.id !== productId));
+        if (editingProduct?.id === productId) {
+            setEditingProduct(null);
+        }
+    };
+
+    const handleDragEnd = (event: DragEndEvent) => {
+        const { active, over } = event;
+        if (over && active.id !== over.id) {
+            setAddedProducts((items) => {
+                const oldIndex = items.findIndex(item => item.id === active.id);
+                const newIndex = items.findIndex(item => item.id === over.id);
+                return arrayMove(items, oldIndex, newIndex);
+            });
+        }
+    };
+    
+    const handleEditorChange = (field: keyof MenuItem, value: any) => {
+        if (!editingProduct) return;
+        const updatedProduct = { ...editingProduct, [field]: value };
+        setEditingProduct(updatedProduct);
+        setAddedProducts(prev => prev.map(p => p.id === updatedProduct.id ? updatedProduct : p));
+        onProductUpdate(updatedProduct);
+    };
+
+    const handleImageUpload = (itemId: string, event: React.ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                const result = reader.result as string;
+                handleEditorChange('image', result);
+            };
+            reader.readAsDataURL(file);
+        }
+    };
+
+    const handleAvailabilityChange = (available: boolean) => {
+        if (editingProduct) {
+            handleEditorChange('available', available);
+        }
+    };
 
     const onSubmit = (data: AddSectionFormValues) => {
-        onAddSection(data);
+        onAddSection(data.name, addedProducts.map(p => p.id));
         onOpenChange(false);
     };
 
     return (
         <Sheet open={isOpen} onOpenChange={onOpenChange}>
-            <SheetContent className="sm:max-w-4xl w-full p-0 flex flex-col">
+            <SheetContent className="sm:max-w-[90vw] lg:sm:max-w-[80vw] w-full p-0 flex flex-col">
                 <SheetHeader className="p-6 border-b shrink-0">
                     <SheetTitle>Add New Menu Section</SheetTitle>
-                    <SheetDescription>Create a new category and populate it with items from your menu.</SheetDescription>
+                    <SheetDescription>Build a new category by selecting items from your library.</SheetDescription>
                 </SheetHeader>
                 <Form {...form}>
                     <form onSubmit={form.handleSubmit(onSubmit)} className="flex-1 flex flex-col overflow-hidden">
-                        <div className="flex-1 grid grid-cols-1 md:grid-cols-3 overflow-hidden">
-                            {/* Left Panel: Settings */}
-                            <div className="md:col-span-1 p-6 border-r bg-muted/30 overflow-y-auto space-y-6">
-                                <FormField
-                                    control={form.control}
-                                    name="name"
-                                    render={({ field }) => (
-                                        <FormItem>
-                                            <FormLabel>Section Name</FormLabel>
-                                            <FormControl>
-                                                <Input placeholder="e.g., Summer Specials" {...field} />
-                                            </FormControl>
-                                            <FormMessage />
-                                        </FormItem>
-                                    )}
-                                />
-                                <FormField
-                                    control={form.control}
-                                    name="isSpecial"
-                                    render={({ field }) => (
-                                        <FormItem className="flex items-center justify-between rounded-lg border p-3 bg-card">
-                                            <div className="space-y-0.5">
-                                                <FormLabel>Mark as Special</FormLabel>
-                                                <FormDescription className="text-xs">Highlight this section on the menu.</FormDescription>
-                                            </div>
-                                            <FormControl>
-                                                <Switch checked={field.value} onCheckedChange={field.onChange} />
-                                            </FormControl>
-                                        </FormItem>
-                                    )}
-                                />
-                                <div className="space-y-2 rounded-lg border p-3 bg-card">
-                                    <FormField
-                                        control={form.control}
-                                        name="enableLink"
-                                        render={({ field }) => (
-                                            <FormItem className="flex items-center justify-between">
-                                                <div className="space-y-0.5">
-                                                    <FormLabel>Enable Category Link</FormLabel>
-                                                    <FormDescription className="text-xs">Links to item list when clicked.</FormDescription>
-                                                </div>
-                                                <FormControl>
-                                                    <Switch checked={field.value} onCheckedChange={field.onChange} />
-                                                </FormControl>
-                                            </FormItem>
-                                        )}
-                                    />
-                                    {!form.watch('enableLink') && (
-                                        <div className="pt-3 border-t">
-                                            <FormField
-                                                control={form.control}
-                                                name="externalLink"
-                                                render={({ field }) => (
-                                                    <FormItem>
-                                                        <FormLabel>Custom URL Link</FormLabel>
-                                                        <FormControl>
-                                                            <Input placeholder="https://example.com" {...field} />
-                                                        </FormControl>
-                                                        <FormMessage />
-                                                    </FormItem>
-                                                )}
-                                            />
-                                        </div>
-                                    )}
-                                </div>
-                            </div>
-                            {/* Right Panel: Product Selection */}
-                            <div className="md:col-span-2 flex flex-col overflow-hidden">
-                                <div className="p-6 pb-4 border-b shrink-0">
-                                    <Label>Choose Items for this Section</Label>
-                                    <div className="relative mt-2">
+                        <div className="p-6 border-b">
+                            <FormField
+                                control={form.control}
+                                name="name"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <Label>Section Name</Label>
+                                        <Input placeholder="e.g., Summer Specials" {...field} />
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-3 flex-1 overflow-hidden">
+                            {/* Available Items */}
+                            <div className="md:col-span-1 flex flex-col overflow-hidden border-r">
+                                <div className="p-4 border-b">
+                                    <div className="relative">
                                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                                        <Input
-                                            placeholder="Search all products..."
-                                            value={searchQuery}
-                                            onChange={(e) => setSearchQuery(e.target.value)}
-                                            className="pl-10"
-                                        />
+                                        <Input placeholder="Search all products..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="pl-10" />
                                     </div>
-                                    <FormField
-                                        control={form.control}
-                                        name="productIds"
-                                        render={() => (
-                                            <FormItem>
-                                                <FormMessage className="mt-2" />
-                                            </FormItem>
-                                        )}
-                                    />
                                 </div>
-                                <div className="flex-1 overflow-y-auto">
-                                    <FormField
-                                        control={form.control}
-                                        name="productIds"
-                                        render={({ field }) => (
-                                            <FormItem>
-                                                <Table>
-                                                    <TableHeader>
-                                                        <TableRow>
-                                                            <TableHead className="w-12"></TableHead>
-                                                            <TableHead>Product</TableHead>
-                                                            <TableHead className="w-24 text-right">Price</TableHead>
-                                                            <TableHead className="w-28 text-center">Available</TableHead>
-                                                        </TableRow>
-                                                    </TableHeader>
-                                                    <TableBody>
-                                                        {filteredProducts.map(product => (
-                                                            <TableRow key={product.id}>
-                                                                <TableCell>
-                                                                    <Checkbox
-                                                                        checked={field.value?.includes(product.id)}
-                                                                        onCheckedChange={(checked) => {
-                                                                            return checked
-                                                                                ? field.onChange([...(field.value || []), product.id])
-                                                                                : field.onChange(
-                                                                                    field.value?.filter(
-                                                                                        (value) => value !== product.id
-                                                                                    )
-                                                                                )
-                                                                        }}
-                                                                    />
-                                                                </TableCell>
-                                                                <TableCell>
-                                                                    <div className="flex items-center gap-3">
-                                                                        <div className="w-12 h-12 rounded-md bg-muted flex items-center justify-center border overflow-hidden">
-                                                                            <Image src={product.image} alt={product.name} width={48} height={48} className="object-cover" />
-                                                                        </div>
-                                                                        <div>
-                                                                            <p className="font-semibold">{product.name}</p>
-                                                                            <p className="text-xs text-muted-foreground line-clamp-1">{product.description}</p>
-                                                                        </div>
-                                                                    </div>
-                                                                </TableCell>
-                                                                <TableCell className="text-right font-mono">
-                                                                    AED {product.price.toFixed(2)}
-                                                                </TableCell>
-                                                                <TableCell className="text-center">
-                                                                    <Switch
-                                                                        checked={product.available ?? true}
-                                                                        onCheckedChange={(checked) => onProductAvailabilityChange(product.id, checked)}
-                                                                    />
-                                                                </TableCell>
-                                                            </TableRow>
-                                                        ))}
-                                                    </TableBody>
-                                                </Table>
-                                            </FormItem>
-                                        )}
-                                    />
-                                    {filteredProducts.length === 0 && (
-                                        <div className="text-center py-16 text-muted-foreground">
-                                            <p>No products found.</p>
+                                <ScrollArea className="flex-1">
+                                    <div className="p-2 space-y-1">
+                                        {availableProducts.map(product => (
+                                            <div key={product.id} className="flex items-center gap-2 p-2 rounded-md hover:bg-muted">
+                                                <Image src={product.image} alt={product.name} width={40} height={40} className="rounded object-cover" />
+                                                <div className="flex-1">
+                                                    <p className="text-sm font-semibold line-clamp-1">{product.name}</p>
+                                                    <p className="text-xs text-muted-foreground">AED {product.price.toFixed(2)}</p>
+                                                </div>
+                                                <Button type="button" size="icon" variant="ghost" className="h-8 w-8 text-primary" onClick={() => handleAddProduct(product)}>
+                                                    <Plus className="h-4 w-4" />
+                                                </Button>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </ScrollArea>
+                            </div>
+
+                            {/* Added Items & Editor */}
+                            <div className="md:col-span-2 grid grid-cols-1 lg:grid-cols-2 flex-1 overflow-hidden">
+                                {/* Added Items List */}
+                                <div className="lg:col-span-1 flex flex-col overflow-hidden border-r">
+                                    <div className="p-4 border-b shrink-0">
+                                        <h3 className="font-semibold text-lg">{form.watch('name') || 'New Section'} ({addedProducts.length} items)</h3>
+                                        <p className="text-sm text-muted-foreground">Drag to reorder.</p>
+                                    </div>
+                                    <ScrollArea className="flex-1">
+                                         <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+                                            <SortableContext items={addedProductIds} strategy={verticalListSortingStrategy}>
+                                                <div className="p-2 space-y-1">
+                                                    {addedProducts.map(product => {
+                                                        const SortableWrapper = ({ children }: { children: React.ReactNode }) => {
+                                                            const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id: product.id });
+                                                            const style = { transform: CSS.Transform.toString(transform), transition };
+                                                            return <div ref={setNodeRef} style={style} className="touch-none flex items-center gap-2 p-2 rounded-md bg-background border" {...attributes} >
+                                                                <button {...listeners} className="cursor-grab p-1"><GripVertical className="h-5 w-5 text-muted-foreground" /></button>
+                                                                {children}
+                                                            </div>;
+                                                        };
+                                                        return (
+                                                            <SortableWrapper key={product.id}>
+                                                                <div className="flex-1 cursor-pointer" onClick={() => setEditingProduct(product)}>
+                                                                    <p className={cn("text-sm font-semibold line-clamp-1", editingProduct?.id === product.id && "text-primary")}>{product.name}</p>
+                                                                    <p className="text-xs text-muted-foreground">AED {product.price.toFixed(2)}</p>
+                                                                </div>
+                                                                <Button type="button" size="icon" variant="ghost" className="h-8 w-8 text-destructive" onClick={() => handleRemoveProduct(product.id)}>
+                                                                    <X className="h-4 w-4" />
+                                                                </Button>
+                                                            </SortableWrapper>
+                                                        )
+                                                    })}
+                                                </div>
+                                            </SortableContext>
+                                         </DndContext>
+                                    </ScrollArea>
+                                </div>
+                                {/* Editor */}
+                                <div className="lg:col-span-1 bg-muted/30 overflow-y-auto">
+                                    {editingProduct ? (
+                                        <div className="p-6 space-y-6">
+                                            <h3 className="font-semibold text-lg">Edit Item</h3>
+                                            <div>
+                                                <Label>Product Image</Label>
+                                                <input type="file" ref={useRef<HTMLInputElement>(null)} className="hidden" accept="image/*" onChange={(e) => handleImageUpload(editingProduct.id, e)} />
+                                                <div className="mt-2 w-full aspect-video rounded-md bg-background flex items-center justify-center border overflow-hidden cursor-pointer" onClick={() => (document.querySelector(`input[type=file]`) as HTMLInputElement)?.click()}>
+                                                    {editingProduct.image ? (
+                                                        <Image src={editingProduct.image} alt={editingProduct.name} width={240} height={135} className="object-cover w-full h-full" />
+                                                    ) : <ImageIcon className="h-8 w-8 text-muted-foreground" />}
+                                                </div>
+                                            </div>
+                                            <div>
+                                                <Label>Product Name</Label>
+                                                <Input value={editingProduct.name} onChange={(e) => handleEditorChange('name', e.target.value)} />
+                                            </div>
+                                            <div>
+                                                <Label>Description</Label>
+                                                <Textarea value={editingProduct.description} onChange={(e) => handleEditorChange('description', e.target.value)} rows={4} />
+                                            </div>
+                                            <div>
+                                                <Label>Price (AED)</Label>
+                                                <Input type="number" value={editingProduct.price} onChange={(e) => handleEditorChange('price', parseFloat(e.target.value) || 0)} />
+                                            </div>
+                                            <div className="flex items-center justify-between rounded-lg border p-4 bg-background">
+                                                <Label className="font-medium">Available</Label>
+                                                <Switch checked={editingProduct.available} onCheckedChange={handleAvailabilityChange} />
+                                            </div>
+                                        </div>
+                                    ) : (
+                                         <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground p-8">
+                                            <Edit className="h-12 w-12 mb-4" />
+                                            <h3 className="font-semibold">Select an Item</h3>
+                                            <p className="text-sm">Click an item from the 'Added' list to edit its details.</p>
                                         </div>
                                     )}
                                 </div>
                             </div>
                         </div>
+
                         <SheetFooter className="p-6 border-t shrink-0">
                             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
-                            <Button type="submit">Add Section</Button>
+                            <Button type="submit">Create Section</Button>
                         </SheetFooter>
                     </form>
                 </Form>
             </SheetContent>
         </Sheet>
-    )
-}
+    );
+};
 
 
 const MenuBuilderMainPage = ({ onClose }: { onClose: () => void }) => {
@@ -775,9 +791,9 @@ const MenuBuilderMainPage = ({ onClose }: { onClose: () => void }) => {
     setMenuItems(uniqueItems);
   };
   
-  const handleProductAvailabilityChange = (itemId: string, available: boolean) => {
+  const handleProductUpdate = (updatedProduct: MenuItem) => {
     const updateItems = (items: MenuItem[]): MenuItem[] => 
-        items.map(item => item.id === itemId ? { ...item, available } : item);
+        items.map(item => item.id === updatedProduct.id ? { ...item, ...updatedProduct } : item);
     
     setMenuItems(prev => updateItems(prev));
     setMenuSections(prev => prev.map(sec => ({
@@ -786,16 +802,16 @@ const MenuBuilderMainPage = ({ onClose }: { onClose: () => void }) => {
     })));
   };
 
-  const handleAddNewSection = (values: AddSectionFormValues) => {
+  const handleAddNewSection = (name: string, productIds: string[]) => {
     const newSection = {
         id: `section_${Date.now()}`,
-        name: values.name,
-        items: menuItems.filter(item => values.productIds.includes(item.id)),
+        name: name,
+        items: menuItems.filter(item => productIds.includes(item.id)),
     };
     setMenuSections(prev => [...prev, newSection]);
     toast({
       title: "Section Added",
-      description: `"${values.name}" has been added to your menu.`,
+      description: `"${name}" has been added to your menu.`,
     });
   };
 
@@ -965,12 +981,12 @@ const MenuBuilderMainPage = ({ onClose }: { onClose: () => void }) => {
                   </div>
               </DialogHeader>
               <div className="flex-1 grid grid-cols-3 overflow-hidden">
-                  <div className="col-span-2 p-6 overflow-y-auto">
+                  <div className="col-span-1 p-6 overflow-y-auto border-r">
                       <h2 className="text-xl font-bold mb-4">Menu Structure</h2>
                       <p className="text-muted-foreground mb-6">Drag and drop sections to reorder your menu. Click 'Add Section' to create new categories.</p>
                       <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
                           <SortableContext items={menuSections.map(s => s.id)} strategy={verticalListSortingStrategy}>
-                              <div className="space-y-3 max-w-lg">
+                              <div className="space-y-3">
                                   {menuSections.map(section => (
                                       <SortableSectionItem
                                           key={section.id}
@@ -987,7 +1003,7 @@ const MenuBuilderMainPage = ({ onClose }: { onClose: () => void }) => {
                           <Plus className="mr-2 h-4 w-4" /> Add Section
                       </Button>
                   </div>
-                  <div className="col-span-1 bg-muted/30 p-6 overflow-y-auto">
+                  <div className="col-span-2 bg-muted/30 p-6 overflow-y-auto">
                       <h2 className="text-xl font-bold mb-4 text-center">Live Preview</h2>
                        <div className="w-full max-w-sm mx-auto bg-white rounded-[40px] shadow-2xl p-4 border-[6px] border-black overflow-hidden">
                           {/* Replicate the full mobile layout here */}
@@ -1091,7 +1107,7 @@ const MenuBuilderMainPage = ({ onClose }: { onClose: () => void }) => {
         onOpenChange={setIsAddSectionSheetOpen}
         onAddSection={handleAddNewSection}
         allProducts={menuItems}
-        onProductAvailabilityChange={handleProductAvailabilityChange}
+        onProductUpdate={handleProductUpdate}
       />
     </>
   );
