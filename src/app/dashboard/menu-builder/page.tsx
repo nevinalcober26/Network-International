@@ -246,6 +246,17 @@ const SortableProductRow = ({ item, onAvailabilityChange, onRowClick, isSelected
 };
 
 const CategoryItemsSheet = ({ category, isOpen, onOpenChange, onSave }: any) => {
+    if (!category) {
+        return (
+            <Sheet open={isOpen} onOpenChange={onOpenChange}>
+                <SheetContent className="sm:max-w-6xl w-full p-0 flex flex-col">
+                    <div className="flex-1 flex items-center justify-center">
+                        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+                    </div>
+                </SheetContent>
+            </Sheet>
+        );
+    }
     
     const [items, setItems] = useState<MenuItem[]>([]);
     const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null);
@@ -347,78 +358,70 @@ const CategoryItemsSheet = ({ category, isOpen, onOpenChange, onSave }: any) => 
     return (
         <Sheet open={isOpen} onOpenChange={onOpenChange}>
             <SheetContent className="sm:max-w-6xl w-full p-0 flex flex-col">
-                    {!category ? (
-                         <div className="flex-1 flex items-center justify-center">
-                            <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-                        </div>
-                    ) : (
-                        <>
-                            <SheetHeader className="p-6 border-b shrink-0">
-                                <SheetTitle>Manage: {category.name} ({items.length} items)</SheetTitle>
-                                <SheetDescription>Drag to reorder, click a row to edit details, and toggle availability.</SheetDescription>
-                            </SheetHeader>
-                            <div className="grid grid-cols-1 md:grid-cols-3 flex-1 overflow-hidden">
-                                <div className="md:col-span-1 border-r bg-muted/30 overflow-y-auto">
-                                    <ItemEditor 
-                                        item={selectedItem}
-                                        onUpdate={handleItemUpdate}
-                                        onImageUpload={handleImageUpload}
-                                        onAvailabilityChange={handleAvailabilityChange}
-                                    />
-                                </div>
-                                <div className="md:col-span-2 flex flex-col overflow-hidden">
-                                    <div className="p-6 pb-4 border-b shrink-0">
-                                        <div className="relative">
-                                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                                            <Input
-                                                placeholder={`Search in ${category.name}...`}
-                                                value={searchQuery}
-                                                onChange={(e) => setSearchQuery(e.target.value)}
-                                                className="pl-10"
-                                            />
-                                        </div>
-                                    </div>
-                                    <div className="flex-1 overflow-y-auto">
-                                        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-                                            <Table>
-                                                <TableHeader>
-                                                    <TableRow>
-                                                        <TableHead className="w-10"></TableHead>
-                                                        <TableHead>Image</TableHead>
-                                                        <TableHead>Details</TableHead>
-                                                        <TableHead>Price</TableHead>
-                                                        <TableHead>Available</TableHead>
-                                                    </TableRow>
-                                                </TableHeader>
-                                                <SortableContext items={itemIds} strategy={verticalListSortingStrategy}>
-                                                    <TableBody>
-                                                        {filteredItems.map(item => (
-                                                            <SortableProductRow
-                                                                key={item.id}
-                                                                item={item}
-                                                                onAvailabilityChange={handleAvailabilityChange}
-                                                                onRowClick={handleRowClick}
-                                                                isSelected={selectedItem?.id === item.id}
-                                                            />
-                                                        ))}
-                                                    </TableBody>
-                                                </SortableContext>
-                                            </Table>
-                                            {filteredItems.length === 0 && (
-                                                <div className="text-center py-16 text-muted-foreground">
-                                                    <p>No items found{searchQuery && ` for "${searchQuery}"`}.</p>
-                                                </div>
-                                            )}
-                                        </DndContext>
-                                    </div>
-                                </div>
+                <SheetHeader className="p-6 border-b shrink-0">
+                    <SheetTitle>Manage: {category.name} ({items.length} items)</SheetTitle>
+                    <SheetDescription>Drag to reorder, click a row to edit details, and toggle availability.</SheetDescription>
+                </SheetHeader>
+                <div className="grid grid-cols-1 md:grid-cols-3 flex-1 overflow-hidden">
+                    <div className="md:col-span-1 border-r bg-muted/30 overflow-y-auto">
+                        <ItemEditor 
+                            item={selectedItem}
+                            onUpdate={handleItemUpdate}
+                            onImageUpload={handleImageUpload}
+                            onAvailabilityChange={handleAvailabilityChange}
+                        />
+                    </div>
+                    <div className="md:col-span-2 flex flex-col overflow-hidden">
+                        <div className="p-6 pb-4 border-b shrink-0">
+                            <div className="relative">
+                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                                <Input
+                                    placeholder={`Search in ${category.name}...`}
+                                    value={searchQuery}
+                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                    className="pl-10"
+                                />
                             </div>
-                            <SheetFooter className="p-6 border-t shrink-0">
-                                <Button variant="outline" onClick={() => onOpenChange(false)}>Close</Button>
-                                <Button onClick={handleSaveChanges}>Save Changes</Button>
-                            </SheetFooter>
-                        </>
-                    )}
+                        </div>
+                        <div className="flex-1 overflow-y-auto">
+                            <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+                                <Table>
+                                    <TableHeader>
+                                        <TableRow>
+                                            <TableHead className="w-10"></TableHead>
+                                            <TableHead>Image</TableHead>
+                                            <TableHead>Details</TableHead>
+                                            <TableHead>Price</TableHead>
+                                            <TableHead>Available</TableHead>
+                                        </TableRow>
+                                    </TableHeader>
+                                    <SortableContext items={itemIds} strategy={verticalListSortingStrategy}>
+                                        <TableBody>
+                                            {filteredItems.map(item => (
+                                                <SortableProductRow
+                                                    key={item.id}
+                                                    item={item}
+                                                    onAvailabilityChange={handleAvailabilityChange}
+                                                    onRowClick={handleRowClick}
+                                                    isSelected={selectedItem?.id === item.id}
+                                                />
+                                            ))}
+                                        </TableBody>
+                                    </SortableContext>
+                                </Table>
+                                {filteredItems.length === 0 && (
+                                    <div className="text-center py-16 text-muted-foreground">
+                                        <p>No items found{searchQuery && ` for "${searchQuery}"`}.</p>
+                                    </div>
+                                )}
+                            </DndContext>
+                        </div>
+                    </div>
+                </div>
+                <SheetFooter className="p-6 border-t shrink-0">
+                    <Button variant="outline" onClick={() => onOpenChange(false)}>Close</Button>
+                    <Button onClick={handleSaveChanges}>Save Changes</Button>
+                </SheetFooter>
             </SheetContent>
         </Sheet>
     );
@@ -446,6 +449,7 @@ const AddSectionSheet = ({
     const [editingProduct, setEditingProduct] = useState<MenuItem | null>(null);
     const [searchQuery, setSearchQuery] = useState('');
     const sensors = useSensors(useSensor(PointerSensor));
+    const fileInputRef = useRef<HTMLInputElement>(null);
 
     const form = useForm<AddSectionFormValues>({
         resolver: zodResolver(addSectionSchema),
@@ -619,8 +623,8 @@ const AddSectionSheet = ({
                                             <h3 className="font-semibold text-lg">Edit Item</h3>
                                             <div>
                                                 <Label>Product Image</Label>
-                                                <input type="file" ref={useRef<HTMLInputElement>(null)} className="hidden" accept="image/*" onChange={(e) => handleImageUpload(editingProduct.id, e)} />
-                                                <div className="mt-2 w-full aspect-video rounded-md bg-background flex items-center justify-center border overflow-hidden cursor-pointer" onClick={() => (document.querySelector(`input[type=file]`) as HTMLInputElement)?.click()}>
+                                                <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={(e) => handleImageUpload(editingProduct.id, e)} />
+                                                <div className="mt-2 w-full aspect-video rounded-md bg-background flex items-center justify-center border overflow-hidden cursor-pointer" onClick={() => fileInputRef.current?.click()}>
                                                     {editingProduct.image ? (
                                                         <Image src={editingProduct.image} alt={editingProduct.name} width={240} height={135} className="object-cover w-full h-full" />
                                                     ) : <ImageIcon className="h-8 w-8 text-muted-foreground" />}
