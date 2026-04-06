@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { EMenuIcon } from '@/components/dashboard/app-sidebar';
-import { List, LayoutGrid, X, Plus, Palette, Database, CheckCircle2, Loader2, GripVertical, Home, Receipt, ArrowLeft, Search, Flame, ShoppingCart } from 'lucide-react';
+import { List, LayoutGrid, X, Plus, Palette, Database, CheckCircle2, Loader2, GripVertical, Home, Receipt, ArrowLeft, Search, Flame, ShoppingCart, ImageIcon } from 'lucide-react';
 import Image from 'next/image';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
@@ -18,8 +18,13 @@ import { DndContext, closestCenter, PointerSensor, useSensor, useSensors, DragEn
 import { arrayMove, SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { cn } from '@/lib/utils';
-import { MenuItemCard, type MenuItem } from '@/app/mobile/menu/menu-item-card';
+import { MenuItemCard, type MenuItem as BaseMenuItem } from '@/app/mobile/menu/menu-item-card';
 import { Badge } from '@/components/ui/badge';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetFooter } from '@/components/ui/sheet';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Input } from '@/components/ui/input';
+import { Switch } from '@/components/ui/switch';
+
 
 const TemplateCard = ({ name, imageHint }: { name: string; imageHint: string }) => {
   const image = PlaceHolderImages.find(img => img.imageHint === imageHint);
@@ -53,6 +58,10 @@ const getImageUrl = (id: string) => {
     return image?.imageUrl || 'https://picsum.photos/seed/placeholder/400/400';
 };
 
+interface MenuItem extends BaseMenuItem {
+  available?: boolean;
+}
+
 const mockMenuItems: MenuItem[] = [
     { id: 'pizza-margherita-12', name: 'Pizza Margherita - 12 inches', description: 'Homemade dough, homemade pizza sauce,...', price: 36.00, category: 'Bestsellers', image: getImageUrl('margherita-pizza'), isCustomisable: false },
     { id: 'chicken-alfredo-pizza-12', name: 'Chicken Alfredo Pizza - 12 inches', description: 'Homemade dough, white sauce base, marinated...', price: 48.00, category: 'Bestsellers', isCustomisable: true, image: getImageUrl('alfredo-pizza') },
@@ -75,7 +84,7 @@ const mockMenuData = [
 ];
 
 
-const SortableSectionItem = ({ id, name }: { id: string, name: string }) => {
+const SortableSectionItem = ({ id, name, onEditClick }: { id: string; name: string; onEditClick: () => void }) => {
   const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id });
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -84,17 +93,166 @@ const SortableSectionItem = ({ id, name }: { id: string, name: string }) => {
 
   return (
     <div ref={setNodeRef} style={style} className="touch-none">
-      <Card className="p-3 flex items-center justify-between cursor-default bg-white hover:bg-muted/50">
+      <Card className="p-3 flex items-center justify-between cursor-pointer bg-white hover:bg-muted/50" onClick={onEditClick}>
         <div className="flex items-center gap-3">
-          <button {...attributes} {...listeners} className="cursor-grab p-1">
+          <div {...attributes} {...listeners} className="cursor-grab p-1" onClick={(e) => e.stopPropagation()}>
             <GripVertical className="h-5 w-5 text-muted-foreground" />
-          </button>
+          </div>
           <span className="font-semibold text-sm">{name}</span>
         </div>
       </Card>
     </div>
   );
 };
+
+
+const SortableProductRow = ({ item, onUpdate, onImageUpload, onAvailabilityChange }: any) => {
+    const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: item.id });
+    const style = { transform: CSS.Transform.toString(transform), transition, zIndex: isDragging ? 10 : 'auto' };
+    const fileInputRef = useRef<HTMLInputElement>(null);
+
+    const handleImageClick = () => {
+        fileInputRef.current?.click();
+    };
+
+    return (
+        <TableRow ref={setNodeRef} style={style} className="bg-background">
+            <TableCell className="w-10">
+                <button {...listeners} {...attributes} className="cursor-grab p-2">
+                    <GripVertical className="h-5 w-5 text-muted-foreground" />
+                </button>
+            </TableCell>
+            <TableCell>
+                <input
+                    type="file"
+                    ref={fileInputRef}
+                    className="hidden"
+                    accept="image/*"
+                    onChange={(e) => onImageUpload(item.id, e)}
+                />
+                <div className="w-16 h-16 rounded-md bg-muted flex items-center justify-center border overflow-hidden cursor-pointer" onClick={handleImageClick}>
+                    {item.image ? (
+                        <Image src={item.image} alt={item.name} width={64} height={64} className="object-cover" />
+                    ) : (
+                        <ImageIcon className="h-6 w-6 text-muted-foreground" />
+                    )}
+                </div>
+            </TableCell>
+            <TableCell className="font-medium">{item.name}</TableCell>
+            <TableCell>
+                <Input
+                    type="number"
+                    value={item.price}
+                    onChange={(e) => onUpdate(item.id, 'price', parseFloat(e.target.value))}
+                    className="w-24"
+                />
+            </TableCell>
+            <TableCell>
+                <Switch
+                    checked={item.available ?? true} // Assuming available if not specified
+                    onCheckedChange={(checked) => onAvailabilityChange(item.id, checked)}
+                />
+            </TableCell>
+        </TableRow>
+    );
+};
+
+
+const CategoryItemsSheet = ({ category, isOpen, onOpenChange, onSave }: any) => {
+    const [items, setItems] = useState<MenuItem[]>([]);
+    const sensors = useSensors(useSensor(PointerSensor));
+
+    useEffect(() => {
+        if (category) {
+            setItems(category.items.map((item: any) => ({ ...item, available: item.available ?? true })));
+        }
+    }, [category]);
+
+    const handleDragEnd = (event: DragEndEvent) => {
+        const { active, over } = event;
+        if (over && active.id !== over.id) {
+            setItems((currentItems) => {
+                const oldIndex = currentItems.findIndex((item) => item.id === active.id);
+                const newIndex = currentItems.findIndex((item) => item.id === over.id);
+                return arrayMove(currentItems, oldIndex, newIndex);
+            });
+        }
+    };
+
+    const handleItemUpdate = (itemId: string, field: keyof MenuItem, value: any) => {
+        setItems(currentItems =>
+            currentItems.map(item => (item.id === itemId ? { ...item, [field]: value } : item))
+        );
+    };
+
+    const handleImageUpload = (itemId: string, event: React.ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                handleItemUpdate(itemId, 'image', reader.result as string);
+            };
+            reader.readAsDataURL(file);
+        }
+    };
+
+    const handleAvailabilityChange = (itemId: string, available: boolean) => {
+        setItems(currentItems =>
+            currentItems.map(item => (item.id === itemId ? { ...item, available } : item))
+        );
+    };
+
+    const handleSaveChanges = () => {
+        onSave(category.id, items);
+        onOpenChange(false);
+    };
+
+    if (!category) return null;
+
+    return (
+        <Sheet open={isOpen} onOpenChange={onOpenChange}>
+            <SheetContent className="sm:max-w-3xl w-full p-0">
+                <SheetHeader className="p-6 border-b">
+                    <SheetTitle>Manage: {category.name}</SheetTitle>
+                    <SheetDescription>Drag to reorder, edit details, and toggle availability.</SheetDescription>
+                </SheetHeader>
+                <div className="p-6">
+                    <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+                        <Table>
+                            <TableHeader>
+                                <TableRow>
+                                    <TableHead className="w-10"></TableHead>
+                                    <TableHead>Image</TableHead>
+                                    <TableHead>Product</TableHead>
+                                    <TableHead>Price</TableHead>
+                                    <TableHead>Available</TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <SortableContext items={items.map(i => i.id)} strategy={verticalListSortingStrategy}>
+                                <TableBody>
+                                    {items.map(item => (
+                                        <SortableProductRow
+                                            key={item.id}
+                                            item={item}
+                                            onUpdate={handleItemUpdate}
+                                            onImageUpload={handleImageUpload}
+                                            onAvailabilityChange={handleAvailabilityChange}
+                                        />
+                                    ))}
+                                </TableBody>
+                            </SortableContext>
+                        </Table>
+                    </DndContext>
+                </div>
+                <SheetFooter className="p-6 border-t">
+                    <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
+                    <Button onClick={handleSaveChanges}>Save Changes</Button>
+                </SheetFooter>
+            </SheetContent>
+        </Sheet>
+    );
+};
+
 
 const MenuBuilderMainPage = ({ onClose }: { onClose: () => void }) => {
   const [isAddMenuModalOpen, setIsAddMenuModalOpen] = useState(false);
@@ -104,9 +262,11 @@ const MenuBuilderMainPage = ({ onClose }: { onClose: () => void }) => {
   const [isSyncComplete, setIsSyncComplete] = useState(false);
 
   const [menuSections, setMenuSections] = useState(mockMenuData);
+  const [editingCategory, setEditingCategory] = useState(null);
+  const [isCategorySheetOpen, setIsCategorySheetOpen] = useState(false);
+
   const sensors = useSensors(useSensor(PointerSensor));
 
-  // State for the interactive preview
   const [previewCart, setPreviewCart] = useState<Record<string, number>>({});
   const [isCartAnimating, setIsCartAnimating] = useState(false);
   const prevCartTotalRef = useRef(0);
@@ -191,6 +351,20 @@ const MenuBuilderMainPage = ({ onClose }: { onClose: () => void }) => {
     }
   }
 
+  const handleEditCategory = (category: any) => {
+    setEditingCategory(category);
+    setIsCategorySheetOpen(true);
+  };
+
+  const handleSaveCategoryItems = (categoryId: string, updatedItems: MenuItem[]) => {
+    setMenuSections(prevSections =>
+      prevSections.map(section =>
+        section.id === categoryId ? { ...section, items: updatedItems } : section
+      )
+    );
+    setEditingCategory(null);
+  };
+
   const templates = [{ name: 'Default', imageHint: 'abstract red' }];
 
   const userMenus = [
@@ -236,7 +410,7 @@ const MenuBuilderMainPage = ({ onClose }: { onClose: () => void }) => {
               <section>
                 <h2 className="text-2xl font-bold mb-4">Default</h2>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {templates.map(t => <TemplateCard key={t.name} name={t.name} imageHint={t.imageHint} />)}
+                  <TemplateCard name='Default' imageHint='abstract red' />
                 </div>
               </section>
               <section>
@@ -366,7 +540,7 @@ const MenuBuilderMainPage = ({ onClose }: { onClose: () => void }) => {
                           <SortableContext items={menuSections.map(s => s.id)} strategy={verticalListSortingStrategy}>
                               <div className="space-y-3 max-w-lg">
                                   {menuSections.map(section => (
-                                      <SortableSectionItem key={section.id} id={section.id} name={section.name} />
+                                      <SortableSectionItem key={section.id} id={section.id} name={section.name} onEditClick={() => handleEditCategory(section)} />
                                   ))}
                               </div>
                           </SortableContext>
@@ -410,11 +584,11 @@ const MenuBuilderMainPage = ({ onClose }: { onClose: () => void }) => {
                             {/* 2. Scrollable Body */}
                             <div className="flex-1 overflow-y-auto">
                                 <main className="p-4 space-y-8">
-                                    {mockMenuData.map(section => (
+                                    {menuSections.map(section => (
                                         <div key={section.id}>
                                             <h2 className="text-2xl font-bold text-gray-900 mb-4">{section.name}</h2>
                                             <div className="space-y-4">
-                                                {section.items.map(item => (
+                                                {section.items.filter(item => item.available ?? true).map(item => (
                                                     <MenuItemCard
                                                         key={item.id}
                                                         item={item}
@@ -468,6 +642,12 @@ const MenuBuilderMainPage = ({ onClose }: { onClose: () => void }) => {
               </div>
           </DialogContent>
       </Dialog>
+      <CategoryItemsSheet 
+        isOpen={isCategorySheetOpen}
+        onOpenChange={setIsCategorySheetOpen}
+        category={editingCategory}
+        onSave={handleSaveCategoryItems}
+      />
     </>
   );
 };
