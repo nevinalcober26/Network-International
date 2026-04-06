@@ -27,11 +27,11 @@ import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { Label } from '@/components/ui/label';
-import { useForm } from 'react-hook-form';
+import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Form, FormControl, FormField, FormItem, FormMessage } from '@/components/ui/form';
+import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 
 
 const TemplateCard = ({ name, imageHint }: { name: string; imageHint: string }) => {
@@ -343,85 +343,81 @@ const CategoryItemsSheet = ({ category, isOpen, onOpenChange, onSave }: any) => 
         setSelectedItem(item);
     };
 
-    if (!category) {
-        return (
-            <Sheet open={isOpen} onOpenChange={onOpenChange}>
-                <SheetContent className="sm:max-w-6xl w-full p-0 flex flex-col">
-                    <div className="flex-1 flex items-center justify-center">
-                        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-                    </div>
-                </SheetContent>
-            </Sheet>
-        );
-    }
-
     return (
         <Sheet open={isOpen} onOpenChange={onOpenChange}>
             <SheetContent className="sm:max-w-6xl w-full p-0 flex flex-col">
-                <SheetHeader className="p-6 border-b shrink-0">
-                    <SheetTitle>Manage: {category.name} ({items.length} items)</SheetTitle>
-                    <SheetDescription>Drag to reorder, click a row to edit details, and toggle availability.</SheetDescription>
-                </SheetHeader>
-                <div className="grid grid-cols-1 md:grid-cols-3 flex-1 overflow-hidden">
-                    <div className="md:col-span-1 border-r bg-muted/30 overflow-y-auto">
-                        <ItemEditor 
-                            item={selectedItem}
-                            onUpdate={handleItemUpdate}
-                            onImageUpload={handleImageUpload}
-                            onAvailabilityChange={handleAvailabilityChange}
-                        />
+                {!category ? (
+                    <div className="flex-1 flex items-center justify-center">
+                        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
                     </div>
-                    <div className="md:col-span-2 flex flex-col overflow-hidden">
-                        <div className="p-6 pb-4 border-b shrink-0">
-                            <div className="relative">
-                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                                <Input
-                                    placeholder={`Search in ${category.name}...`}
-                                    value={searchQuery}
-                                    onChange={(e) => setSearchQuery(e.target.value)}
-                                    className="pl-10"
-                                />
+                ) : (
+                  <>
+                    <SheetHeader className="p-6 border-b shrink-0">
+                        <SheetTitle>Manage: {category.name} ({items.length} items)</SheetTitle>
+                        <SheetDescription>Drag to reorder, click a row to edit details, and toggle availability.</SheetDescription>
+                    </SheetHeader>
+                    <div className="grid grid-cols-1 md:grid-cols-3 flex-1 overflow-hidden">
+                        <div className="md:col-span-1 border-r bg-muted/30 overflow-y-auto">
+                            <ItemEditor 
+                                item={selectedItem}
+                                onUpdate={handleItemUpdate}
+                                onImageUpload={handleImageUpload}
+                                onAvailabilityChange={handleAvailabilityChange}
+                            />
+                        </div>
+                        <div className="md:col-span-2 flex flex-col overflow-hidden">
+                            <div className="p-6 pb-4 border-b shrink-0">
+                                <div className="relative">
+                                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                                    <Input
+                                        placeholder={`Search in ${category.name}...`}
+                                        value={searchQuery}
+                                        onChange={(e) => setSearchQuery(e.target.value)}
+                                        className="pl-10"
+                                    />
+                                </div>
+                            </div>
+                            <div className="flex-1 overflow-y-auto">
+                                <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+                                    <Table>
+                                        <TableHeader>
+                                            <TableRow>
+                                                <TableHead className="w-10"></TableHead>
+                                                <TableHead>Image</TableHead>
+                                                <TableHead>Details</TableHead>
+                                                <TableHead>Price</TableHead>
+                                                <TableHead>Available</TableHead>
+                                            </TableRow>
+                                        </TableHeader>
+                                        <SortableContext items={itemIds} strategy={verticalListSortingStrategy}>
+                                            <TableBody>
+                                                {filteredItems.map(item => (
+                                                    <SortableProductRow
+                                                        key={item.id}
+                                                        item={item}
+                                                        onAvailabilityChange={handleAvailabilityChange}
+                                                        onRowClick={handleRowClick}
+                                                        isSelected={selectedItem?.id === item.id}
+                                                    />
+                                                ))}
+                                            </TableBody>
+                                        </SortableContext>
+                                    </Table>
+                                    {filteredItems.length === 0 && (
+                                        <div className="text-center py-16 text-muted-foreground">
+                                            <p>No items found{searchQuery && ` for "${searchQuery}"`}.</p>
+                                        </div>
+                                    )}
+                                </DndContext>
                             </div>
                         </div>
-                        <div className="flex-1 overflow-y-auto">
-                            <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-                                <Table>
-                                    <TableHeader>
-                                        <TableRow>
-                                            <TableHead className="w-10"></TableHead>
-                                            <TableHead>Image</TableHead>
-                                            <TableHead>Details</TableHead>
-                                            <TableHead>Price</TableHead>
-                                            <TableHead>Available</TableHead>
-                                        </TableRow>
-                                    </TableHeader>
-                                    <SortableContext items={itemIds} strategy={verticalListSortingStrategy}>
-                                        <TableBody>
-                                            {filteredItems.map(item => (
-                                                <SortableProductRow
-                                                    key={item.id}
-                                                    item={item}
-                                                    onAvailabilityChange={handleAvailabilityChange}
-                                                    onRowClick={handleRowClick}
-                                                    isSelected={selectedItem?.id === item.id}
-                                                />
-                                            ))}
-                                        </TableBody>
-                                    </SortableContext>
-                                </Table>
-                                {filteredItems.length === 0 && (
-                                    <div className="text-center py-16 text-muted-foreground">
-                                        <p>No items found{searchQuery && ` for "${searchQuery}"`}.</p>
-                                    </div>
-                                )}
-                            </DndContext>
-                        </div>
                     </div>
-                </div>
-                <SheetFooter className="p-6 border-t shrink-0">
-                    <Button variant="outline" onClick={() => onOpenChange(false)}>Close</Button>
-                    <Button onClick={handleSaveChanges}>Save Changes</Button>
-                </SheetFooter>
+                    <SheetFooter className="p-6 border-t shrink-0">
+                        <Button variant="outline" onClick={() => onOpenChange(false)}>Close</Button>
+                        <Button onClick={handleSaveChanges}>Save Changes</Button>
+                    </SheetFooter>
+                  </>
+                )}
             </SheetContent>
         </Sheet>
     );
@@ -542,16 +538,16 @@ const AddSectionSheet = ({
 
     return (
         <Sheet open={isOpen} onOpenChange={onOpenChange}>
-            <SheetContent className="sm:max-w-[90vw] lg:sm:max-w-[80vw] w-full p-0 flex flex-col">
+            <SheetContent className="sm:max-w-[90vw] lg:max-w-5xl w-full p-0 flex flex-col">
                 <SheetHeader className="p-6 border-b shrink-0">
                     <SheetTitle>Add New Menu Section</SheetTitle>
                     <SheetDescription>Build a new category by selecting items from your library.</SheetDescription>
                 </SheetHeader>
                 <Form {...form}>
                     <form onSubmit={form.handleSubmit(onSubmit)} className="flex-1 flex flex-col overflow-hidden">
-                        <div className="grid grid-cols-1 md:grid-cols-3 flex-1 overflow-hidden relative">
+                        <div className="grid grid-cols-1 lg:grid-cols-3 flex-1 overflow-hidden relative">
                             {/* Settings Column */}
-                             <div className="md:col-span-1 flex flex-col overflow-hidden border-r">
+                             <div className="lg:col-span-1 flex flex-col overflow-hidden border-r">
                                 <ScrollArea className="flex-1">
                                     <div className="p-6 space-y-6">
                                         <FormField
@@ -559,7 +555,7 @@ const AddSectionSheet = ({
                                             name="name"
                                             render={({ field }) => (
                                                 <FormItem>
-                                                    <Label>Section Name</Label>
+                                                    <FormLabel>Section Name</FormLabel>
                                                     <Input placeholder="e.g., Summer Specials" {...field} />
                                                     <FormMessage />
                                                 </FormItem>
@@ -573,7 +569,7 @@ const AddSectionSheet = ({
                                                     <FormItem className="flex items-center justify-between rounded-lg border p-3">
                                                         <div className="space-y-0.5">
                                                             <FormLabel>Mark as Special</FormLabel>
-                                                            <p className="text-xs text-muted-foreground">Highlight this section.</p>
+                                                            <FormDescription className="text-xs">Highlight this section on the menu.</FormDescription>
                                                         </div>
                                                         <FormControl>
                                                             <Switch checked={field.value} onCheckedChange={field.onChange} />
@@ -594,7 +590,7 @@ const AddSectionSheet = ({
                                                         )}
                                                     />
                                                      <div className="space-y-2">
-                                                        <Label>Tag Icon</Label>
+                                                        <FormLabel>Tag Icon</FormLabel>
                                                          <div className="flex items-center gap-2">
                                                             <div className="w-10 h-10 rounded-md bg-background flex items-center justify-center border">
                                                                 <ImageIcon className="h-5 w-5 text-muted-foreground" />
@@ -612,7 +608,7 @@ const AddSectionSheet = ({
                                                     <FormItem className="flex items-center justify-between rounded-lg border p-3">
                                                         <div className="space-y-0.5">
                                                             <FormLabel>Enable Category Link</FormLabel>
-                                                             <p className="text-xs text-muted-foreground">Link to a URL instead of showing items.</p>
+                                                             <FormDescription className="text-xs">Link to a URL instead of showing items.</FormDescription>
                                                         </div>
                                                         <FormControl>
                                                             <Switch checked={field.value} onCheckedChange={field.onChange} />
@@ -641,7 +637,7 @@ const AddSectionSheet = ({
                              </div>
 
                              {form.watch('enableCategoryLink') && (
-                                <div className="absolute inset-0 md:left-1/3 bg-background/80 backdrop-blur-sm z-10 flex items-center justify-center">
+                                <div className="absolute inset-0 lg:left-1/3 bg-background/80 backdrop-blur-sm z-10 flex items-center justify-center">
                                     <div className="text-center p-4">
                                         <p className="font-semibold">Item selection is disabled.</p>
                                         <p className="text-sm text-muted-foreground">This section is configured as an external link.</p>
@@ -650,9 +646,9 @@ const AddSectionSheet = ({
                             )}
 
                             {/* Item Selection & Editor Columns */}
-                            <div className="md:col-span-2 grid grid-cols-1 lg:grid-cols-2 flex-1 overflow-hidden">
+                            <div className="lg:col-span-2 grid grid-cols-1 md:grid-cols-3 flex-1 overflow-hidden">
                                 {/* Available Items */}
-                                <div className="lg:col-span-1 flex flex-col overflow-hidden border-r">
+                                <div className="md:col-span-1 flex flex-col overflow-hidden border-r">
                                     <div className="p-4 border-b">
                                         <div className="relative">
                                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -677,10 +673,10 @@ const AddSectionSheet = ({
                                     </ScrollArea>
                                 </div>
                                 {/* Added Items List */}
-                                <div className="lg:col-span-1 flex flex-col overflow-hidden">
+                                <div className="md:col-span-1 flex flex-col overflow-hidden border-r">
                                     <div className="p-4 border-b shrink-0">
                                         <h3 className="font-semibold text-lg">{form.watch('name') || 'New Section'} ({addedProducts.length} items)</h3>
-                                        <p className="text-sm text-muted-foreground">Drag to reorder.</p>
+                                        <p className="text-sm text-muted-foreground">Drag to reorder. Click to edit.</p>
                                     </div>
                                     <ScrollArea className="flex-1">
                                          <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
@@ -711,6 +707,52 @@ const AddSectionSheet = ({
                                             </SortableContext>
                                          </DndContext>
                                     </ScrollArea>
+                                </div>
+                                {/* Item Editor */}
+                                 <div className="md:col-span-1 bg-muted/30 overflow-y-auto">
+                                    <div className="p-4 border-b shrink-0">
+                                        <h3 className="font-semibold text-lg">Item Editor</h3>
+                                    </div>
+                                    {editingProduct ? (
+                                        <div className="p-4 space-y-4">
+                                            <div>
+                                                <Label>Product Image</Label>
+                                                <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={(e) => handleImageUpload(editingProduct.id, e)} />
+                                                <div className="mt-2 w-full aspect-video rounded-md bg-background flex items-center justify-center border overflow-hidden cursor-pointer" onClick={() => fileInputRef.current?.click()}>
+                                                    {editingProduct.image ? (
+                                                        <Image src={editingProduct.image} alt={editingProduct.name} width={240} height={135} className="object-cover w-full h-full" />
+                                                    ) : (
+                                                        <div className="text-center text-muted-foreground">
+                                                            <ImageIcon className="h-8 w-8 mx-auto mb-2" />
+                                                            <p className="text-xs">Click to upload</p>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </div>
+                                            <div>
+                                                <Label htmlFor="itemName">Product Name</Label>
+                                                <Input id="itemName" value={editingProduct.name} onChange={(e) => handleEditorChange('name', e.target.value)} className="font-bold text-base" />
+                                            </div>
+                                            <div>
+                                                <Label htmlFor="itemDescription">Description</Label>
+                                                <Textarea id="itemDescription" value={editingProduct.description} onChange={(e) => handleEditorChange('description', e.target.value)} placeholder="Short description..." rows={3}/>
+                                            </div>
+                                            <div>
+                                                <Label htmlFor="itemPrice">Price (AED)</Label>
+                                                <Input id="itemPrice" type="number" value={editingProduct.price} onChange={(e) => handleEditorChange('price', parseFloat(e.target.value) || 0)}/>
+                                            </div>
+                                            <div className="flex items-center justify-between rounded-lg border p-3 bg-background">
+                                                <Label htmlFor="itemAvailability" className="font-medium">Available</Label>
+                                                <Switch id="itemAvailability" checked={editingProduct.available ?? true} onCheckedChange={handleAvailabilityChange} />
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground p-8">
+                                            <Edit className="h-12 w-12 mb-4" />
+                                            <h3 className="font-semibold">Select an Item</h3>
+                                            <p className="text-sm">Click on an item from the center list to edit its details here.</p>
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                         </div>
@@ -1201,3 +1243,5 @@ export default function MenuBuilderPage() {
 
   return <MenuBuilderMainPage onClose={handleClose} />;
 }
+
+    
