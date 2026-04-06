@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { EMenuIcon } from '@/components/dashboard/app-sidebar';
-import { List, LayoutGrid, X, Plus, Palette, Database, CheckCircle2, Loader2, GripVertical, Home, Receipt, ArrowLeft, Search, Flame, ShoppingCart, ImageIcon, Edit, ChevronDown, Wand, RefreshCw, Lock } from 'lucide-react';
+import { List, LayoutGrid, X, Plus, Palette, Database, CheckCircle2, Loader2, GripVertical, Home, Receipt, ArrowLeft, Search, Flame, ShoppingCart, ImageIcon, Edit, ChevronDown, Wand, RefreshCw, Lock, MoreHorizontal } from 'lucide-react';
 import Image from 'next/image';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
@@ -32,9 +32,15 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+} from '@/components/ui/dropdown-menu';
 
-
-const TemplateCard = ({ name, imageHint, isLocked, status }: { name: string; imageHint: string; isLocked?: boolean; status?: 'Draft' | 'Published' | 'Online' }) => {
+const TemplateCard = ({ name, imageHint, isLocked, status, onDelete }: { name: string; imageHint: string; isLocked?: boolean; status?: 'Draft' | 'Published' | 'Online', onDelete?: () => void; }) => {
   const image = PlaceHolderImages.find(img => img.imageHint === imageHint);
   return (
     <Card className={cn("overflow-hidden shadow-sm transition-shadow group", isLocked ? "cursor-not-allowed" : "hover:shadow-lg cursor-pointer")}>
@@ -55,7 +61,21 @@ const TemplateCard = ({ name, imageHint, isLocked, status }: { name: string; ima
               {status}
             </Badge>
           )}
-          {isLocked && <Lock className="h-3 w-3 text-muted-foreground" />}
+          {isLocked ? <Lock className="h-3 w-3 text-muted-foreground" /> : (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-6 w-6">
+                  <MoreHorizontal className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem>Set as Draft</DropdownMenuItem>
+                <DropdownMenuItem>Deactivate</DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem className="text-destructive" onClick={onDelete}>Delete</DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
         </div>
       </CardHeader>
       <CardContent className="p-3">
@@ -832,6 +852,15 @@ const MenuBuilderMainPage = ({ onClose }: { onClose: () => void }) => {
     });
   };
 
+  const handleDeleteMenu = (indexToDelete: number) => {
+    setUserMenus(menus => menus.filter((_, index) => index !== indexToDelete));
+    toast({
+      title: "Menu Deleted",
+      description: "The menu has been removed.",
+      variant: "destructive",
+    });
+  };
+
   const totalItemsInCart = useMemo(() => {
     return Object.values(previewCart).reduce((sum, quantity) => sum + quantity, 0);
   }, [previewCart]);
@@ -1019,7 +1048,15 @@ const MenuBuilderMainPage = ({ onClose }: { onClose: () => void }) => {
                         </Card>
                     ) : (
                         <>
-                            {userMenus.map(m => <TemplateCard key={m.name} name={m.name} imageHint={m.imageHint} status={m.status} />)}
+                            {userMenus.map((m, index) => (
+                                <TemplateCard 
+                                    key={m.name} 
+                                    name={m.name} 
+                                    imageHint={m.imageHint} 
+                                    status={m.status} 
+                                    onDelete={() => handleDeleteMenu(index)}
+                                />
+                            ))}
                              <Card 
                                 className="border-2 border-dashed bg-muted/50 hover:border-primary hover:bg-primary/5 transition-all flex items-center justify-center min-h-[200px] cursor-pointer" 
                                 onClick={() => setIsAddMenuModalOpen(true)}
