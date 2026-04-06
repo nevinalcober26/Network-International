@@ -239,14 +239,14 @@ const CategoryItemsSheet = ({ category, isOpen, onOpenChange, onSave }: any) => 
     const { toast } = useToast();
     
     useEffect(() => {
-        if (isOpen) {
-          if (category) {
-            setItems(category.items.map((item: any) => ({ ...item, available: item.available ?? true })));
-          }
+        if (category && isOpen) {
+          setItems(category.items.map((item: any) => ({ ...item, available: item.available ?? true })));
+        }
+        if (!isOpen) {
           setSearchQuery('');
           setSelectedItem(null);
         }
-      }, [category, isOpen]);
+    }, [category, isOpen]);
     
     const filteredItems = useMemo(() => {
         if (!searchQuery) {
@@ -325,7 +325,7 @@ const CategoryItemsSheet = ({ category, isOpen, onOpenChange, onSave }: any) => 
                     <>
                         <SheetHeader className="p-6 border-b shrink-0">
                             <SheetTitle>Manage: {category.name}</SheetTitle>
-                            <SheetDescription>Drag to reorder, select to edit, and toggle availability.</SheetDescription>
+                            <SheetDescription>Manage the {items.length} items in this category. Drag to reorder, select to edit, and toggle availability.</SheetDescription>
                         </SheetHeader>
                         <div className="grid grid-cols-1 md:grid-cols-3 flex-1 overflow-hidden">
                             <div className="md:col-span-1 border-r bg-muted/30 overflow-y-auto">
@@ -817,3 +817,5 @@ export default function MenuBuilderPage() {
 
   return <MenuBuilderMainPage onClose={handleClose} />;
 }
+
+    
