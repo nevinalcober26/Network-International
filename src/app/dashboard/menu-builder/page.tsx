@@ -246,18 +246,6 @@ const SortableProductRow = ({ item, onAvailabilityChange, onRowClick, isSelected
 };
 
 const CategoryItemsSheet = ({ category, isOpen, onOpenChange, onSave }: any) => {
-    if (!category) {
-        return (
-            <Sheet open={isOpen} onOpenChange={onOpenChange}>
-                <SheetContent className="sm:max-w-6xl w-full p-0 flex flex-col">
-                    <div className="flex-1 flex items-center justify-center">
-                        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-                    </div>
-                </SheetContent>
-            </Sheet>
-        );
-    }
-    
     const [items, setItems] = useState<MenuItem[]>([]);
     const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null);
     const [searchQuery, setSearchQuery] = useState('');
@@ -355,6 +343,18 @@ const CategoryItemsSheet = ({ category, isOpen, onOpenChange, onSave }: any) => 
         setSelectedItem(item);
     };
 
+    if (!category) {
+        return (
+            <Sheet open={isOpen} onOpenChange={onOpenChange}>
+                <SheetContent className="sm:max-w-6xl w-full p-0 flex flex-col">
+                    <div className="flex-1 flex items-center justify-center">
+                        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+                    </div>
+                </SheetContent>
+            </Sheet>
+        );
+    }
+
     return (
         <Sheet open={isOpen} onOpenChange={onOpenChange}>
             <SheetContent className="sm:max-w-6xl w-full p-0 flex flex-col">
@@ -429,6 +429,11 @@ const CategoryItemsSheet = ({ category, isOpen, onOpenChange, onSave }: any) => 
 
 const addSectionSchema = z.object({
     name: z.string().min(1, 'Section name is required'),
+    enableSpecial: z.boolean().default(false),
+    specialTagName: z.string().optional(),
+    specialTagIcon: z.string().optional(),
+    enableCategoryLink: z.boolean().default(false),
+    externalLink: z.string().url().optional().or(z.literal('')),
 });
 type AddSectionFormValues = z.infer<typeof addSectionSchema>;
 
@@ -441,7 +446,7 @@ const AddSectionSheet = ({
 }: {
     isOpen: boolean;
     onOpenChange: (open: boolean) => void;
-    onAddSection: (name: string, productIds: string[]) => void;
+    onAddSection: (data: AddSectionFormValues, productIds: string[]) => void;
     allProducts: MenuItem[];
     onProductUpdate: (product: MenuItem) => void;
 }) => {
@@ -453,7 +458,14 @@ const AddSectionSheet = ({
 
     const form = useForm<AddSectionFormValues>({
         resolver: zodResolver(addSectionSchema),
-        defaultValues: { name: '' },
+        defaultValues: { 
+            name: '',
+            enableSpecial: false,
+            specialTagName: '',
+            specialTagIcon: '',
+            enableCategoryLink: false,
+            externalLink: ''
+        },
     });
 
     useEffect(() => {
@@ -524,7 +536,7 @@ const AddSectionSheet = ({
     };
 
     const onSubmit = (data: AddSectionFormValues) => {
-        onAddSection(data.name, addedProducts.map(p => p.id));
+        onAddSection(data, addedProducts.map(p => p.id));
         onOpenChange(false);
     };
 
@@ -537,51 +549,135 @@ const AddSectionSheet = ({
                 </SheetHeader>
                 <Form {...form}>
                     <form onSubmit={form.handleSubmit(onSubmit)} className="flex-1 flex flex-col overflow-hidden">
-                        <div className="p-6 border-b">
-                            <FormField
-                                control={form.control}
-                                name="name"
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <Label>Section Name</Label>
-                                        <Input placeholder="e.g., Summer Specials" {...field} />
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
-                            />
-                        </div>
-
-                        <div className="grid grid-cols-1 md:grid-cols-3 flex-1 overflow-hidden">
-                            {/* Available Items */}
-                            <div className="md:col-span-1 flex flex-col overflow-hidden border-r">
-                                <div className="p-4 border-b">
-                                    <div className="relative">
-                                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                                        <Input placeholder="Search all products..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="pl-10" />
-                                    </div>
-                                </div>
+                        <div className="grid grid-cols-1 md:grid-cols-3 flex-1 overflow-hidden relative">
+                            {/* Settings Column */}
+                             <div className="md:col-span-1 flex flex-col overflow-hidden border-r">
                                 <ScrollArea className="flex-1">
-                                    <div className="p-2 space-y-1">
-                                        {availableProducts.map(product => (
-                                            <div key={product.id} className="flex items-center gap-2 p-2 rounded-md hover:bg-muted">
-                                                <Image src={product.image} alt={product.name} width={40} height={40} className="rounded object-cover" />
-                                                <div className="flex-1">
-                                                    <p className="text-sm font-semibold line-clamp-1">{product.name}</p>
-                                                    <p className="text-xs text-muted-foreground">AED {product.price.toFixed(2)}</p>
+                                    <div className="p-6 space-y-6">
+                                        <FormField
+                                            control={form.control}
+                                            name="name"
+                                            render={({ field }) => (
+                                                <FormItem>
+                                                    <Label>Section Name</Label>
+                                                    <Input placeholder="e.g., Summer Specials" {...field} />
+                                                    <FormMessage />
+                                                </FormItem>
+                                            )}
+                                        />
+                                        <div className="space-y-4 pt-6">
+                                            <FormField
+                                                control={form.control}
+                                                name="enableSpecial"
+                                                render={({ field }) => (
+                                                    <FormItem className="flex items-center justify-between rounded-lg border p-3">
+                                                        <div className="space-y-0.5">
+                                                            <FormLabel>Mark as Special</FormLabel>
+                                                            <p className="text-xs text-muted-foreground">Highlight this section.</p>
+                                                        </div>
+                                                        <FormControl>
+                                                            <Switch checked={field.value} onCheckedChange={field.onChange} />
+                                                        </FormControl>
+                                                    </FormItem>
+                                                )}
+                                            />
+                                            {form.watch('enableSpecial') && (
+                                                <div className="space-y-4 p-4 border rounded-lg ml-4 bg-muted/30">
+                                                     <FormField
+                                                        control={form.control}
+                                                        name="specialTagName"
+                                                        render={({ field }) => (
+                                                            <FormItem>
+                                                                <FormLabel>Tag Name</FormLabel>
+                                                                <Input placeholder="e.g., Hot, New" {...field} />
+                                                            </FormItem>
+                                                        )}
+                                                    />
+                                                     <div className="space-y-2">
+                                                        <Label>Tag Icon</Label>
+                                                         <div className="flex items-center gap-2">
+                                                            <div className="w-10 h-10 rounded-md bg-background flex items-center justify-center border">
+                                                                <ImageIcon className="h-5 w-5 text-muted-foreground" />
+                                                            </div>
+                                                            <Button type="button" variant="outline" size="sm">Upload</Button>
+                                                        </div>
+                                                     </div>
                                                 </div>
-                                                <Button type="button" size="icon" variant="ghost" className="h-8 w-8 text-primary" onClick={() => handleAddProduct(product)}>
-                                                    <Plus className="h-4 w-4" />
-                                                </Button>
-                                            </div>
-                                        ))}
+                                            )}
+
+                                            <FormField
+                                                control={form.control}
+                                                name="enableCategoryLink"
+                                                render={({ field }) => (
+                                                    <FormItem className="flex items-center justify-between rounded-lg border p-3">
+                                                        <div className="space-y-0.5">
+                                                            <FormLabel>Enable Category Link</FormLabel>
+                                                             <p className="text-xs text-muted-foreground">Link to a URL instead of showing items.</p>
+                                                        </div>
+                                                        <FormControl>
+                                                            <Switch checked={field.value} onCheckedChange={field.onChange} />
+                                                        </FormControl>
+                                                    </FormItem>
+                                                )}
+                                            />
+                                            {form.watch('enableCategoryLink') && (
+                                                <div className="space-y-4 p-4 border rounded-lg ml-4 bg-muted/30">
+                                                     <FormField
+                                                        control={form.control}
+                                                        name="externalLink"
+                                                        render={({ field }) => (
+                                                            <FormItem>
+                                                                <FormLabel>External URL</FormLabel>
+                                                                <Input placeholder="https://example.com" {...field} />
+                                                                 <FormMessage />
+                                                            </FormItem>
+                                                        )}
+                                                    />
+                                                </div>
+                                            )}
+                                        </div>
                                     </div>
                                 </ScrollArea>
-                            </div>
+                             </div>
 
-                            {/* Added Items & Editor */}
+                             {form.watch('enableCategoryLink') && (
+                                <div className="absolute inset-0 md:left-1/3 bg-background/80 backdrop-blur-sm z-10 flex items-center justify-center">
+                                    <div className="text-center p-4">
+                                        <p className="font-semibold">Item selection is disabled.</p>
+                                        <p className="text-sm text-muted-foreground">This section is configured as an external link.</p>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Item Selection & Editor Columns */}
                             <div className="md:col-span-2 grid grid-cols-1 lg:grid-cols-2 flex-1 overflow-hidden">
-                                {/* Added Items List */}
+                                {/* Available Items */}
                                 <div className="lg:col-span-1 flex flex-col overflow-hidden border-r">
+                                    <div className="p-4 border-b">
+                                        <div className="relative">
+                                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                                            <Input placeholder="Search all products..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="pl-10" />
+                                        </div>
+                                    </div>
+                                    <ScrollArea className="flex-1">
+                                        <div className="p-2 space-y-1">
+                                            {availableProducts.map(product => (
+                                                <div key={product.id} className="flex items-center gap-2 p-2 rounded-md hover:bg-muted">
+                                                    <Image src={product.image!} alt={product.name} width={40} height={40} className="rounded object-cover" />
+                                                    <div className="flex-1">
+                                                        <p className="text-sm font-semibold line-clamp-1">{product.name}</p>
+                                                        <p className="text-xs text-muted-foreground">AED {product.price.toFixed(2)}</p>
+                                                    </div>
+                                                    <Button type="button" size="icon" variant="ghost" className="h-8 w-8 text-primary" onClick={() => handleAddProduct(product)}>
+                                                        <Plus className="h-4 w-4" />
+                                                    </Button>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </ScrollArea>
+                                </div>
+                                {/* Added Items List */}
+                                <div className="lg:col-span-1 flex flex-col overflow-hidden">
                                     <div className="p-4 border-b shrink-0">
                                         <h3 className="font-semibold text-lg">{form.watch('name') || 'New Section'} ({addedProducts.length} items)</h3>
                                         <p className="text-sm text-muted-foreground">Drag to reorder.</p>
@@ -615,45 +711,6 @@ const AddSectionSheet = ({
                                             </SortableContext>
                                          </DndContext>
                                     </ScrollArea>
-                                </div>
-                                {/* Editor */}
-                                <div className="lg:col-span-1 bg-muted/30 overflow-y-auto">
-                                    {editingProduct ? (
-                                        <div className="p-6 space-y-6">
-                                            <h3 className="font-semibold text-lg">Edit Item</h3>
-                                            <div>
-                                                <Label>Product Image</Label>
-                                                <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={(e) => handleImageUpload(editingProduct.id, e)} />
-                                                <div className="mt-2 w-full aspect-video rounded-md bg-background flex items-center justify-center border overflow-hidden cursor-pointer" onClick={() => fileInputRef.current?.click()}>
-                                                    {editingProduct.image ? (
-                                                        <Image src={editingProduct.image} alt={editingProduct.name} width={240} height={135} className="object-cover w-full h-full" />
-                                                    ) : <ImageIcon className="h-8 w-8 text-muted-foreground" />}
-                                                </div>
-                                            </div>
-                                            <div>
-                                                <Label>Product Name</Label>
-                                                <Input value={editingProduct.name} onChange={(e) => handleEditorChange('name', e.target.value)} />
-                                            </div>
-                                            <div>
-                                                <Label>Description</Label>
-                                                <Textarea value={editingProduct.description} onChange={(e) => handleEditorChange('description', e.target.value)} rows={4} />
-                                            </div>
-                                            <div>
-                                                <Label>Price (AED)</Label>
-                                                <Input type="number" value={editingProduct.price} onChange={(e) => handleEditorChange('price', parseFloat(e.target.value) || 0)} />
-                                            </div>
-                                            <div className="flex items-center justify-between rounded-lg border p-4 bg-background">
-                                                <Label className="font-medium">Available</Label>
-                                                <Switch checked={editingProduct.available} onCheckedChange={handleAvailabilityChange} />
-                                            </div>
-                                        </div>
-                                    ) : (
-                                         <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground p-8">
-                                            <Edit className="h-12 w-12 mb-4" />
-                                            <h3 className="font-semibold">Select an Item</h3>
-                                            <p className="text-sm">Click an item from the 'Added' list to edit its details.</p>
-                                        </div>
-                                    )}
                                 </div>
                             </div>
                         </div>
@@ -806,16 +863,17 @@ const MenuBuilderMainPage = ({ onClose }: { onClose: () => void }) => {
     })));
   };
 
-  const handleAddNewSection = (name: string, productIds: string[]) => {
+  const handleAddNewSection = (data: AddSectionFormValues, productIds: string[]) => {
     const newSection = {
         id: `section_${Date.now()}`,
-        name: name,
+        name: data.name,
         items: menuItems.filter(item => productIds.includes(item.id)),
+        ...data,
     };
     setMenuSections(prev => [...prev, newSection]);
     toast({
       title: "Section Added",
-      description: `"${name}" has been added to your menu.`,
+      description: `"${data.name}" has been added to your menu.`,
     });
   };
 
