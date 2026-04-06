@@ -31,7 +31,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 
 
 const TemplateCard = ({ name, imageHint }: { name: string; imageHint: string }) => {
@@ -220,8 +220,16 @@ const SortableProductRow = ({ item, onAvailabilityChange, onRowClick, isSelected
                 </div>
             </TableCell>
             <TableCell className="font-medium align-top py-4">
-                <p className="font-bold text-base">{item.name}</p>
-                <p className="mt-1 text-xs text-muted-foreground line-clamp-2">{item.description}</p>
+                 <Input
+                    value={item.name}
+                    readOnly
+                    className="font-bold text-base bg-transparent border-none shadow-none p-0 h-auto"
+                />
+                <Textarea
+                    value={item.description}
+                    readOnly
+                    className="mt-1 text-xs text-muted-foreground line-clamp-2 bg-transparent border-none shadow-none p-0 h-auto resize-none"
+                />
             </TableCell>
             <TableCell className="align-top py-4 font-mono font-semibold">
                 AED {item.price.toFixed(2)}
@@ -238,6 +246,7 @@ const SortableProductRow = ({ item, onAvailabilityChange, onRowClick, isSelected
 };
 
 const CategoryItemsSheet = ({ category, isOpen, onOpenChange, onSave }: any) => {
+    
     const [items, setItems] = useState<MenuItem[]>([]);
     const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null);
     const [searchQuery, setSearchQuery] = useState('');
@@ -247,13 +256,15 @@ const CategoryItemsSheet = ({ category, isOpen, onOpenChange, onSave }: any) => 
     useEffect(() => {
         if (category && isOpen) {
           setItems(category.items.map((item: any) => ({ ...item, available: item.available ?? true })));
-        }
-        if (!isOpen) {
-          setSearchQuery('');
           setSelectedItem(null);
+          setSearchQuery('');
         }
     }, [category, isOpen]);
-
+    
+    if (!isOpen) {
+        return null;
+    }
+    
     const filteredItems = useMemo(() => {
         if (!searchQuery) return items;
         return items.filter(item =>
@@ -263,16 +274,35 @@ const CategoryItemsSheet = ({ category, isOpen, onOpenChange, onSave }: any) => 
     }, [items, searchQuery]);
     
     const itemIds = useMemo(() => filteredItems.map(i => i.id), [filteredItems]);
-
+    
     const handleDragEnd = (event: DragEndEvent) => {
         const { active, over } = event;
         if (over && active.id !== over.id) {
-            setItems((currentItems) => {
-                const oldIndex = currentItems.findIndex((item) => item.id === active.id);
-                const newIndex = currentItems.findIndex((item) => item.id === over.id);
-                if (oldIndex === -1 || newIndex === -1) return currentItems;
-                return arrayMove(currentItems, oldIndex, newIndex);
+            const oldIndexInFiltered = filteredItems.findIndex(item => item.id === active.id);
+            const newIndexInFiltered = filteredItems.findIndex(item => item.id === over.id);
+
+            if (oldIndexInFiltered === -1 || newIndexInFiltered === -1) return;
+
+            const newOrderedFilteredItems = arrayMove(filteredItems, oldIndexInFiltered, newIndexInFiltered);
+            
+            // Reconstruct the full items array based on the new order of filtered items
+            const newFullItemsOrder = [...items];
+            let lastFoundIndex = -1;
+
+            newOrderedFilteredItems.forEach(filteredItem => {
+                const currentIndexInFull = newFullItemsOrder.findIndex(item => item.id === filteredItem.id);
+                if (currentIndexInFull > lastFoundIndex) {
+                    // This item is already in a correct relative position
+                    lastFoundIndex = currentIndexInFull;
+                } else {
+                    // Move this item to be after the last placed item
+                    const [itemToMove] = newFullItemsOrder.splice(currentIndexInFull, 1);
+                    newFullItemsOrder.splice(lastFoundIndex + 1, 0, itemToMove);
+                    lastFoundIndex++;
+                }
             });
+
+            setItems(newFullItemsOrder);
         }
     };
 
@@ -318,10 +348,6 @@ const CategoryItemsSheet = ({ category, isOpen, onOpenChange, onSave }: any) => 
         setSelectedItem(item);
     };
 
-    if (!isOpen) {
-        return null;
-    }
-    
     return (
         <Sheet open={isOpen} onOpenChange={onOpenChange}>
             <SheetContent className="sm:max-w-6xl w-full p-0 flex flex-col">
@@ -332,8 +358,8 @@ const CategoryItemsSheet = ({ category, isOpen, onOpenChange, onSave }: any) => 
                     ) : (
                         <>
                             <SheetHeader className="p-6 border-b shrink-0">
-                                <SheetTitle>Manage: {category.name}</SheetTitle>
-                                <SheetDescription>Manage the {items.length} items in this category. Drag to reorder, select to edit, and toggle availability.</SheetDescription>
+                                <SheetTitle>Manage: {category.name} ({items.length} items)</SheetTitle>
+                                <SheetDescription>Drag to reorder, click a row to edit details, and toggle availability.</SheetDescription>
                             </SheetHeader>
                             <div className="grid grid-cols-1 md:grid-cols-3 flex-1 overflow-hidden">
                                 <div className="md:col-span-1 border-r bg-muted/30 overflow-y-auto">
@@ -392,7 +418,7 @@ const CategoryItemsSheet = ({ category, isOpen, onOpenChange, onSave }: any) => 
                                 </div>
                             </div>
                             <SheetFooter className="p-6 border-t shrink-0">
-                                <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
+                                <Button variant="outline" onClick={() => onOpenChange(false)}>Close</Button>
                                 <Button onClick={handleSaveChanges}>Save Changes</Button>
                             </SheetFooter>
                         </>
@@ -730,9 +756,6 @@ const MenuBuilderMainPage = ({ onClose }: { onClose: () => void }) => {
   };
 
   const handleSaveCategoryItems = (categoryId: string, updatedItems: MenuItem[]) => {
-    const allItemIds = new Set(menuItems.map(i => i.id));
-    const currentCategoryItemIds = new Set(updatedItems.map(i => i.id));
-  
     // Update items within the specific category
     setMenuSections(prevSections =>
       prevSections.map(section =>
@@ -740,11 +763,16 @@ const MenuBuilderMainPage = ({ onClose }: { onClose: () => void }) => {
       )
     );
   
-    // Rebuild the master list of all menu items to reflect changes
-    setMenuItems(prevAllItems => {
-      const otherItems = prevAllItems.filter(item => !currentCategoryItemIds.has(item.id));
-      return [...otherItems, ...updatedItems];
-    });
+    // Rebuild the master list of all menu items to reflect changes from all sections
+    const allUpdatedItems = menuSections.reduce((acc, section) => {
+        if (section.id === categoryId) {
+            return acc.concat(updatedItems);
+        }
+        return acc.concat(section.items);
+    }, [] as MenuItem[]);
+
+    const uniqueItems = Array.from(new Map(allUpdatedItems.map(item => [item.id, item])).values());
+    setMenuItems(uniqueItems);
   };
   
   const handleProductAvailabilityChange = (itemId: string, available: boolean) => {
@@ -804,7 +832,7 @@ const MenuBuilderMainPage = ({ onClose }: { onClose: () => void }) => {
 
             <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mt-8 mb-2 px-3">CUSTOMIZATION</p>
             <Button variant="ghost" className="w-full justify-start font-semibold text-base">
-              <LayoutGrid className="mr-3 h-5 w-5" /> Brand Management
+              <Palette className="mr-3 h-5 w-5" /> Brand Management
             </Button>
           </div>
 
