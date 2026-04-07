@@ -46,11 +46,11 @@ const TemplateCard = ({ name, imageHint, isLocked, status, onDelete }: { name: s
     <Card className={cn("overflow-hidden shadow-sm transition-shadow group", isLocked ? "cursor-not-allowed" : "hover:shadow-lg cursor-pointer")}>
       <CardHeader className="p-3 border-b flex-row justify-between items-center">
         <p className="text-xs font-semibold flex items-center gap-1.5">
-          <span className={cn(
+          {isLocked ? <Lock className="h-3 w-3 text-muted-foreground mr-1" /> : <span className={cn(
             "h-2 w-2 rounded-full",
             !isLocked && "group-hover:bg-primary transition-colors",
             status === 'Published' || status === 'Online' ? 'bg-green-500' : 'bg-gray-300'
-          )} />
+          )} />}
           {name}
         </p>
         <div className="flex items-center gap-2">
@@ -61,7 +61,7 @@ const TemplateCard = ({ name, imageHint, isLocked, status, onDelete }: { name: s
               {status}
             </Badge>
           )}
-          {isLocked ? <Lock className="h-3 w-3 text-muted-foreground" /> : (
+          {isLocked ? null : (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="icon" className="h-6 w-6">
@@ -856,12 +856,35 @@ const MenuBuilderMainPage = ({ onClose }: { onClose: () => void }) => {
     });
   };
 
+  const handleImportFromPos = () => {
+    setIsAddMenuModalOpen(false);
+    setPosFlowStep('select');
+  };
+
+  const startSyncProcess = () => {
+    setPosFlowStep('sync');
+    setIsSyncComplete(false);
+    setSyncProgress(0);
+    
+    let progress = 0;
+    const interval = setInterval(() => {
+      progress += Math.floor(Math.random() * 10) + 5;
+      if (progress >= 100) {
+        setSyncProgress(100);
+        clearInterval(interval);
+        setTimeout(() => setIsSyncComplete(true), 500);
+      } else {
+        setSyncProgress(progress);
+      }
+    }, 300);
+  };
+
   const handleStartCustomization = () => {
     const providerName = SUPPORTED_POS.find(p => p.id === selectedPos)?.name || 'Imported Menu';
     setImportedMenuName(`${providerName} Menu`);
     setPosFlowStep('customize');
   };
-
+  
   const handleSaveImportedMenu = (status: 'Published' | 'Draft') => {
     const newName = importedMenuName.trim();
     if (!newName) {
@@ -941,28 +964,6 @@ const MenuBuilderMainPage = ({ onClose }: { onClose: () => void }) => {
     });
   };
 
-  const handleImportFromPos = () => {
-    setIsAddMenuModalOpen(false);
-    setPosFlowStep('select');
-  };
-
-  const startSyncProcess = () => {
-    setPosFlowStep('sync');
-    setIsSyncComplete(false);
-    setSyncProgress(0);
-    
-    let progress = 0;
-    const interval = setInterval(() => {
-      progress += Math.floor(Math.random() * 10) + 5;
-      if (progress >= 100) {
-        setSyncProgress(100);
-        clearInterval(interval);
-        setTimeout(() => setIsSyncComplete(true), 500);
-      } else {
-        setSyncProgress(progress);
-      }
-    }, 300);
-  };
   
   function handleDragEnd(event: DragEndEvent) {
     const { active, over } = event;
@@ -1133,7 +1134,7 @@ const MenuBuilderMainPage = ({ onClose }: { onClose: () => void }) => {
               </CardContent>
             </Card>
 
-            <Card className="hover:shadow-lg hover:border-primary transition-all cursor-pointer" onClick={() => handleAddMenu('pos')}>
+            <Card className="hover:shadow-lg hover:border-primary transition-all cursor-pointer" onClick={handleImportFromPos}>
               <CardHeader className="flex-row items-center gap-4 space-y-0 pb-4">
                 <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
                   <Database className="h-6 w-6 text-primary" />
@@ -1204,7 +1205,13 @@ const MenuBuilderMainPage = ({ onClose }: { onClose: () => void }) => {
       {/* Customize Full-Screen Modal */}
       <Dialog open={posFlowStep === 'customize'} onOpenChange={() => setPosFlowStep('')}>
           <DialogContent className="max-w-full w-screen h-screen m-0 p-0 rounded-none border-none flex flex-col">
-              <DialogHeader className="p-4 border-b flex-row items-center justify-between space-y-0">
+              <DialogHeader className="sr-only">
+                <DialogTitle>Customize Imported Menu</DialogTitle>
+                <DialogDescription>
+                  Here you can reorder menu sections and customize items imported from your Point-of-Sale system.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="p-4 border-b flex-row items-center justify-between space-y-0 flex">
                   <Input
                     value={importedMenuName}
                     onChange={(e) => setImportedMenuName(e.target.value)}
@@ -1215,7 +1222,7 @@ const MenuBuilderMainPage = ({ onClose }: { onClose: () => void }) => {
                       <Button variant="outline" onClick={() => handleSaveImportedMenu('Draft')}>Save Draft</Button>
                       <Button onClick={() => handleSaveImportedMenu('Published')}>Save & Close</Button>
                   </div>
-              </DialogHeader>
+              </div>
               <div className="flex-1 grid grid-cols-3 overflow-hidden">
                   <div className="col-span-1 p-6 overflow-y-auto border-r">
                       <h2 className="text-xl font-bold mb-4">Menu Structure</h2>
