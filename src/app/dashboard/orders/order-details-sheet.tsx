@@ -46,6 +46,7 @@ import {
   X,
   Split,
   Banknote,
+  Pencil,
 } from 'lucide-react';
 import type { Order, Payment } from './types';
 import { getStatusBadgeVariant } from './utils';
@@ -73,7 +74,11 @@ export function OrderDetailsSheet({
   const [isSplitDialogOpen, setIsSplitDialogOpen] = useState(false);
   const [localOrder, setLocalOrder] = useState<Order | null>(order);
   const [settlingPayment, setSettlingPayment] = useState<Payment | null>(null);
-  const [settlementData, setSettlementData] = useState<{ tip: string; note: string }>({ tip: '', note: '' });
+  
+  const [selectedSettleTip, setSelectedSettleTip] = useState<number | 'custom' | null>(null);
+  const [customTipValue, setCustomTipValue] = useState('');
+  const [settlementNote, setSettlementNote] = useState('');
+
 
   const { toast } = useToast();
 
@@ -101,14 +106,21 @@ export function OrderDetailsSheet({
   };
   
   const handleOpenSettleDialog = (payment: Payment) => {
-    setSettlementData({ tip: '', note: '' });
     setSettlingPayment(payment);
+    setSelectedSettleTip(null);
+    setCustomTipValue('');
+    setSettlementNote('');
   };
 
   const handleConfirmSettle = (method: 'Card' | 'Cash') => {
     if (!settlingPayment || !localOrder) return;
 
-    const tipAmount = parseFloat(settlementData.tip) || 0;
+    let tipAmount = 0;
+    if (selectedSettleTip === 'custom') {
+        tipAmount = parseFloat(customTipValue) || 0;
+    } else if (typeof selectedSettleTip === 'number') {
+        tipAmount = selectedSettleTip;
+    }
 
     const updatedPayments = localOrder.payments.map(p => {
         if (p.transactionId === settlingPayment.transactionId) {
@@ -118,7 +130,7 @@ export function OrderDetailsSheet({
                 method: method,
                 date: new Date().toLocaleString(),
                 tip: tipAmount > 0 ? tipAmount : undefined,
-                note: settlementData.note || undefined,
+                note: settlementNote || undefined,
             };
         }
         return p;
@@ -140,9 +152,22 @@ export function OrderDetailsSheet({
 
     setLocalOrder(updatedOrder);
     setSettlingPayment(null);
-    setSettlementData({ tip: '', note: '' });
+    setSelectedSettleTip(null);
+    setCustomTipValue('');
+    setSettlementNote('');
     toast({ title: 'Payment Settled', description: `Payment for ${settlingPayment.guestName} has been recorded.` });
   };
+  
+  const TipButton = ({ emoji, label, popular, selected, onClick }: { emoji?: string, label: string, popular?: boolean, selected?: boolean, onClick: () => void }) => (
+    <button type="button" onClick={onClick} className={cn(
+       "relative flex-1 flex flex-col items-center justify-center gap-2 px-3 py-3 rounded-xl border-2 transition-all min-w-[70px]",
+       selected ? "bg-primary/10 border-primary" : "bg-card hover:border-muted-foreground/20"
+   )}>
+       {popular && <Badge className="absolute -top-2 left-1/2 -translate-x-1/2 bg-primary text-primary-foreground px-2 py-0.5 text-[10px] font-bold">POPULAR</Badge>}
+       {emoji ? <span className="text-xl">{emoji}</span> : <Pencil className="h-5 w-5"/>}
+       <span className="text-sm font-bold">{label}</span>
+   </button>
+ );
   
   if (!localOrder) return null;
 
@@ -353,6 +378,12 @@ export function OrderDetailsSheet({
                                                             <div className="p-4 flex justify-between items-center text-sm">
                                                                 <span className="font-medium text-muted-foreground">Tip Amount:</span>
                                                                 <span className="font-mono font-semibold text-foreground">${payment.tip.toFixed(2)}</span>
+                                                            </div>
+                                                        )}
+                                                        
+                                                        {payment.note && (
+                                                            <div className="p-4 text-sm italic text-muted-foreground">
+                                                                Note: "{payment.note}"
                                                             </div>
                                                         )}
                                                         
@@ -614,31 +645,51 @@ export function OrderDetailsSheet({
       <Dialog open={!!settlingPayment} onOpenChange={(open) => !open && setSettlingPayment(null)}>
         <DialogContent>
             <DialogHeader>
-                <DialogTitle>Settle Payment for {settlingPayment?.guestName}?</DialogTitle>
+                <DialogTitle>Settle Payment for {settlingPayment?.guestName}</DialogTitle>
                 <DialogDescription>
                     Record payment of <strong>${settlingPayment?.amount}</strong>. Add notes or tips.
                 </DialogDescription>
             </DialogHeader>
-            <div className="space-y-4 py-4">
-              <div className="space-y-2">
-                <Label htmlFor="tip-amount">Tip Amount (Optional)</Label>
-                <Input 
-                  id="tip-amount" 
-                  type="number" 
-                  placeholder="e.g., 5.00"
-                  value={settlementData.tip}
-                  onChange={(e) => setSettlementData(prev => ({...prev, tip: e.target.value}))}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="payment-note">Note (Optional)</Label>
-                <Textarea 
-                  id="payment-note"
-                  placeholder="e.g., Customer paid part in cash, rest on card."
-                  value={settlementData.note}
-                  onChange={(e) => setSettlementData(prev => ({...prev, note: e.target.value}))}
-                />
-              </div>
+            <div className="space-y-6 py-4">
+                <div className="space-y-3">
+                    <Label>Tip Amount (Optional)</Label>
+                    <div className="flex items-stretch gap-3 justify-center">
+                        <TipButton emoji="👍" label="AED 2" selected={selectedSettleTip === 2} onClick={() => setSelectedSettleTip(2)} />
+                        <TipButton emoji="😄" label="AED 4" popular selected={selectedSettleTip === 4} onClick={() => setSelectedSettleTip(4)} />
+                        <TipButton emoji="🤩" label="AED 8" selected={selectedSettleTip === 8} onClick={() => setSelectedSettleTip(8)} />
+                        <TipButton label="Custom" selected={selectedSettleTip === 'custom'} onClick={() => setSelectedSettleTip('custom')} />
+                    </div>
+                    {selectedSettleTip === 'custom' && (
+                        <div className="pt-2">
+                            <Input 
+                              type="number"
+                              placeholder="Enter custom tip amount"
+                              value={customTipValue}
+                              onChange={(e) => setCustomTipValue(e.target.value)}
+                              autoFocus
+                            />
+                        </div>
+                    )}
+                    <div className="flex justify-center">
+                      <Button
+                          variant="ghost"
+                          className="w-auto text-muted-foreground h-auto p-1"
+                          onClick={() => setSelectedSettleTip(null)}
+                      >
+                          No Tip
+                      </Button>
+                    </div>
+                </div>
+
+                <div className="space-y-2">
+                    <Label htmlFor="payment-note">Note (Optional)</Label>
+                    <Textarea 
+                        id="payment-note"
+                        placeholder="e.g., Customer paid part in cash, rest on card."
+                        value={settlementNote}
+                        onChange={(e) => setSettlementNote(e.target.value)}
+                    />
+                </div>
             </div>
             <DialogFooter>
                 <Button variant="outline" onClick={() => setSettlingPayment(null)}>Cancel</Button>
