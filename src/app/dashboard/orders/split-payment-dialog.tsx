@@ -27,11 +27,20 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Users, Package, ArrowLeft, CreditCard, Banknote, CheckCircle, X, Minus, Plus } from 'lucide-react';
+import { Users, Package, ArrowLeft, CreditCard, Banknote, CheckCircle, X, Minus, Plus, Check } from 'lucide-react';
 import type { Order, OrderItem, Payment } from './types';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { ScrollArea } from '@/components/ui/scroll-area';
+
+const SuccessAnimationOverlay = () => (
+    <div className="absolute inset-0 bg-background/80 backdrop-blur-sm flex flex-col items-center justify-center z-50 animate-in fade-in-50 rounded-b-lg">
+        <div className="h-24 w-24 rounded-full bg-green-500 flex items-center justify-center animate-in zoom-in-50">
+            <Check className="h-16 w-16 text-white" strokeWidth={3} />
+        </div>
+        <p className="mt-4 text-xl font-bold text-foreground">Payment Complete!</p>
+    </div>
+);
 
 interface SplitPaymentDialogProps {
   order: Order | null;
@@ -121,6 +130,7 @@ const SplitEquallyView = ({ order, totalWithTax, onBack, onUpdateOrder, onOpenCh
     const [numSplits, setNumSplits] = useState(2);
     const [paidStatus, setPaidStatus] = useState<boolean[]>([]);
     const [confirmingPayerIndex, setConfirmingPayerIndex] = useState<number | null>(null);
+    const [showSuccess, setShowSuccess] = useState(false);
     
     const [selectedTip, setSelectedTip] = useState<number | 'custom' | null>(4);
     const [customTipValue, setCustomTipValue] = useState('');
@@ -140,11 +150,9 @@ const SplitEquallyView = ({ order, totalWithTax, onBack, onUpdateOrder, onOpenCh
     const totalWithTip = amountPerPerson + finalTip;
 
     const handleRecordPayment = (index: number, method: 'Card' | 'Cash') => {
-        setPaidStatus(prev => {
-            const newStatus = [...prev];
-            newStatus[index] = true;
-            return newStatus;
-        });
+        const newPaidStatus = [...paidStatus];
+        newPaidStatus[index] = true;
+        setPaidStatus(newPaidStatus);
         
         const newPayment: Payment = {
             method: method,
@@ -170,8 +178,12 @@ const SplitEquallyView = ({ order, totalWithTax, onBack, onUpdateOrder, onOpenCh
         setSelectedTip(4);
         setCustomTipValue('');
 
-        if (paidStatus.filter(s => !s).length === 1) { // This was the last one
-            setTimeout(() => onOpenChange(false), 500);
+        const allPaid = newPaidStatus.every(p => p);
+        if (allPaid) {
+            setShowSuccess(true);
+            setTimeout(() => {
+                onOpenChange(false);
+            }, 2000);
         }
     };
     
@@ -182,7 +194,8 @@ const SplitEquallyView = ({ order, totalWithTax, onBack, onUpdateOrder, onOpenCh
     }
 
     return (
-        <div className="py-6 space-y-6">
+        <div className="py-6 space-y-6 relative">
+            {showSuccess && <SuccessAnimationOverlay />}
             <div className="grid grid-cols-2 gap-4 items-end">
                 <div className="space-y-1.5">
                     <Label>Number of People</Label>
@@ -270,6 +283,7 @@ const SplitByItemView = ({ order, totalWithTax, onBack, onUpdateOrder, onOpenCha
     const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set());
     const [paidItems, setPaidItems] = useState<Set<string>>(new Set());
     const [confirmingPayment, setConfirmingPayment] = useState(false);
+    const [showSuccess, setShowSuccess] = useState(false);
     
     const [selectedTip, setSelectedTip] = useState<number | 'custom' | null>(4);
     const [customTipValue, setCustomTipValue] = useState('');
@@ -329,7 +343,8 @@ const SplitByItemView = ({ order, totalWithTax, onBack, onUpdateOrder, onOpenCha
         };
         onUpdateOrder(updatedOrder);
         
-        setPaidItems(prev => new Set([...prev, ...selectedItems]));
+        const newPaidItems = new Set([...paidItems, ...selectedItems]);
+        setPaidItems(newPaidItems);
         setSelectedItems(new Set());
         setConfirmingPayment(false);
         setSelectedTip(4);
@@ -337,14 +352,18 @@ const SplitByItemView = ({ order, totalWithTax, onBack, onUpdateOrder, onOpenCha
 
         toast({ title: "Payment Recorded", description: `Payment of $${totalForSelectedItems.toFixed(2)}${finalTip > 0 ? ` (+ $${finalTip.toFixed(2)} tip)` : ''} for selected items recorded.` });
 
-        const allItemsPaid = order.items.every(i => paidItems.has(i.id) || selectedItems.has(i.id));
+        const allItemsPaid = order.items.every(i => newPaidItems.has(i.id));
         if (allItemsPaid) {
-             setTimeout(() => onOpenChange(false), 500);
+             setShowSuccess(true);
+             setTimeout(() => {
+                onOpenChange(false);
+             }, 2000);
         }
     };
     
     return (
-        <div className="py-6 space-y-4">
+        <div className="py-6 space-y-4 relative">
+            {showSuccess && <SuccessAnimationOverlay />}
             <h4 className="font-semibold text-muted-foreground">Select items to pay for:</h4>
             <ScrollArea className="h-80 border rounded-lg p-2">
                 <div className="space-y-2 p-2">
