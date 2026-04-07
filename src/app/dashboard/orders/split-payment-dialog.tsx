@@ -26,7 +26,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Users, Package, ArrowLeft, CreditCard, Banknote, CheckCircle, X } from 'lucide-react';
+import { Users, Package, ArrowLeft, CreditCard, Banknote, CheckCircle, X, Minus, Plus } from 'lucide-react';
 import type { Order, OrderItem, Payment } from './types';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
@@ -124,8 +124,32 @@ const SplitEquallyView = ({ order, totalWithTax, onBack, onUpdateOrder, onOpenCh
         <div className="py-6 space-y-6">
             <div className="grid grid-cols-2 gap-4 items-end">
                 <div className="space-y-1.5">
-                    <Label htmlFor="num-splits">Number of People</Label>
-                    <Input id="num-splits" type="number" min="2" max="20" value={numSplits} onChange={e => setNumSplits(parseInt(e.target.value, 10) || 2)} />
+                    <Label>Number of People</Label>
+                    <div className="flex items-center gap-2">
+                        <Button
+                            type="button"
+                            variant="outline"
+                            size="icon"
+                            className="h-10 w-10 rounded-lg"
+                            onClick={() => setNumSplits(s => Math.max(2, s - 1))}
+                            disabled={numSplits <= 2}
+                        >
+                            <Minus className="h-4 w-4" />
+                        </Button>
+                        <div className="flex h-10 w-16 items-center justify-center rounded-lg border bg-background text-lg font-bold">
+                            {numSplits}
+                        </div>
+                        <Button
+                            type="button"
+                            variant="outline"
+                            size="icon"
+                            className="h-10 w-10 rounded-lg"
+                            onClick={() => setNumSplits(s => Math.min(20, s + 1))}
+                            disabled={numSplits >= 20}
+                        >
+                            <Plus className="h-4 w-4" />
+                        </Button>
+                    </div>
                 </div>
                 <div className="text-right pb-2">
                     <p className="text-sm text-muted-foreground">Amount per person</p>
