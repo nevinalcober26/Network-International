@@ -857,7 +857,9 @@ const MenuBuilderMainPage = ({ onClose }: { onClose: () => void }) => {
   };
 
   const handleSaveImportedMenu = (status: 'Published' | 'Draft') => {
-    const newName = `POS Imported Menu #${userMenus.length + 1}`;
+    const providerName = SUPPORTED_POS.find(p => p.id === selectedPos)?.name || 'Imported Menu';
+    const newName = `${providerName} Menu`;
+    
     const newMenu = {
       name: newName,
       imageHint: 'dark theme',
