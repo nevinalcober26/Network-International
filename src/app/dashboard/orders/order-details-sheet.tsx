@@ -17,6 +17,16 @@ import {
   DialogDescription as DialogDescriptionComponent, // Renamed
   DialogClose as RadixDialogClose,
 } from '@/components/ui/dialog';
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -43,12 +53,14 @@ import {
   FileText,
   X,
   Split,
+  Banknote,
 } from 'lucide-react';
-import type { Order } from './types';
+import type { Order, Payment } from './types';
 import { getStatusBadgeVariant } from './utils';
 import { cn } from '@/lib/utils';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { SplitPaymentDialog } from './split-payment-dialog';
+import { useToast } from '@/hooks/use-toast';
 
 
 interface OrderDetailsSheetProps {
@@ -65,21 +77,71 @@ export function OrderDetailsSheet({
   const [isStaffInfoOpen, setIsStaffInfoOpen] = useState(false);
   const [isSplitDialogOpen, setIsSplitDialogOpen] = useState(false);
   const [localOrder, setLocalOrder] = useState<Order | null>(order);
+  const [settlingPayment, setSettlingPayment] = useState<Payment | null>(null);
+  const { toast } = useToast();
 
   useEffect(() => {
     setLocalOrder(order);
   }, [order, open]);
 
+  const totalWithTax = useMemo(() => {
+    if (!localOrder) return 0;
+    const subtotal = localOrder.totalAmount;
+    const taxAmount = subtotal * 0.05;
+    return subtotal + taxAmount;
+  }, [localOrder]);
+
+  const pendingAmount = useMemo(() => {
+    if (!localOrder) return 0;
+    return totalWithTax - localOrder.paidAmount;
+  }, [localOrder, totalWithTax]);
+
   const handleOrderUpdate = (updatedOrder: Order) => {
       setLocalOrder(updatedOrder);
+  };
+  
+  const handleOpenSettleDialog = (payment: Payment) => {
+    setSettlingPayment(payment);
+  };
+
+  const handleConfirmSettle = (method: 'Card' | 'Cash') => {
+    if (!settlingPayment || !localOrder) return;
+
+    const updatedPayments = localOrder.payments.map(p => {
+        if (p.transactionId === settlingPayment.transactionId) {
+            return {
+                ...p,
+                status: 'Paid' as const,
+                method: method,
+                date: new Date().toLocaleString(),
+            };
+        }
+        return p;
+    });
+
+    const newPaidAmount = updatedPayments
+        .filter(p => p.status === 'Paid')
+        .reduce((sum, p) => sum + parseFloat(p.amount), 0);
+    
+    const newPaymentState: Order['paymentState'] =
+        newPaidAmount >= totalWithTax - 0.01 ? 'Fully Paid' : 'Partial';
+
+    const updatedOrder: Order = {
+        ...localOrder,
+        payments: updatedPayments,
+        paidAmount: newPaidAmount,
+        paymentState: newPaymentState,
+    };
+
+    setLocalOrder(updatedOrder);
+    setSettlingPayment(null);
+    toast({ title: 'Payment Settled', description: `Payment for ${settlingPayment.guestName} has been recorded.` });
   };
   
   if (!localOrder) return null;
 
   const subtotal = localOrder.totalAmount;
   const taxAmount = subtotal * 0.05;
-  const totalWithTax = subtotal + taxAmount;
-  const pendingAmount = totalWithTax - localOrder.paidAmount;
 
   return (
     <>
@@ -194,33 +256,50 @@ export function OrderDetailsSheet({
                               Payment split <strong>{localOrder.splitType === 'byItem' ? 'by Item' : 'Equally'}</strong>.
                             </span>
                           </div>
-                        ) : localOrder.paymentState === 'Partial' ? (
-                          <p className="text-sm text-muted-foreground mb-3">
-                            A partial payment was made.
-                          </p>
                         ) : null}
 
-                        {localOrder.payments.length > 0 ||
-                        pendingAmount > 0.01 ? (
+                        {localOrder.payments.length > 0 ? (
                           <div className="flow-root">
                             <ul>
                               {localOrder.payments.map((payment, index) => {
-                                const isLastPayment =
-                                  index === localOrder.payments.length - 1;
-                                const hasPendingAmount =
-                                  pendingAmount > 0.01;
-                                const showLineAndPadding =
-                                  !isLastPayment || hasPendingAmount;
+                                  const isLastPayment = index === localOrder.payments.length - 1;
+                                  const showLine = !isLastPayment || (isLastPayment && pendingAmount > 0.01 && localOrder.payments.some(p => p.status === 'Paid'));
+
+                                  if (payment.status === 'Pending') {
+                                    return (
+                                        <li key={payment.transactionId}>
+                                            <div className="relative pb-8">
+                                                {index < localOrder.payments.length - 1 && <span className="absolute left-2.5 top-4 -ml-px h-full w-0.5 bg-border" aria-hidden="true" />}
+                                                <div className="relative flex items-start space-x-3">
+                                                    <div>
+                                                        <span className="h-5 w-5 rounded-full bg-yellow-500 flex items-center justify-center ring-4 ring-background">
+                                                            <Hourglass className="h-3 w-3 text-white" />
+                                                        </span>
+                                                    </div>
+                                                    <div className="min-w-0 flex-1">
+                                                        <div className="flex justify-between items-center">
+                                                            <div>
+                                                                <p className="font-medium text-sm">{payment.guestName}</p>
+                                                                <p className="font-mono text-sm text-muted-foreground">Amount: ${payment.amount}</p>
+                                                            </div>
+                                                            <Button size="sm" onClick={() => handleOpenSettleDialog(payment)}>Settle</Button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </li>
+                                    )
+                                  }
 
                                 return (
-                                  <li key={`payment-${index}`}>
+                                  <li key={payment.transactionId}>
                                     <div
                                       className={cn(
                                         'relative',
-                                        showLineAndPadding && 'pb-8'
+                                        showLine && 'pb-8'
                                       )}
                                     >
-                                      {showLineAndPadding && (
+                                      {showLine && (
                                         <span
                                           className="absolute left-2.5 top-4 -ml-px h-full w-0.5 bg-border"
                                           aria-hidden="true"
@@ -288,7 +367,7 @@ export function OrderDetailsSheet({
                                 );
                               })}
 
-                              {pendingAmount > 0.01 && (
+                              {pendingAmount > 0.01 && !localOrder.payments.some(p => p.status === 'Pending') && (
                                 <li key="pending">
                                   <div className="relative">
                                     <div className="relative flex items-start space-x-3">
@@ -319,7 +398,7 @@ export function OrderDetailsSheet({
                           </div>
                         ) : (
                           <p className="text-sm text-muted-foreground">
-                            This order is fully paid.
+                            This order has no payment activity yet.
                           </p>
                         )}
                       </div>
@@ -525,6 +604,23 @@ export function OrderDetailsSheet({
           </DialogContent>
         </Dialog>
       )}
+      <AlertDialog open={!!settlingPayment} onOpenChange={() => setSettlingPayment(null)}>
+        <AlertDialogContent>
+            <AlertDialogHeader>
+                <AlertDialogTitle>Settle Payment for {settlingPayment?.guestName}?</AlertDialogTitle>
+                <AlertDialogDescription>
+                    Confirm payment of <strong>${settlingPayment?.amount}</strong>. Choose the method used.
+                </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <div className="flex gap-2">
+                    <Button onClick={() => handleConfirmSettle('Card')}><CreditCard className="mr-2 h-4 w-4" /> Card</Button>
+                    <Button onClick={() => handleConfirmSettle('Cash')} variant="secondary"><Banknote className="mr-2 h-4 w-4" /> Cash</Button>
+                </div>
+            </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
       <SplitPaymentDialog
         order={localOrder}
         totalWithTax={totalWithTax}

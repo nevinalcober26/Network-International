@@ -7,13 +7,14 @@ export type OrderItem = {
 };
 
 export type Payment = {
-  method: string;
+  method?: string; // Optional for pending payments
   amount: string;
-  date: string;
-  transactionId: string;
+  date?: string; // Optional for pending payments
+  transactionId: string; // Unique ID for the payment record
   guestName: string;
   tip?: number;
   items?: { name: string; quantity: number }[];
+  status: 'Paid' | 'Pending';
 };
 
 export type Customer = {
