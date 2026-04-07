@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { EMenuIcon } from '@/components/dashboard/app-sidebar';
-import { List, LayoutGrid, X, Plus, Palette, Database, CheckCircle2, Loader2, GripVertical, Home, Receipt, ArrowLeft, Search, Flame, ShoppingCart, ImageIcon, Edit, ChevronDown, Wand, RefreshCw, Lock, MoreHorizontal } from 'lucide-react';
+import { List, LayoutGrid, X, Plus, Palette, Database, CheckCircle2, Loader2, GripVertical, Home, Receipt, ArrowLeft, Search, Flame, ShoppingCart, ImageIcon, Edit, ChevronDown, Wand, RefreshCw, Lock, MoreHorizontal, Trash2 } from 'lucide-react';
 import Image from 'next/image';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
@@ -49,53 +49,72 @@ import {
   DropdownMenuTrigger,
   DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 const TemplateCard = ({ name, imageHint, isLocked, status, onDelete, onEdit }: { 
   name: string; 
   imageHint: string; 
   isLocked?: boolean; 
-  status?: 'Offline' | 'Online', 
+  status?: 'Offline' | 'Online' | 'Draft', 
   onDelete?: () => void;
   onEdit?: () => void;
 }) => {
   const image = PlaceHolderImages.find(img => img.id === imageHint);
+  
+  const isOnline = status === 'Online';
+  const isDraft = status === 'Draft';
+
+  const tooltipText = isOnline ? "Currently set as live and public" : "Currently offline";
+  const dotColor = isOnline ? 'bg-green-500' : 'bg-red-500';
+
   return (
     <Card 
       onClick={!isLocked ? onEdit : undefined}
       className={cn("overflow-hidden shadow-sm transition-shadow group", isLocked ? "cursor-not-allowed" : "hover:shadow-lg cursor-pointer")}
     >
       <CardHeader className="p-3 border-b flex-row justify-between items-center">
-        <p className="text-xs font-semibold flex items-center gap-1.5">
-          <span className={cn(
-            "h-2 w-2 rounded-full",
-            status === 'Online' ? 'bg-green-500' : 'bg-red-500'
-          )} />
+        <div className="text-xs font-semibold flex items-center gap-1.5">
+          <TooltipProvider delayDuration={100}>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span className={cn("h-2 w-2 rounded-full", dotColor)} />
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>{tooltipText}</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+
           {isLocked && <Lock className="h-3 w-3 text-muted-foreground" />}
-          {name}
-        </p>
-        <div className="flex items-center gap-2">
-          {isLocked ? null : (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <button 
-                  className="h-8 w-8 rounded-full bg-black/5 text-gray-500 flex items-center justify-center hover:bg-gray-100 transition-colors"
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  <MoreHorizontal className="h-4 w-4" />
-                </button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem onSelect={onEdit}>
-                  <Edit className="mr-2 h-4 w-4" /> Edit
-                </DropdownMenuItem>
-                <DropdownMenuItem>Set as Offline</DropdownMenuItem>
-                <DropdownMenuItem>Deactivate</DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem className="text-destructive" onClick={onDelete}>Delete</DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          )}
+          
+          <span className="truncate">{name}</span>
+          
+          {isDraft && <Badge variant="secondary" className="font-bold text-xs px-1.5 py-0.5 h-4">DRAFT</Badge>}
         </div>
+        {!isLocked && (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button 
+                className="h-8 w-8 rounded-full bg-black/5 text-gray-500 flex items-center justify-center hover:bg-gray-100 transition-colors"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <MoreHorizontal className="h-4 w-4" />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onSelect={onEdit}>
+                <Edit className="mr-2 h-4 w-4" /> Edit
+              </DropdownMenuItem>
+              <DropdownMenuItem disabled>Set as Offline</DropdownMenuItem>
+              <DropdownMenuItem disabled>Deactivate</DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem className="text-destructive" onSelect={onDelete}>
+                <Trash2 className="mr-2 h-4 w-4" />
+                Delete
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        )}
       </CardHeader>
       <CardContent className="p-3">
         <div className={cn("aspect-[4/3] w-full bg-muted rounded-md overflow-hidden", isLocked && "filter grayscale opacity-70")}>
@@ -922,7 +941,7 @@ const MenuBuilderMainPage = ({ onClose }: { onClose: () => void }) => {
     setPosFlowStep('customize');
   };
   
-  const handleSaveImportedMenu = (status: 'Online' | 'Offline') => {
+  const handleSaveImportedMenu = (status: 'Online' | 'Offline' | 'Draft') => {
     const newName = importedMenuName.trim();
     if (!newName) {
       toast({
@@ -943,13 +962,13 @@ const MenuBuilderMainPage = ({ onClose }: { onClose: () => void }) => {
     if (status === 'Online') {
         setPendingPublishData(menuData);
         setIsConfirmingPublish(true);
-    } else { // It's an Offline menu
+    } else { // It's an Offline or Draft menu
         if (editingMenuIndex !== null) {
             setUserMenus(prev => prev.map((menu, index) => index === editingMenuIndex ? { ...menu, ...menuData } : menu));
-            toast({ title: 'Menu Updated', description: `"${newName}" has been saved as offline.` });
+            toast({ title: 'Menu Updated', description: `"${newName}" has been saved as ${status.toLowerCase()}.` });
         } else {
             setUserMenus((prev) => [...prev, menuData]);
-            toast({ title: "Offline Menu Saved", description: `${newName} has been added to Your Menus.` });
+            toast({ title: `Menu Saved as ${status}`, description: `${newName} has been added to Your Menus.` });
         }
         setEditingMenuIndex(null);
         setPosFlowStep('');
@@ -959,20 +978,19 @@ const MenuBuilderMainPage = ({ onClose }: { onClose: () => void }) => {
   const handleConfirmPublish = () => {
     if (!pendingPublishData) return;
     
-    // Set all other custom menus to 'Offline'
     let updatedMenus = userMenus.map((menu, i) => {
-      // If we are editing, we don't want to change the status of the menu being edited here.
-      if (editingMenuIndex !== null && i === editingMenuIndex) {
+        if (editingMenuIndex !== null && i === editingMenuIndex) {
+            return menu;
+        }
+        if (menu.status === 'Online') {
+            return { ...menu, status: 'Offline' as const };
+        }
         return menu;
-      }
-      return { ...menu, status: 'Offline' as const };
     });
 
     if (editingMenuIndex !== null) {
-        // Update the existing menu being edited
         updatedMenus[editingMenuIndex] = { ...updatedMenus[editingMenuIndex], ...pendingPublishData };
     } else {
-        // Add the new menu
         updatedMenus.push(pendingPublishData);
     }
     
@@ -980,7 +998,7 @@ const MenuBuilderMainPage = ({ onClose }: { onClose: () => void }) => {
 
     toast({
         title: "Menu Published!",
-        description: `"${pendingPublishData.name}" is now the live menu. Other menus have been set to offline.`,
+        description: `"${pendingPublishData.name}" is now the live menu. Other active menus have been set to offline.`,
     });
     
     setPendingPublishData(null);
@@ -1298,7 +1316,7 @@ const MenuBuilderMainPage = ({ onClose }: { onClose: () => void }) => {
                     aria-label="Menu Name"
                   />
                   <div className="flex items-center gap-2">
-                      <Button variant="outline" onClick={() => handleSaveImportedMenu('Offline')}>Save Offline</Button>
+                      <Button variant="outline" onClick={() => handleSaveImportedMenu('Draft')}>Save as Draft</Button>
                       <Button onClick={() => handleSaveImportedMenu('Online')}>Save & Publish</Button>
                   </div>
               </div>
@@ -1436,7 +1454,7 @@ const MenuBuilderMainPage = ({ onClose }: { onClose: () => void }) => {
           <AlertDialogHeader>
             <AlertDialogTitle>Are you sure you want to publish this menu?</AlertDialogTitle>
             <AlertDialogDescription>
-              Publishing this menu will make it the live version for your customers. All other custom menus will be set to 'Offline'.
+              Publishing this menu will make it the live version for your customers. Other active menus will be set to offline.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
