@@ -12,6 +12,16 @@ import { List, LayoutGrid, X, Plus, Palette, Database, CheckCircle2, Loader2, Gr
 import Image from 'next/image';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Progress } from '@/components/ui/progress';
 import { DndContext, closestCenter, PointerSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core';
@@ -31,7 +41,7 @@ import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -68,7 +78,8 @@ const TemplateCard = ({ name, imageHint, isLocked, status, onDelete, onEdit }: {
         <div className="flex items-center gap-2">
           {status && (
             <Badge variant={status === 'Draft' ? 'secondary' : 'default'} className={cn(
-              (status === 'Published' || status === 'Online') && 'bg-green-100 text-green-700'
+              status === 'Published' && 'bg-green-100 text-green-700',
+              status === 'Online' && 'bg-primary/10 text-primary font-bold border-primary/20',
             )}>
               {status}
             </Badge>
@@ -839,6 +850,8 @@ const MenuBuilderMainPage = ({ onClose }: { onClose: () => void }) => {
   const [selectedPos, setSelectedPos] = useState('');
   const [syncProgress, setSyncProgress] = useState(0);
   const [isSyncComplete, setIsSyncComplete] = useState(false);
+  const [isConfirmingPublish, setIsConfirmingPublish] = useState(false);
+  const [pendingPublishData, setPendingPublishData] = useState<any>(null);
 
   const [menuItems, setMenuItems] = useState<MenuItem[]>(mockMenuItems.map(item => ({ ...item, available: item.available ?? true })));
   const [menuSections, setMenuSections] = useState(mockMenuData);
@@ -927,31 +940,49 @@ const MenuBuilderMainPage = ({ onClose }: { onClose: () => void }) => {
     
     const menuData = {
       name: newName,
-      imageHint: 'dark theme',
+      imageHint: editingMenuIndex !== null ? userMenus[editingMenuIndex].imageHint : 'dark theme',
       status: status,
       sections: menuSections,
     };
 
+    if (status === 'Published') {
+        setPendingPublishData(menuData);
+        setIsConfirmingPublish(true);
+    } else { // It's a Draft
+        if (editingMenuIndex !== null) {
+            setUserMenus(prev => prev.map((menu, index) => index === editingMenuIndex ? { ...menu, ...menuData } : menu));
+            toast({ title: 'Menu Updated', description: `"${newName}" has been saved as a draft.` });
+        } else {
+            setUserMenus((prev) => [...prev, menuData]);
+            toast({ title: "Draft Saved", description: `${newName} has been added to Your Menus.` });
+        }
+        setEditingMenuIndex(null);
+        setPosFlowStep('');
+    }
+  };
+
+  const handleConfirmPublish = () => {
+    if (!pendingPublishData) return;
+    
+    let updatedMenus = userMenus.map(menu => ({ ...menu, status: 'Draft' as const }));
+
     if (editingMenuIndex !== null) {
-        setUserMenus(prev => {
-            const newMenus = [...prev];
-            newMenus[editingMenuIndex] = { ...newMenus[editingMenuIndex], ...menuData };
-            return newMenus;
-        });
-        toast({
-            title: 'Menu Updated',
-            description: `"${newName}" has been saved.`,
-        });
+        updatedMenus[editingMenuIndex] = { ...updatedMenus[editingMenuIndex], ...pendingPublishData };
     } else {
-        setUserMenus((prev) => [...prev, menuData]);
-        toast({
-          title: status === 'Published' ? "Menu Saved" : "Draft Saved",
-          description: `${newName} has been added to Your Menus.`,
-        });
+        updatedMenus.push(pendingPublishData);
     }
     
+    setUserMenus(updatedMenus);
+
+    toast({
+        title: "Menu Published!",
+        description: `"${pendingPublishData.name}" is now the live menu. Other menus have been set to draft.`,
+    });
+    
+    setPendingPublishData(null);
+    setIsConfirmingPublish(false);
     setEditingMenuIndex(null);
-    setPosFlowStep(''); // Close the dialog
+    setPosFlowStep('');
   };
 
   const handleDeleteMenu = (indexToDelete: number) => {
@@ -1109,7 +1140,7 @@ const MenuBuilderMainPage = ({ onClose }: { onClose: () => void }) => {
               <section>
                 <h2 className="text-2xl font-bold mb-4">Default</h2>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                  <TemplateCard name='Default' imageHint='template-1' isLocked status="Published" />
+                  <TemplateCard name='Default' imageHint='template-1' isLocked status="Online" />
                 </div>
               </section>
               <section>
@@ -1249,7 +1280,7 @@ const MenuBuilderMainPage = ({ onClose }: { onClose: () => void }) => {
       </Dialog>
       
       {/* Customize Full-Screen Modal */}
-      <Dialog open={posFlowStep === 'customize'} onOpenChange={() => setPosFlowStep('')}>
+      <Dialog open={posFlowStep === 'customize'} onOpenChange={(open) => !open && setPosFlowStep('')}>
           <DialogContent className="max-w-full w-screen h-screen m-0 p-0 rounded-none border-none flex flex-col">
               <DialogHeader className="sr-only">
                 <DialogTitle>Customize Imported Menu</DialogTitle>
@@ -1266,7 +1297,7 @@ const MenuBuilderMainPage = ({ onClose }: { onClose: () => void }) => {
                   />
                   <div className="flex items-center gap-2">
                       <Button variant="outline" onClick={() => handleSaveImportedMenu('Draft')}>Save Draft</Button>
-                      <Button onClick={() => handleSaveImportedMenu('Published')}>Save & Close</Button>
+                      <Button onClick={() => handleSaveImportedMenu('Published')}>Save & Publish</Button>
                   </div>
               </div>
               <div className="flex-1 grid grid-cols-3 overflow-hidden">
@@ -1398,6 +1429,20 @@ const MenuBuilderMainPage = ({ onClose }: { onClose: () => void }) => {
         allProducts={menuItems}
         onProductUpdate={handleProductUpdate}
       />
+      <AlertDialog open={isConfirmingPublish} onOpenChange={setIsConfirmingPublish}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure you want to publish this menu?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Publishing this menu will make it the live version for your customers. All other custom menus will be set to 'Draft'.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleConfirmPublish}>Publish</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 };
