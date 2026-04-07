@@ -250,14 +250,14 @@ export function OrderDetailsSheet({
                                                 </Badge>
                                             </div>
                                             {localOrder.splitType && (
-                                                <Card className="mt-3 bg-card border">
-                                                    <CardContent className="p-4 space-y-3">
+                                                <Card className="mt-3 bg-card border overflow-hidden">
+                                                    <CardContent className="p-0 divide-y">
                                                         {localOrder.splitType === 'byItem' && payment.items && payment.items.length > 0 && (
-                                                            <div>
+                                                            <div className="p-4">
                                                                 <p className="text-sm font-semibold text-foreground mb-2">Items Paid For:</p>
                                                                 <ul className="space-y-2 text-sm text-muted-foreground">
                                                                     {payment.items.map((item, idx) => (
-                                                                        <li key={idx} className="flex justify-between items-center">
+                                                                        <li key={idx}>
                                                                             <span>{item.quantity}x {item.name}</span>
                                                                         </li>
                                                                     ))}
@@ -266,18 +266,13 @@ export function OrderDetailsSheet({
                                                         )}
 
                                                         {payment.tip && payment.tip > 0 && (
-                                                            <>
-                                                                {localOrder.splitType === 'byItem' && payment.items && payment.items.length > 0 && <Separator />}
-                                                                <div className="flex justify-between items-center text-sm font-medium">
-                                                                    <span className="text-muted-foreground">Tip Amount:</span>
-                                                                    <span className="font-mono text-foreground">${payment.tip.toFixed(2)}</span>
-                                                                </div>
-                                                            </>
+                                                            <div className="p-4 flex justify-between items-center text-sm">
+                                                                <span className="font-medium text-muted-foreground">Tip Amount:</span>
+                                                                <span className="font-mono font-semibold text-foreground">${payment.tip.toFixed(2)}</span>
+                                                            </div>
                                                         )}
                                                         
-                                                        {((localOrder.splitType === 'byItem' && payment.items && payment.items.length > 0) || (payment.tip && payment.tip > 0)) && <Separator />}
-
-                                                        <div className="space-y-1 text-xs text-muted-foreground">
+                                                        <div className="p-4 space-y-1 text-xs text-muted-foreground">
                                                             <p>Transaction ID: {payment.transactionId}</p>
                                                             {localOrder.staffReference?.employee_reference_code && (
                                                                 <p>Terminal ID: {localOrder.staffReference.employee_reference_code}</p>
