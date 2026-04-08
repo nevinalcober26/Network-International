@@ -39,7 +39,7 @@ const OrderStatusIndicator = ({ currentStatus }: { currentStatus: Order['orderSt
               <div
                 className={cn(
                   'h-10 w-10 rounded-full flex items-center justify-center transition-colors',
-                  isCompleted ? 'bg-teal-500 text-white' : 'bg-teal-100 text-teal-400'
+                  isCompleted ? 'bg-primary text-white' : 'bg-primary/10 text-primary/40'
                 )}
               >
                 <Icon className="h-5 w-5" />
@@ -52,7 +52,7 @@ const OrderStatusIndicator = ({ currentStatus }: { currentStatus: Order['orderSt
             {index < statuses.length - 1 && (
               <div className={cn(
                 "flex-1 h-0.5 mx-2",
-                isCompleted && index < currentIndex ? 'bg-teal-500' : 'bg-teal-100'
+                isCompleted && index < currentIndex ? 'bg-primary' : 'bg-primary/10'
               )} />
             )}
           </React.Fragment>

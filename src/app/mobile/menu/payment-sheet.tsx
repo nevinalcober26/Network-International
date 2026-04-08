@@ -23,11 +23,11 @@ interface PaymentSheetProps {
 const OrderTypeButton = ({ icon: Icon, label, selected, onClick }: { icon: React.ElementType, label: string, selected: boolean, onClick: () => void }) => (
     <button onClick={onClick} className={cn(
         "flex-1 flex flex-col items-center justify-center gap-2 p-3 rounded-2xl border-2 transition-all",
-        selected ? "bg-teal-50 border-teal-500 text-teal-600" : "bg-white border-gray-200 text-gray-500 hover:border-gray-400"
+        selected ? "bg-primary/5 border-primary text-primary" : "bg-white border-gray-200 text-gray-500 hover:border-gray-400"
     )}>
         <div className={cn(
             "h-10 w-10 rounded-full flex items-center justify-center",
-            selected ? "bg-teal-100" : "bg-gray-100"
+            selected ? "bg-primary/10" : "bg-gray-100"
         )}>
             <Icon className="h-5 w-5" />
         </div>
@@ -38,9 +38,9 @@ const OrderTypeButton = ({ icon: Icon, label, selected, onClick }: { icon: React
 const TipButton = ({ emoji, label, popular, selected, onClick }: { emoji?: string, label: string, popular?: boolean, selected: boolean, onClick: () => void }) => (
      <button onClick={onClick} className={cn(
         "relative flex-1 flex flex-col items-center justify-center gap-2 px-3 py-4 rounded-2xl border-2 transition-all min-w-[70px]",
-        selected ? "bg-teal-50 border-teal-500 text-teal-600" : "bg-white border-gray-200 text-gray-500 hover:border-gray-400"
+        selected ? "bg-primary/5 border-primary text-primary" : "bg-white border-gray-200 text-gray-500 hover:border-gray-400"
     )}>
-        {popular && <Badge className="absolute -top-2 left-1/2 -translate-x-1/2 bg-teal-500 text-white px-2 py-0.5 text-[10px] font-bold">POPULAR</Badge>}
+        {popular && <Badge className="absolute -top-2 left-1/2 -translate-x-1/2 bg-primary text-white px-2 py-0.5 text-[10px] font-bold">POPULAR</Badge>}
         {emoji ? <span className="text-2xl">{emoji}</span> : <Pencil className="h-6 w-6"/>}
         <span className="text-sm font-bold">{label}</span>
     </button>
@@ -114,11 +114,11 @@ export function PaymentSheet({ isOpen, onOpenChange, subtotal, tax, serviceCharg
                 </div>
 
                 <SheetFooter className="p-4 bg-white border-t border-gray-200/80 shadow-[0_-4px_12px_rgba(0,0,0,0.05)] w-full shrink-0 flex-row gap-3">
-                    <Button variant="outline" className="h-14 rounded-2xl flex-1 text-base font-bold border-2 border-teal-500 text-teal-600">
+                    <Button variant="outline" className="h-14 rounded-2xl flex-1 text-base font-bold border-2 border-primary text-primary">
                         <Users className="h-5 w-5 mr-2" />
                         Split Bill
                     </Button>
-                    <Button className="h-14 rounded-2xl flex-1 text-base font-bold bg-teal-500 hover:bg-teal-600 shadow-lg shadow-teal-500/20" onClick={onPayNow}>
+                    <Button className="h-14 rounded-2xl flex-1 text-base font-bold bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20" onClick={onPayNow}>
                         Pay AED {total.toFixed(2)}
                     </Button>
                 </SheetFooter>

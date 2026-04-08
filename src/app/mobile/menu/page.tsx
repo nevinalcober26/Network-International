@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useEffect, useRef, useMemo } from 'react';
@@ -50,7 +49,7 @@ const PaymentRedirectContent = ({ totalAmount }: { totalAmount: number }) => (
       <div className="space-y-6">
         <div className="relative w-24 h-24 mx-auto">
           <div className="absolute inset-0 border-4 border-gray-200 rounded-full"></div>
-          <Loader2 className="w-full h-full text-blue-500 animate-spin" style={{ animationDuration: '1.5s' }} />
+          <Loader2 className="w-full h-full text-primary animate-spin" style={{ animationDuration: '1.5s' }} />
         </div>
         <div className="space-y-1">
           <h2 className="text-2xl font-bold text-gray-800">Redirecting to Payment</h2>
@@ -64,8 +63,8 @@ const PaymentRedirectContent = ({ totalAmount }: { totalAmount: number }) => (
           </div>
           <div className="border-t border-dashed border-gray-200" />
           <div className="flex items-center gap-3 text-left">
-            <div className="h-10 w-10 rounded-full bg-blue-50 flex items-center justify-center border border-blue-200">
-                <Loader2 className="h-5 w-5 text-blue-500 animate-spin"/>
+            <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center border border-primary/20">
+                <Loader2 className="h-5 w-5 text-primary animate-spin"/>
             </div>
             <div>
                 <p className="font-semibold text-gray-800">Connecting to payment gateway</p>
@@ -351,7 +350,7 @@ export default function MobileMenuPage() {
             </Link>
             <div className="text-center">
               <h1 className="text-xl font-bold text-gray-900">{activeTab}</h1>
-              <p className="text-sm text-teal-600 font-medium">
+              <p className="text-sm text-primary font-medium">
                 {menuItems.filter(i => i.category === activeTab).length} items
               </p>
             </div>
@@ -370,13 +369,13 @@ export default function MobileMenuPage() {
                   className={cn(
                     "flex items-center gap-1.5 whitespace-nowrap px-4 py-3 text-sm font-bold transition-colors relative",
                     activeTab === cat
-                      ? "text-teal-600"
+                      ? "text-primary"
                       : "text-gray-500 hover:text-gray-800"
                   )}
                 >
                   {cat === 'Bestsellers' && <Flame className="h-4 w-4 text-red-500" />}
                   {cat}
-                  {activeTab === cat && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-teal-500 rounded-full" />}
+                  {activeTab === cat && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary rounded-full" />}
                 </button>
               ))}
             </div>

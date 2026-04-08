@@ -39,8 +39,8 @@ export function VipClubSheet({ isOpen, onOpenChange, onSignup }: VipClubSheetPro
           {/* Header */}
           <SheetHeader className="p-4 flex flex-row items-center justify-between bg-white/80 backdrop-blur-sm sticky top-0 z-10 shrink-0">
             <div className="flex items-center gap-2">
-                <Crown className="h-5 w-5 text-teal-600" />
-                <SheetTitle className="text-base font-bold text-teal-600">VIP Club</SheetTitle>
+                <Crown className="h-5 w-5 text-primary" />
+                <SheetTitle className="text-base font-bold text-primary">VIP Club</SheetTitle>
             </div>
             <SheetClose asChild>
                 <Button variant="link" className="text-gray-500 font-semibold p-0 h-auto">Not for now</Button>
@@ -108,7 +108,7 @@ export function VipClubSheet({ isOpen, onOpenChange, onSignup }: VipClubSheetPro
           {/* Footer Button */}
           <SheetFooter className="p-4 bg-white border-t border-gray-200/80 shadow-[0_-4px_12px_rgba(0,0,0,0.05)] w-full shrink-0">
             <Button
-              className="w-full h-14 rounded-2xl text-lg font-bold bg-teal-500 hover:bg-teal-600 shadow-lg shadow-teal-500/20"
+              className="w-full h-14 rounded-2xl text-lg font-bold bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20"
               onClick={onSignup}
             >
               Sign Me Up for Exclusive Deals

@@ -68,7 +68,7 @@ const OrderCard = ({ order }: { order: Order }) => {
             {orderStatus === 'Completed' ? (
                 <div className="w-full flex justify-between items-end">
                   <span className="text-2xl font-bold text-gray-900">${totalAmount.toFixed(2)}</span>
-                  <Button variant="link" className="text-teal-600 font-bold p-0 border-b-2 border-dotted border-teal-600 rounded-none h-auto leading-none">Reorder</Button>
+                  <Button variant="link" className="text-primary font-bold p-0 border-b-2 border-dotted border-primary rounded-none h-auto leading-none">Reorder</Button>
                 </div>
             ) : (
                 <div className="w-full flex justify-between items-end">
@@ -76,7 +76,7 @@ const OrderCard = ({ order }: { order: Order }) => {
                       <p className="text-xs font-bold text-gray-400">TOTAL</p>
                       <span className="text-2xl font-bold text-gray-900">${totalAmount.toFixed(2)}</span>
                   </div>
-                  <Button variant="outline" className="rounded-full font-bold text-teal-600 border-teal-500/50 bg-white">View Details &gt;</Button>
+                  <Button variant="outline" className="rounded-full font-bold text-primary border-primary/50 bg-white">View Details &gt;</Button>
                 </div>
             )}
           </div>
@@ -110,7 +110,7 @@ export default function MobileOrdersPage() {
                     className={cn(
                         "rounded-full font-bold",
                         activeFilter === filter 
-                            ? 'bg-teal-500 text-white' 
+                            ? 'bg-primary text-white' 
                             : 'bg-white text-gray-700 border-gray-200'
                     )}
                 >
@@ -134,7 +134,7 @@ export default function MobileOrdersPage() {
                 </div>
                 <h2 className="text-xl font-bold text-gray-800">No Orders Yet</h2>
                 <p className="mt-2 text-base text-gray-500 max-w-xs">Your past and current orders will appear here.</p>
-                <Button asChild className="mt-6 bg-teal-500 hover:bg-teal-600 rounded-full px-6">
+                <Button asChild className="mt-6 bg-primary hover:bg-primary/90 rounded-full px-6">
                     <Link href="/mobile/menu">Start Ordering</Link>
                 </Button>
           </div>

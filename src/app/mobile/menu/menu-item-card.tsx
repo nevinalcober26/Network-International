@@ -1,4 +1,3 @@
-
 'use client';
 
 import Image from 'next/image';
@@ -68,14 +67,14 @@ export const MenuItemCard = ({
                     <Trash2 className="h-5 w-5" />
                   </Button>
                   <span className="font-bold text-lg text-gray-800">{quantity}</span>
-                  <Button size="icon" variant="ghost" className="h-full w-8 rounded-r-lg text-teal-500" onClick={handleIncrementClick}>
+                  <Button size="icon" variant="ghost" className="h-full w-8 rounded-r-lg text-primary" onClick={handleIncrementClick}>
                     <Plus className="h-5 w-5" />
                   </Button>
                 </div>
               ) : (
                 <>
                   <Button
-                      className="w-full h-9 rounded-lg bg-teal-500 text-white font-bold text-sm shadow-md hover:bg-teal-600"
+                      className="w-full h-9 rounded-lg bg-primary text-white font-bold text-sm shadow-md hover:bg-primary/90"
                       onClick={handleAddClick}
                   >
                       Add

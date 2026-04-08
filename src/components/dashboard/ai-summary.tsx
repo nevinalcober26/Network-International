@@ -94,20 +94,20 @@ export function AiSummary({ data, context }: AiSummaryProps) {
   }
 
   return (
-    <div className="animated-gradient-border relative rounded-lg bg-gradient-to-r from-teal-50/60 to-blue-100/60 p-6 shadow-sm">
+    <div className="animated-gradient-border relative rounded-lg bg-gradient-to-r from-primary/5 to-blue-100/60 p-6 shadow-sm">
       <div className="relative z-10 flex items-start gap-4">
         <div className="flex-shrink-0">
           <div className="flex items-center justify-center h-10 w-10 rounded-lg bg-white/50">
-            <Wand className="h-6 w-6 text-teal-500" />
+            <Wand className="h-6 w-6 text-primary" />
           </div>
         </div>
         <div className="flex-grow">
-          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-teal-600 mb-1">
+          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-primary mb-1">
             AI Operational Pulse
           </p>
           {status === 'loading' ? (
             <div className="flex items-center gap-2 text-sm text-gray-600 animate-pulse">
-              <RefreshCw className="h-4 w-4 animate-spin text-teal-500" />
+              <RefreshCw className="h-4 w-4 animate-spin text-primary" />
               <span>Analyzing latest metrics...</span>
             </div>
           ) : (

@@ -85,8 +85,8 @@ export function CartSheet({ isOpen, onOpenChange, cartItems, onIncrement, onDecr
         <SheetHeader className="p-4 pt-5 border-b border-gray-200/80 bg-white rounded-t-3xl sticky top-0 z-10 shrink-0">
             <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                    <div className="h-10 w-10 rounded-full bg-teal-100 flex items-center justify-center">
-                        <ShoppingBasket className="h-6 w-6 text-teal-600" />
+                    <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
+                        <ShoppingBasket className="h-6 w-6 text-primary" />
                     </div>
                     <div>
                         <SheetTitle className="text-xl font-bold text-gray-800">Your basket</SheetTitle>
@@ -94,7 +94,7 @@ export function CartSheet({ isOpen, onOpenChange, cartItems, onIncrement, onDecr
                     </div>
                 </div>
                  <div className="flex items-center gap-2">
-                    <Button variant="link" className="text-teal-600 font-bold p-0 h-auto">+ Add more items</Button>
+                    <Button variant="link" className="text-primary font-bold p-0 h-auto">+ Add more items</Button>
                     <SheetClose asChild>
                       <Button size="icon" variant="ghost" className="h-8 w-8 rounded-full text-gray-500">
                         <X className="h-5 w-5" />
@@ -112,14 +112,14 @@ export function CartSheet({ isOpen, onOpenChange, cartItems, onIncrement, onDecr
                         <Image src={item.image} alt={item.name} width={72} height={72} className="object-cover rounded-lg w-20 h-20" />
                         <div className="flex-1">
                             <h4 className="font-bold text-gray-800 text-base leading-snug">{item.name}</h4>
-                            <p className="font-semibold text-teal-600 text-sm mt-1">AED {item.price.toFixed(2)}</p>
+                            <p className="font-semibold text-primary text-sm mt-1">AED {item.price.toFixed(2)}</p>
                         </div>
                         <div className="flex items-center justify-between rounded-lg border border-gray-200 w-24 h-9">
                              <Button size="icon" variant="ghost" className="h-full rounded-l-lg text-red-500" onClick={() => onDecrement(item.id)}>
                                 <Trash2 className="h-4 w-4" />
                             </Button>
                             <span className="font-bold text-sm text-gray-800">{quantity}</span>
-                            <Button size="icon" variant="ghost" className="h-full rounded-r-lg text-teal-500" onClick={() => onIncrement(item.id)}>
+                            <Button size="icon" variant="ghost" className="h-full rounded-r-lg text-primary" onClick={() => onIncrement(item.id)}>
                                 <Plus className="h-4 w-4" />
                             </Button>
                         </div>
@@ -138,8 +138,8 @@ export function CartSheet({ isOpen, onOpenChange, cartItems, onIncrement, onDecr
                                 <h4 className="font-bold text-sm text-gray-800 leading-snug line-clamp-2 flex-1">{item.name}</h4>
                             </div>
                             <div className="flex items-center justify-between pt-2">
-                                <p className="font-extrabold text-teal-600">AED {item.price.toFixed(2)}</p>
-                                <Button size="icon" className="h-7 w-7 rounded-full bg-teal-500 text-white shadow-md hover:bg-teal-600">
+                                <p className="font-extrabold text-primary">AED {item.price.toFixed(2)}</p>
+                                <Button size="icon" className="h-7 w-7 rounded-full bg-primary text-white shadow-md hover:bg-primary/90">
                                     <Plus className="h-5 w-5" />
                                 </Button>
                             </div>
@@ -189,7 +189,7 @@ export function CartSheet({ isOpen, onOpenChange, cartItems, onIncrement, onDecr
         )}
         
         <SheetFooter className="p-4 pt-[15px] bg-white border-t border-gray-200/80 shadow-[0_-4px_12px_rgba(0,0,0,0.05)] w-full shrink-0">
-            <Button className="w-full h-14 rounded-2xl text-lg font-bold bg-teal-500 hover:bg-teal-600 shadow-lg shadow-teal-500/20" onClick={onCheckout}>
+            <Button className="w-full h-14 rounded-2xl text-lg font-bold bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20" onClick={onCheckout}>
                 Proceed to Checkout
             </Button>
         </SheetFooter>

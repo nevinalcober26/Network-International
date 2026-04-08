@@ -82,14 +82,14 @@ export function WelcomeBanner({ statCards, chartData }: WelcomeBannerProps) {
   };
 
   return (
-    <div className="animated-gradient-border relative rounded-lg bg-gradient-to-r from-teal-50/60 to-blue-100/60 p-6 shadow-sm">
+    <div className="animated-gradient-border relative rounded-lg bg-gradient-to-r from-primary/5 to-blue-100/60 p-6 shadow-sm">
       <div className="relative z-10 flex flex-wrap items-start justify-between gap-4">
         <div className="flex-grow">
           <h2 className="text-2xl font-bold text-gray-800">
             {getGreeting()}, Marice! 😊
           </h2>
           <div className="mt-2 text-sm flex items-start gap-3">
-            <Wand className="h-4 w-4 text-teal-600 flex-shrink-0 mt-0.5" />
+            <Wand className="h-4 w-4 text-primary flex-shrink-0 mt-0.5" />
             <div className="flex-grow">
               {status === 'loading' ? (
                 <div className="flex items-center gap-2 text-gray-600">
@@ -113,7 +113,7 @@ export function WelcomeBanner({ statCards, chartData }: WelcomeBannerProps) {
             </Button>
           </div>
           <div className="mt-6 flex items-center">
-            <div className="mr-4 h-2 w-2 rounded-full bg-teal-400"></div>
+            <div className="mr-4 h-2 w-2 rounded-full bg-primary"></div>
             <div className="flex items-baseline">
               <p className="text-6xl font-bold tracking-tighter text-gray-900">
                 {format(currentTime, 'hh:mm')}
