@@ -47,7 +47,7 @@ export default function ActivationConfirmationPage() {
       <main className="relative flex-1 flex flex-col items-center p-4 pt-16 pb-32 overflow-auto">
         {/* Mesh Background */}
         <div className="absolute inset-0 z-0 pointer-events-none fixed">
-          <div className="absolute top-[-10%] left-[-10%] w-[60%] h-[60%] rounded-full bg-[#e6f7f6] blur-[120px] opacity-60" />
+          <div className="absolute top-[-10%] left-[-10%] w-[60%] h-[60%] rounded-full bg-blue-50 blur-[120px] opacity-60" />
           <div className="absolute top-[-10%] right-[-10%] w-[60%] h-[60%] rounded-full bg-[#fffcf0] blur-[120px] opacity-60" />
           <div className="absolute bottom-[-10%] left-[-10%] w-[60%] h-[60%] rounded-full bg-[#f0f7ff] blur-[120px] opacity-60" />
           <div className="absolute bottom-[-10%] right-[-10%] w-[60%] h-[60%] rounded-full bg-[#fff5f8] blur-[120px] opacity-60" />
@@ -106,7 +106,7 @@ export default function ActivationConfirmationPage() {
                       'POS Sync & Basic Analytics'
                     ].map(feat => (
                       <li key={feat} className="flex items-center gap-3 text-[13px] font-medium text-gray-600">
-                        <Check className="h-4 w-4 text-[#18B4A6]" strokeWidth={3} />
+                        <Check className="h-4 w-4 text-primary" strokeWidth={3} />
                         {feat}
                       </li>
                     ))}
@@ -123,7 +123,7 @@ export default function ActivationConfirmationPage() {
                     </div>
                     <div className="flex justify-between items-center text-[13px]">
                       <span className="text-gray-400 font-medium">Status:</span>
-                      <span className="font-bold text-[#18B4A6]">Active</span>
+                      <span className="font-bold text-primary">Active</span>
                     </div>
                     <div className="flex justify-between items-center text-[13px]">
                       <span className="text-gray-400 font-medium">Activation Date:</span>
@@ -152,7 +152,7 @@ export default function ActivationConfirmationPage() {
             <Button 
               onClick={handleGoToDashboard}
               disabled={isLoading}
-              className="h-12 px-8 bg-[#18B4A6] hover:bg-[#149d94] text-white font-bold text-[14px] rounded-xl shadow-lg shadow-[#18B4A6]/20 transition-all active:scale-[0.98] group"
+              className="h-12 px-8 bg-primary hover:bg-primary/90 text-white font-bold text-[14px] rounded-xl shadow-lg shadow-primary/20 transition-all active:scale-[0.98] group"
             >
               {isLoading ? (
                 <>
@@ -169,9 +169,9 @@ export default function ActivationConfirmationPage() {
           </div>
 
           {/* 4. Help Link Box */}
-          <div className="p-4 bg-[#f0fdfa] border border-[#ccfbf1] rounded-xl text-center">
+          <div className="p-4 bg-blue-50/50 border border-blue-100 rounded-xl text-center">
             <p className="text-[13px] font-medium text-gray-500">
-              Need help with your digital menu? <span className="text-[#18B4A6] font-bold cursor-pointer hover:underline">Watch our setup videos</span> or <span className="text-[#18B4A6] font-bold cursor-pointer hover:underline">contact support</span>.
+              Need help with your digital menu? <span className="text-primary font-bold cursor-pointer hover:underline">Watch our setup videos</span> or <span className="text-primary font-bold cursor-pointer hover:underline">contact support</span>.
             </p>
           </div>
 
@@ -183,8 +183,8 @@ export default function ActivationConfirmationPage() {
               {/* Resource 1 */}
               <Card className="border-0 shadow-confirmation rounded-[24px] bg-white overflow-hidden hover:scale-[1.02] transition-transform">
                 <CardContent className="p-8 flex items-start gap-5">
-                  <div className="h-10 w-10 rounded-lg bg-[#18B4A6]/10 flex items-center justify-center shrink-0">
-                    <BookOpen className="h-5 w-5 text-[#18B4A6]" />
+                  <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                    <BookOpen className="h-5 w-5 text-primary" />
                   </div>
                   <div className="space-y-3">
                     <h4 className="text-[16px] font-bold text-[#142424]">Knowledge Base</h4>
@@ -192,7 +192,7 @@ export default function ActivationConfirmationPage() {
                       Explore our comprehensive guides and documentation to learn how to use Digital eMenu effectively.
                     </p>
                     <div className="pt-2">
-                      <span className="text-[13px] font-bold text-[#18B4A6] cursor-pointer hover:underline">
+                      <span className="text-[13px] font-bold text-primary cursor-pointer hover:underline">
                         Browse Knowledge Base
                       </span>
                     </div>
@@ -203,8 +203,8 @@ export default function ActivationConfirmationPage() {
               {/* Resource 2 */}
               <Card className="border-0 shadow-confirmation rounded-[24px] bg-white overflow-hidden hover:scale-[1.02] transition-transform">
                 <CardContent className="p-8 flex items-start gap-5">
-                  <div className="h-10 w-10 rounded-lg bg-[#18B4A6]/10 flex items-center justify-center shrink-0">
-                    <Video className="h-5 w-5 text-[#18B4A6]" />
+                  <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                    <Video className="h-5 w-5 text-primary" />
                   </div>
                   <div className="space-y-3">
                     <h4 className="text-[16px] font-bold text-[#142424]">Video Tutorials</h4>
@@ -212,7 +212,7 @@ export default function ActivationConfirmationPage() {
                       Watch step-by-step tutorials to help you set up your restaurant menu and QR codes quickly.
                     </p>
                     <div className="pt-2">
-                      <span className="text-[13px] font-bold text-[#18B4A6] cursor-pointer hover:underline">
+                      <span className="text-[13px] font-bold text-primary cursor-pointer hover:underline">
                         Watch Tutorials
                       </span>
                     </div>

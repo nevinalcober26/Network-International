@@ -81,7 +81,7 @@ export default function LoginPage() {
 
       {/* Background Mesh */}
       <div className="absolute inset-0 z-0 pointer-events-none fixed">
-        <div className="absolute top-[-10%] left-[-10%] w-[60%] h-[60%] rounded-full bg-[#e6f7f6] blur-[120px] opacity-60" />
+        <div className="absolute top-[-10%] left-[-10%] w-[60%] h-[60%] rounded-full bg-blue-50 blur-[120px] opacity-60" />
         <div className="absolute top-[-10%] right-[-10%] w-[60%] h-[60%] rounded-full bg-[#fffcf0] blur-[120px] opacity-60" />
         <div className="absolute bottom-[-10%] left-[-10%] w-[60%] h-[60%] rounded-full bg-[#f0f7ff] blur-[120px] opacity-60" />
         <div className="absolute bottom-[-10%] right-[-10%] w-[60%] h-[60%] rounded-full bg-[#fff5f8] blur-[120px] opacity-60" />
@@ -112,7 +112,7 @@ export default function LoginPage() {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     required
-                    className="h-12 bg-white border-gray-200 rounded-xl px-4 text-[14px] focus:ring-[#18B4A6] focus:border-[#18B4A6] transition-all placeholder:text-gray-300"
+                    className="h-12 bg-white border-gray-200 rounded-xl px-4 text-[14px] focus:ring-primary focus:border-primary transition-all placeholder:text-gray-300"
                   />
                 </div>
 
@@ -128,12 +128,12 @@ export default function LoginPage() {
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       required
-                      className="h-12 bg-white border-gray-200 rounded-xl px-4 pr-12 text-[14px] focus:ring-[#18B4A6] focus:border-[#18B4A6] transition-all placeholder:text-gray-300"
+                      className="h-12 bg-white border-gray-200 rounded-xl px-4 pr-12 text-[14px] focus:ring-primary focus:border-primary transition-all placeholder:text-gray-300"
                     />
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-[#18B4A6] transition-colors"
+                      className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-primary transition-colors"
                     >
                       {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                     </button>
@@ -144,7 +144,7 @@ export default function LoginPage() {
                   <div className="flex items-center space-x-2.5">
                     <Checkbox 
                       id="remember" 
-                      className="border-gray-300 rounded-md data-[state=checked]:bg-[#18B4A6] data-[state=checked]:border-[#18B4A6]" 
+                      className="border-gray-300 rounded-md data-[state=checked]:bg-primary data-[state=checked]:border-primary" 
                     />
                     <label htmlFor="remember" className="text-[13px] font-medium text-gray-500 cursor-pointer">
                       Remember me
@@ -152,7 +152,7 @@ export default function LoginPage() {
                   </div>
                   <button 
                     type="button" 
-                    className="text-[13px] font-bold text-[#18B4A6] hover:underline transition-all"
+                    className="text-[13px] font-bold text-primary hover:underline transition-all"
                   >
                     Forgot password?
                   </button>
@@ -161,7 +161,7 @@ export default function LoginPage() {
                 {error && <p className="text-destructive text-sm font-bold text-center animate-in fade-in slide-in-from-top-1">{error}</p>}
 
                 <Button 
-                  className="w-full h-14 bg-[#18B4A6] hover:bg-[#149d94] text-white font-bold text-[16px] rounded-xl shadow-lg shadow-[#18B4A6]/20 transition-all active:scale-[0.98]" 
+                  className="w-full h-14 bg-primary hover:bg-primary/90 text-white font-bold text-[16px] rounded-xl shadow-lg shadow-primary/20 transition-all active:scale-[0.98]" 
                   type="submit" 
                   disabled={isSubmitting}
                 >
@@ -181,7 +181,7 @@ export default function LoginPage() {
               <Button 
                 variant="outline"
                 onClick={() => router.push('/signup')}
-                className="w-full h-12 border-[#18B4A6] text-[#18B4A6] hover:bg-[#18B4A6]/5 font-bold text-[14px] rounded-xl transition-all"
+                className="w-full h-12 border-primary text-primary hover:bg-primary/5 font-bold text-[14px] rounded-xl transition-all"
               >
                 Sign up
               </Button>

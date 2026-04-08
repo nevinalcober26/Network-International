@@ -1,4 +1,3 @@
-
 'use client';
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
@@ -56,7 +55,7 @@ export default function SignupPage() {
     <div className={cn("relative flex flex-col min-h-screen bg-[#fafbfc]", inter.className)}>
       {/* Background Mesh */}
       <div className="absolute inset-0 z-0 pointer-events-none fixed">
-        <div className="absolute top-[-10%] left-[-10%] w-[60%] h-[60%] rounded-full bg-[#e6f7f6] blur-[120px] opacity-60" />
+        <div className="absolute top-[-10%] left-[-10%] w-[60%] h-[60%] rounded-full bg-blue-50 blur-[120px] opacity-60" />
         <div className="absolute top-[-10%] right-[-10%] w-[60%] h-[60%] rounded-full bg-[#fffcf0] blur-[120px] opacity-60" />
         <div className="absolute bottom-[-10%] left-[-10%] w-[60%] h-[60%] rounded-full bg-[#f0f7ff] blur-[120px] opacity-60" />
         <div className="absolute bottom-[-10%] right-[-10%] w-[60%] h-[60%] rounded-full bg-[#fff5f8] blur-[120px] opacity-60" />
@@ -90,7 +89,7 @@ export default function SignupPage() {
                       id="first-name"
                       placeholder="John"
                       required
-                      className="h-11 bg-white border-gray-200 rounded-xl px-4 text-[14px] focus:ring-[#18B4A6] focus:border-[#18B4A6] transition-all placeholder:text-gray-300"
+                      className="h-11 bg-white border-gray-200 rounded-xl px-4 text-[14px] focus:ring-primary focus:border-primary transition-all placeholder:text-gray-300"
                     />
                   </div>
                   <div className="space-y-1.5 text-left">
@@ -101,7 +100,7 @@ export default function SignupPage() {
                       id="last-name"
                       placeholder="Smith"
                       required
-                      className="h-11 bg-white border-gray-200 rounded-xl px-4 text-[14px] focus:ring-[#18B4A6] focus:border-[#18B4A6] transition-all placeholder:text-gray-300"
+                      className="h-11 bg-white border-gray-200 rounded-xl px-4 text-[14px] focus:ring-primary focus:border-primary transition-all placeholder:text-gray-300"
                     />
                   </div>
                 </div>
@@ -115,7 +114,7 @@ export default function SignupPage() {
                     type="email"
                     placeholder="your@email.com"
                     required
-                    className="h-11 bg-white border-gray-200 rounded-xl px-4 text-[14px] focus:ring-[#18B4A6] focus:border-[#18B4A6] transition-all placeholder:text-gray-300"
+                    className="h-11 bg-white border-gray-200 rounded-xl px-4 text-[14px] focus:ring-primary focus:border-primary transition-all placeholder:text-gray-300"
                   />
                 </div>
 
@@ -129,12 +128,12 @@ export default function SignupPage() {
                       type={showPassword ? 'text' : 'password'}
                       placeholder="••••••••"
                       required
-                      className="h-11 bg-white border-gray-200 rounded-xl px-4 pr-12 text-[14px] focus:ring-[#18B4A6] focus:border-[#18B4A6] transition-all placeholder:text-gray-300"
+                      className="h-11 bg-white border-gray-200 rounded-xl px-4 pr-12 text-[14px] focus:ring-primary focus:border-primary transition-all placeholder:text-gray-300"
                     />
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-[#18B4A6] transition-colors"
+                      className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-primary transition-colors"
                     >
                       {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                     </button>
@@ -154,12 +153,12 @@ export default function SignupPage() {
                       type={showConfirmPassword ? 'text' : 'password'}
                       placeholder="••••••••"
                       required
-                      className="h-11 bg-white border-gray-200 rounded-xl px-4 pr-12 text-[14px] focus:ring-[#18B4A6] focus:border-[#18B4A6] transition-all placeholder:text-gray-300"
+                      className="h-11 bg-white border-gray-200 rounded-xl px-4 pr-12 text-[14px] focus:ring-primary focus:border-primary transition-all placeholder:text-gray-300"
                     />
                     <button
                       type="button"
                       onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                      className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-[#18B4A6] transition-colors"
+                      className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-primary transition-colors"
                     >
                       {showConfirmPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                     </button>
@@ -170,17 +169,17 @@ export default function SignupPage() {
                   <div className="flex items-start space-x-3">
                     <Checkbox 
                       id="terms" 
-                      className="mt-0.5 border-gray-300 rounded-md data-[state=checked]:bg-[#18B4A6] data-[state=checked]:border-[#18B4A6]" 
+                      className="mt-0.5 border-gray-300 rounded-md data-[state=checked]:bg-primary data-[state=checked]:border-primary" 
                       required
                     />
                     <label htmlFor="terms" className="text-[12px] font-medium text-gray-500 leading-relaxed cursor-pointer">
-                      I agree to the <span className="text-[#18B4A6] font-bold cursor-pointer hover:underline">Terms of Service</span> and <span className="text-[#18B4A6] font-bold cursor-pointer hover:underline">Privacy Policy</span>
+                      I agree to the <span className="text-primary font-bold cursor-pointer hover:underline">Terms of Service</span> and <span className="text-primary font-bold cursor-pointer hover:underline">Privacy Policy</span>
                     </label>
                   </div>
                   <div className="flex items-start space-x-3">
                     <Checkbox 
                       id="marketing" 
-                      className="mt-0.5 border-gray-300 rounded-md data-[state=checked]:bg-[#18B4A6] data-[state=checked]:border-[#18B4A6]" 
+                      className="mt-0.5 border-gray-300 rounded-md data-[state=checked]:bg-primary data-[state=checked]:border-primary" 
                     />
                     <label htmlFor="marketing" className="text-[12px] font-medium text-gray-500 leading-relaxed cursor-pointer">
                       Send me product updates and marketing emails
@@ -189,13 +188,13 @@ export default function SignupPage() {
                 </div>
 
                 <Button 
-                  className="w-full h-12 bg-[#18B4A6] hover:bg-[#149d94] text-white font-bold text-[15px] rounded-xl shadow-lg shadow-[#18B4A6]/20 transition-all active:scale-[0.98]" 
+                  className="w-full h-12 bg-primary hover:bg-primary/90 text-white font-bold text-[15px] rounded-xl shadow-lg shadow-primary/20 transition-all active:scale-[0.98]" 
                   type="submit" 
                   disabled={isSubmitting}
                 >
                   {isSubmitting ? (
                     <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      <Loader2 className="mr-2 h-5 w-5 animate-spin" />
                       Creating Account...
                     </>
                   ) : (
@@ -206,7 +205,7 @@ export default function SignupPage() {
                 <div className="text-center pt-1">
                   <p className="text-[13px] font-medium text-gray-500">
                     Already have an account?{' '}
-                    <NextLink href="/" className="text-[#18B4A6] font-bold hover:underline transition-all">
+                    <NextLink href="/" className="text-primary font-bold hover:underline transition-all">
                       Sign in
                     </NextLink>
                   </p>

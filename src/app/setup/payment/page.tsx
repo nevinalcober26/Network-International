@@ -57,15 +57,15 @@ export default function PaymentGatewayPage() {
     return (
       <div className={cn("relative flex flex-col min-h-screen items-center justify-center bg-[#fafbfc]", inter.className)}>
         <div className="absolute inset-0 z-0 pointer-events-none fixed">
-          <div className="absolute top-[-10%] left-[-10%] w-[60%] h-[60%] rounded-full bg-[#f0f7ff] blur-[120px] opacity-60" />
-          <div className="absolute bottom-[-10%] right-[-10%] w-[60%] h-[60%] rounded-full bg-[#f0f7ff] blur-[120px] opacity-60" />
+          <div className="absolute top-[-10%] left-[-10%] w-[60%] h-[60%] rounded-full bg-blue-50 blur-[120px] opacity-60" />
+          <div className="absolute bottom-[-10%] right-[-10%] w-[60%] h-[60%] rounded-full bg-blue-50 blur-[120px] opacity-60" />
         </div>
         <div className="relative z-10 flex flex-col items-center space-y-8 animate-in fade-in zoom-in duration-500 text-center">
           <div className="relative">
-            <div className="h-24 w-24 rounded-full border-4 border-[#0069B1]/10 flex items-center justify-center">
-              <ShieldCheck className="h-12 w-12 text-[#0069B1] animate-pulse" />
+            <div className="h-24 w-24 rounded-full border-4 border-primary/10 flex items-center justify-center">
+              <ShieldCheck className="h-12 w-12 text-primary animate-pulse" />
             </div>
-            <div className="absolute inset-0 h-24 w-24 rounded-full border-t-4 border-[#0069B1] animate-spin" />
+            <div className="absolute inset-0 h-24 w-24 rounded-full border-t-4 border-primary animate-spin" />
           </div>
           <div className="space-y-3">
             <h2 className="text-3xl font-bold text-[#142424]">Securing Transaction</h2>
@@ -87,7 +87,7 @@ export default function PaymentGatewayPage() {
             onClick={() => router.back()}
             className="p-2 hover:bg-gray-50 rounded-full transition-colors group"
           >
-            <ChevronLeft className="h-5 w-5 text-gray-400 group-hover:text-[#0069B1]" />
+            <ChevronLeft className="h-5 w-5 text-gray-400 group-hover:text-primary" />
           </button>
           <div className="h-8 w-px bg-gray-100 mx-2 hidden sm:block" />
           <EMenuIcon />
@@ -109,8 +109,8 @@ export default function PaymentGatewayPage() {
 
       <main className="relative flex-1 flex flex-col items-center p-4 pt-12 overflow-auto">
         <div className="absolute inset-0 z-0 pointer-events-none fixed">
-          <div className="absolute top-[-5%] left-[-5%] w-[50%] h-[50%] rounded-full bg-[#f0f7ff] blur-[100px] opacity-70" />
-          <div className="absolute bottom-[-5%] right-[-5%] w-[50%] h-[50%] rounded-full bg-[#f0f7ff] blur-[100px] opacity-70" />
+          <div className="absolute top-[-5%] left-[-5%] w-[50%] h-[50%] rounded-full bg-blue-50 blur-[100px] opacity-70" />
+          <div className="absolute bottom-[-5%] right-[-5%] w-[50%] h-[50%] rounded-full bg-blue-50 blur-[100px] opacity-70" />
         </div>
 
         <div className="relative z-10 w-full max-w-[960px] grid grid-cols-1 lg:grid-cols-12 gap-10 mb-24">
@@ -126,10 +126,10 @@ export default function PaymentGatewayPage() {
                 
                 <div className="p-5 rounded-[20px] bg-blue-50/50 border border-blue-100 flex items-start gap-4">
                   <div className="h-10 w-10 rounded-xl bg-white flex items-center justify-center shadow-sm shrink-0">
-                    <ShieldCheck className="h-5 w-5 text-[#0069B1]" />
+                    <ShieldCheck className="h-5 w-5 text-primary" />
                   </div>
                   <div className="space-y-1 text-left">
-                    <p className="text-[11px] font-bold uppercase text-[#0069B1]">Prototype Environment</p>
+                    <p className="text-[11px] font-bold uppercase text-primary">Prototype Environment</p>
                     <p className="text-[13px] font-medium text-gray-600 leading-relaxed">
                       This interface is for <span className="font-bold text-[#142424]">prototype demonstration purposes only</span>. No real credit card processing or charges will occur.
                     </p>
@@ -158,7 +158,7 @@ export default function PaymentGatewayPage() {
                       <Label className="text-[12px] font-bold uppercase text-gray-400">Cardholder Name</Label>
                       <Input 
                         defaultValue="John Smith" 
-                        className="h-14 bg-white border-gray-200 rounded-2xl px-5 font-bold text-[#142424] text-base focus:ring-[#0069B1] focus:border-[#0069B1] transition-all" 
+                        className="h-14 bg-white border-gray-200 rounded-2xl px-5 font-bold text-[#142424] text-base focus:ring-primary focus:border-primary transition-all" 
                       />
                     </div>
                     
@@ -167,7 +167,7 @@ export default function PaymentGatewayPage() {
                       <div className="relative">
                         <Input 
                           defaultValue="4242 4242 4242 4242" 
-                          className="h-14 bg-white border-gray-200 rounded-2xl px-5 font-bold text-[#142424] text-base focus:ring-[#0069B1] focus:border-[#0069B1] transition-all" 
+                          className="h-14 bg-white border-gray-200 rounded-2xl px-5 font-bold text-[#142424] text-base focus:ring-primary focus:border-primary transition-all" 
                         />
                         <div className="absolute right-5 top-1/2 -translate-y-1/2 flex items-center gap-2">
                            <CheckCircle2 className="h-5 w-5 text-green-500" />
@@ -180,7 +180,7 @@ export default function PaymentGatewayPage() {
                         <Label className="text-[12px] font-bold uppercase text-gray-400">Expiration Date</Label>
                         <Input 
                           defaultValue="12/26" 
-                          className="h-14 bg-white border-gray-200 rounded-2xl px-5 font-bold text-[#142424] text-base focus:ring-[#0069B1] focus:border-[#0069B1] transition-all" 
+                          className="h-14 bg-white border-gray-200 rounded-2xl px-5 font-bold text-[#142424] text-base focus:ring-primary focus:border-primary transition-all" 
                         />
                       </div>
                       <div className="space-y-2 text-left">
@@ -189,7 +189,7 @@ export default function PaymentGatewayPage() {
                           <Input 
                             defaultValue="***" 
                             type="password" 
-                            className="h-14 bg-white border-gray-200 rounded-2xl px-5 font-bold text-[#142424] text-base focus:ring-[#0069B1] focus:border-[#0069B1] transition-all" 
+                            className="h-14 bg-white border-gray-200 rounded-2xl px-5 font-bold text-[#142424] text-base focus:ring-primary focus:border-primary transition-all" 
                           />
                           <Lock className="absolute right-5 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-300" />
                         </div>
@@ -198,7 +198,7 @@ export default function PaymentGatewayPage() {
                   </div>
 
                   <Button 
-                    className="w-full h-16 bg-[#0069B1] hover:bg-[#005a96] text-white font-bold uppercase text-[15px] rounded-2xl shadow-xl shadow-blue-900/20 transition-all active:scale-[0.98] mt-4"
+                    className="w-full h-16 bg-primary hover:bg-primary/90 text-white font-bold uppercase text-[15px] rounded-2xl shadow-xl shadow-primary/20 transition-all active:scale-[0.98] mt-4"
                     type="submit"
                   >
                     Authorize Payment — ${planData?.price || 0}.00
@@ -222,13 +222,13 @@ export default function PaymentGatewayPage() {
               <CardContent className="p-8 space-y-8">
                 <div className="flex items-center justify-between border-b border-gray-50 pb-8">
                   <div className="space-y-1 text-left">
-                    <Badge className="bg-blue-50 text-[#0069B1] font-bold uppercase px-3 py-1 border-0 shadow-none mb-1">
+                    <Badge className="bg-blue-50 text-primary font-bold uppercase px-3 py-1 border-0 shadow-none mb-1">
                       {planData?.plan || 'PRO'} PLAN
                     </Badge>
                     <h4 className="text-2xl font-bold">eMenu Digital Hub</h4>
                   </div>
                   <div className="h-14 w-14 rounded-2xl bg-gray-50 flex items-center justify-center border border-gray-100">
-                    <Crown className="h-7 w-7 text-[#0069B1]" />
+                    <Crown className="h-7 w-7 text-primary" />
                   </div>
                 </div>
 
@@ -254,7 +254,7 @@ export default function PaymentGatewayPage() {
                 <div className="border-t border-gray-100 pt-8 flex justify-between items-center">
                   <div className="flex flex-col text-left">
                     <span className="text-[11px] font-bold uppercase text-gray-400 leading-none mb-1">Total Due</span>
-                    <span className="text-sm font-bold text-[#0069B1]">USD / Monthly</span>
+                    <span className="text-sm font-bold text-primary">USD / Monthly</span>
                   </div>
                   <span className="text-4xl font-bold text-[#142424] tabular-nums">
                     ${planData?.price || 0}.00
@@ -266,7 +266,7 @@ export default function PaymentGatewayPage() {
             <div className="p-6 bg-blue-50/30 rounded-[24px] border border-blue-100/50 space-y-2 text-left">
               <p className="text-[13px] font-bold text-gray-700">Need help with your purchase?</p>
               <p className="text-[12px] font-medium text-gray-500 leading-relaxed">
-                Contact our accounts team at <span className="text-[#0069B1] font-bold cursor-pointer hover:underline">billing@emenutable.com</span> for any subscription inquiries.
+                Contact our accounts team at <span className="text-primary font-bold cursor-pointer hover:underline">billing@emenutable.com</span> for any subscription inquiries.
               </p>
             </div>
           </div>

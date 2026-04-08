@@ -82,7 +82,7 @@ export default function BusinessProfilePage() {
 
       <main className="relative flex-1 flex flex-col items-center p-4 pt-12 overflow-auto">
         <div className="absolute inset-0 z-0 pointer-events-none fixed">
-          <div className="absolute top-[-10%] left-[-10%] w-[60%] h-[60%] rounded-full bg-[#e6f7f6] blur-[120px] opacity-60" />
+          <div className="absolute top-[-10%] left-[-10%] w-[60%] h-[60%] rounded-full bg-blue-50 blur-[120px] opacity-60" />
           <div className="absolute top-[-10%] right-[-10%] w-[60%] h-[60%] rounded-full bg-[#fffcf0] blur-[120px] opacity-60" />
           <div className="absolute bottom-[-10%] left-[-10%] w-[60%] h-[60%] rounded-full bg-[#f0f7ff] blur-[120px] opacity-60" />
           <div className="absolute bottom-[-10%] right-[-10%] w-[60%] h-[60%] rounded-full bg-[#fff5f8] blur-[120px] opacity-60" />
@@ -97,9 +97,9 @@ export default function BusinessProfilePage() {
                     className={cn(
                       "flex h-8 w-8 items-center justify-center rounded-full text-[13px] font-bold transition-all duration-300",
                       step.status === 'completed'
-                        ? "bg-[#18B4A6] text-white"
+                        ? "bg-primary text-white"
                         : step.status === 'current'
-                        ? "bg-[#18B4A6] text-white ring-4 ring-[#18B4A6]/10"
+                        ? "bg-primary text-white ring-4 ring-primary/10"
                         : "bg-gray-200 text-gray-400"
                     )}
                   >
@@ -118,7 +118,7 @@ export default function BusinessProfilePage() {
                   <div className="flex-1 mx-4 h-[2px] bg-gray-200">
                     <div 
                       className={cn(
-                        "h-full bg-[#18B4A6] transition-all duration-500",
+                        "h-full bg-primary transition-all duration-500",
                         step.status === 'completed' ? "w-full" : "w-0"
                       )} 
                     />
@@ -327,7 +327,7 @@ export default function BusinessProfilePage() {
                   </Button>
                   <Button 
                     type="submit"
-                    className="h-11 bg-[#18B4A6] hover:bg-[#149d94] text-white font-bold text-[13px] rounded-xl px-10 shadow-lg shadow-[#18B4A6]/20 transition-all active:scale-[0.98]"
+                    className="h-11 bg-primary hover:bg-primary/90 text-white font-bold text-[13px] rounded-xl px-10 shadow-lg shadow-primary/20 transition-all active:scale-[0.98]"
                     disabled={isSubmitting}
                   >
                     {isSubmitting ? (

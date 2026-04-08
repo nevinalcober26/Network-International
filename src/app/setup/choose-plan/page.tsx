@@ -71,7 +71,7 @@ export default function ChoosePlanPage() {
   const RenderCheck = ({ value }: { value: boolean | string }) => {
     if (typeof value === 'boolean') {
       return value ? (
-        <div className="flex justify-center"><Check className="h-5 w-5 text-[#18B4A6]" strokeWidth={3} /></div>
+        <div className="flex justify-center"><Check className="h-5 w-5 text-primary" strokeWidth={3} /></div>
       ) : (
         <div className="flex justify-center"><X className="h-5 w-5 text-gray-300" /></div>
       );
@@ -83,12 +83,12 @@ export default function ChoosePlanPage() {
     return (
       <div className="relative flex flex-col min-h-screen items-center justify-center bg-[#fafbfc]">
         <div className="absolute inset-0 z-0 pointer-events-none fixed">
-          <div className="absolute top-[-10%] left-[-10%] w-[60%] h-[60%] rounded-full bg-[#e6f7f6] blur-[120px] opacity-60" />
+          <div className="absolute top-[-10%] left-[-10%] w-[60%] h-[60%] rounded-full bg-blue-50 blur-[120px] opacity-60" />
           <div className="absolute bottom-[-10%] right-[-10%] w-[60%] h-[60%] rounded-full bg-[#fffcf0] blur-[120px] opacity-60" />
         </div>
         <div className="relative z-10 flex flex-col items-center space-y-6 animate-in fade-in zoom-in duration-500">
           <div className="h-20 w-20 rounded-3xl bg-white shadow-xl flex items-center justify-center">
-            <RefreshCw className="h-10 w-10 text-[#18B4A6] animate-spin" />
+            <RefreshCw className="h-10 w-10 text-primary animate-spin" />
           </div>
           <div className="text-center space-y-2">
             <h2 className="text-2xl font-black text-[#142424]">Activating {selectedPlanName} Plan</h2>
@@ -107,7 +107,7 @@ export default function ChoosePlanPage() {
 
       <main className="relative flex-1 flex flex-col items-center p-4 pt-12 overflow-auto pb-24">
         <div className="absolute inset-0 z-0 pointer-events-none fixed">
-          <div className="absolute top-[-10%] left-[-10%] w-[60%] h-[60%] rounded-full bg-[#e6f7f6] blur-[120px] opacity-60" />
+          <div className="absolute top-[-10%] left-[-10%] w-[60%] h-[60%] rounded-full bg-blue-50 blur-[120px] opacity-60" />
           <div className="absolute top-[-10%] right-[-10%] w-[60%] h-[60%] rounded-full bg-[#fffcf0] blur-[120px] opacity-60" />
           <div className="absolute bottom-[-10%] left-[-10%] w-[60%] h-[60%] rounded-full bg-[#f0f7ff] blur-[120px] opacity-60" />
           <div className="absolute bottom-[-10%] right-[-10%] w-[60%] h-[60%] rounded-full bg-[#fff5f8] blur-[120px] opacity-60" />
@@ -123,9 +123,9 @@ export default function ChoosePlanPage() {
                     className={cn(
                       "flex h-8 w-8 items-center justify-center rounded-full text-[13px] font-bold transition-all duration-300",
                       step.status === 'completed'
-                        ? "bg-[#18B4A6] text-white"
+                        ? "bg-primary text-white"
                         : step.status === 'current'
-                        ? "bg-[#18B4A6] text-white ring-4 ring-[#18B4A6]/10"
+                        ? "bg-primary text-white ring-4 ring-primary/10"
                         : "bg-gray-200 text-gray-400"
                     )}
                   >
@@ -144,7 +144,7 @@ export default function ChoosePlanPage() {
                   <div className="flex-1 mx-4 h-[2px] bg-gray-200">
                     <div 
                       className={cn(
-                        "h-full bg-[#18B4A6] transition-all duration-500",
+                        "h-full bg-primary transition-all duration-500",
                         step.status === 'completed' ? "w-full" : "w-0"
                       )} 
                     />
@@ -172,7 +172,7 @@ export default function ChoosePlanPage() {
                 onClick={() => setBillingCycle('monthly')}
                 className={cn(
                   "px-6 py-2 text-[13px] font-bold rounded-xl transition-all",
-                  billingCycle === 'monthly' ? "bg-[#18B4A6] text-white shadow-lg shadow-[#18B4A6]/20" : "text-gray-400 hover:text-gray-600"
+                  billingCycle === 'monthly' ? "bg-primary text-white shadow-lg shadow-primary/20" : "text-gray-400 hover:text-gray-600"
                 )}
               >
                 Monthly
@@ -181,7 +181,7 @@ export default function ChoosePlanPage() {
                 onClick={() => setBillingCycle('annual')}
                 className={cn(
                   "px-6 py-2 text-[13px] font-bold rounded-xl transition-all flex items-center gap-2",
-                  billingCycle === 'annual' ? "bg-[#18B4A6] text-white shadow-lg shadow-[#18B4A6]/20" : "text-gray-400 hover:text-gray-600"
+                  billingCycle === 'annual' ? "bg-primary text-white shadow-lg shadow-primary/20" : "text-gray-400 hover:text-gray-600"
                 )}
               >
                 Annual
@@ -222,7 +222,7 @@ export default function ChoosePlanPage() {
                   ].map((item, i) => (
                     <li key={i} className="flex items-center gap-3 text-[13px] font-medium">
                       {item.check ? (
-                        <Check className="h-4 w-4 text-[#18B4A6]" strokeWidth={3} />
+                        <Check className="h-4 w-4 text-primary" strokeWidth={3} />
                       ) : (
                         <X className="h-4 w-4 text-gray-300" />
                       )}
@@ -233,7 +233,7 @@ export default function ChoosePlanPage() {
                 <Button 
                   variant="outline"
                   onClick={() => handleSelectPlan('Free')}
-                  className="w-full h-12 rounded-xl border-[#18B4A6] text-[#18B4A6] font-bold text-[14px] hover:bg-[#18B4A6]/5 transition-all"
+                  className="w-full h-12 rounded-xl border-primary text-primary font-bold text-[14px] hover:bg-primary/5 transition-all"
                 >
                   Select Free Plan
                 </Button>
@@ -241,8 +241,8 @@ export default function ChoosePlanPage() {
             </Card>
 
             {/* Pro Plan */}
-            <Card className="border-2 border-[#18B4A6] shadow-[0_20px_50px_rgba(24,180,166,0.15)] rounded-[24px] bg-white overflow-hidden relative group hover:scale-[1.05] transition-all duration-300 z-20">
-              <div className="bg-[#18B4A6] text-white py-2 px-4 text-center">
+            <Card className="border-2 border-primary shadow-[0_20px_50px_rgba(1,110,175,0.15)] rounded-[24px] bg-white overflow-hidden relative group hover:scale-[1.05] transition-all duration-300 z-20">
+              <div className="bg-primary text-white py-2 px-4 text-center">
                 <span className="text-[10px] font-black uppercase tracking-[0.2em]">Most Popular</span>
               </div>
               <CardHeader className="p-8 text-left space-y-4">
@@ -251,8 +251,8 @@ export default function ChoosePlanPage() {
                     <CardTitle className="text-[24px] font-black text-[#142424]">Pro</CardTitle>
                     <p className="text-[12px] font-bold text-gray-400">For growing brands</p>
                   </div>
-                  <div className="h-10 w-10 rounded-xl bg-[#18B4A6]/10 flex items-center justify-center">
-                    <Crown className="h-5 w-5 text-[#18B4A6]" />
+                  <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                    <Crown className="h-5 w-5 text-primary" />
                   </div>
                 </div>
                 <div className="space-y-1">
@@ -260,7 +260,7 @@ export default function ChoosePlanPage() {
                     <p className="text-[32px] font-black text-[#142424]">{billingCycle === 'monthly' ? '$49' : '$39'}</p>
                     <p className="text-[14px] font-bold text-gray-400">/month</p>
                   </div>
-                  <p className="text-[12px] font-medium text-[#18B4A6]">{billingCycle === 'annual' ? '$468 billed annually' : '$588 billed annually'}</p>
+                  <p className="text-[12px] font-medium text-primary">{billingCycle === 'annual' ? '$468 billed annually' : '$588 billed annually'}</p>
                 </div>
               </CardHeader>
               <CardContent className="p-8 pt-0 text-left space-y-6">
@@ -275,14 +275,14 @@ export default function ChoosePlanPage() {
                     'Email & Chat support',
                   ].map((text, i) => (
                     <li key={i} className="flex items-center gap-3 text-[13px] font-medium text-gray-700">
-                      <Check className="h-4 w-4 text-[#18B4A6]" strokeWidth={3} />
+                      <Check className="h-4 w-4 text-primary" strokeWidth={3} />
                       {text}
                     </li>
                   ))}
                 </ul>
                 <Button 
                   onClick={() => handleSelectPlan('Pro')}
-                  className="w-full h-12 rounded-xl bg-[#18B4A6] text-white font-bold text-[14px] hover:bg-[#149d94] shadow-lg shadow-[#18B4A6]/30 transition-all active:scale-[0.98]"
+                  className="w-full h-12 rounded-xl bg-primary text-white font-bold text-[14px] hover:bg-primary/90 shadow-lg shadow-primary/30 transition-all active:scale-[0.98]"
                 >
                   Select Pro Plan
                 </Button>
@@ -318,7 +318,7 @@ export default function ChoosePlanPage() {
                     '24/7 Priority support',
                   ].map((text, i) => (
                     <li key={i} className="flex items-center gap-3 text-[13px] font-medium text-gray-700">
-                      <Check className="h-4 w-4 text-[#18B4A6]" strokeWidth={3} />
+                      <Check className="h-4 w-4 text-primary" strokeWidth={3} />
                       {text}
                     </li>
                   ))}
@@ -326,7 +326,7 @@ export default function ChoosePlanPage() {
                 <Button 
                   variant="outline"
                   onClick={() => handleSelectPlan('Enterprise')}
-                  className="w-full h-12 rounded-xl border-[#18B4A6] text-[#18B4A6] font-bold text-[14px] hover:bg-[#18B4A6]/5 transition-all"
+                  className="w-full h-12 rounded-xl border-primary text-primary font-bold text-[14px] hover:bg-primary/5 transition-all"
                 >
                   Contact Sales
                 </Button>
@@ -344,7 +344,7 @@ export default function ChoosePlanPage() {
                   <TableRow className="border-gray-100 h-16">
                     <TableHead className="w-[30%] px-8 text-[12px] font-black uppercase tracking-widest text-gray-400">Features</TableHead>
                     <TableHead className="text-center text-[12px] font-black uppercase tracking-widest text-gray-400">Free</TableHead>
-                    <TableHead className="text-center text-[12px] font-black uppercase tracking-widest text-[#18B4A6]">Pro</TableHead>
+                    <TableHead className="text-center text-[12px] font-black uppercase tracking-widest text-primary">Pro</TableHead>
                     <TableHead className="text-center text-[12px] font-black uppercase tracking-widest text-gray-400">Enterprise</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -353,7 +353,7 @@ export default function ChoosePlanPage() {
                     <TableRow key={feature.name} className="border-gray-100 h-14 group">
                       <TableCell className="px-8 text-[13px] font-bold text-gray-900">{feature.name}</TableCell>
                       <TableCell className="text-center"><RenderCheck value={feature.free} /></TableCell>
-                      <TableCell className="text-center bg-[#18B4A6]/[0.02]"><RenderCheck value={feature.pro} /></TableCell>
+                      <TableCell className="text-center bg-primary/[0.02]"><RenderCheck value={feature.pro} /></TableCell>
                       <TableCell className="text-center"><RenderCheck value={feature.enterprise} /></TableCell>
                     </TableRow>
                   ))}
@@ -371,7 +371,7 @@ export default function ChoosePlanPage() {
               <ArrowLeft className="mr-2 h-4 w-4" /> Back to Profile
             </Button>
             <p className="text-[12px] font-medium text-gray-400 italic">
-              Need a custom plan? <span className="text-[#18B4A6] font-bold cursor-pointer hover:underline">Chat with us</span>
+              Need a custom plan? <span className="text-primary font-bold cursor-pointer hover:underline">Chat with us</span>
             </p>
           </div>
         </div>
