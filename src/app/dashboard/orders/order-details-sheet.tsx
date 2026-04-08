@@ -174,6 +174,12 @@ export function OrderDetailsSheet({
   const subtotal = localOrder.totalAmount;
   const taxAmount = subtotal * 0.05;
 
+  // Logic to determine if split payment button should be shown
+  const canSplitPayment = 
+    pendingAmount > 0.01 && 
+    !localOrder.splitType && 
+    localOrder.paymentState === 'Unpaid';
+
   return (
     <>
       <Sheet open={open} onOpenChange={onOpenChange}>
@@ -529,7 +535,7 @@ export function OrderDetailsSheet({
             </div>
             <SheetFooter className="p-6 border-t bg-background flex-row justify-between w-full">
               <div>
-                {pendingAmount > 0.01 && (
+                {canSplitPayment && (
                   <Button onClick={() => setIsSplitDialogOpen(true)}>
                     <Split className="mr-2 h-4 w-4" />
                     Split Payment
