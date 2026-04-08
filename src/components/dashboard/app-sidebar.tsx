@@ -325,7 +325,7 @@ export function AppSidebar() {
 
         <SidebarContent className="p-0 pb-4">
           <SidebarGroup id="sidebar-nav">
-            <SidebarGroupLabel className="group-data-[collapsible=icon]:hidden uppercase tracking-wider text-[10px] font-bold">
+            <SidebarGroupLabel className="group-data-[collapsible=icon]:hidden uppercase tracking-wider text-[10px] font-bold mt-[10px]">
               Overview
             </SidebarGroupLabel>
             <SidebarMenu>
