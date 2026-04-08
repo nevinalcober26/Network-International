@@ -312,7 +312,7 @@ export function AppSidebar() {
 
       <Sidebar variant="sidebar" collapsible="icon" className="border-r">
         <SidebarHeader className="relative flex h-auto flex-col items-center justify-center gap-4 p-4 pb-2">
-          <div className="flex w-full items-center justify-center">
+          <div className="flex w-full items-center justify-center mb-2">
             <div className="group-data-[collapsible=icon]:hidden">
               <EMenuIcon />
             </div>
