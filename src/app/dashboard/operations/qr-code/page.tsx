@@ -21,6 +21,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Card } from '@/components/ui/card';
 import { 
   Search, 
   Download, 
@@ -73,8 +74,8 @@ export default function ManageQrPage() {
           {/* Header Section */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div className="space-y-1">
-              <h1 className="text-3xl font-bold tracking-tight text-[#1e293b]">Manage QR Codes</h1>
-              <p className="text-muted-foreground text-sm font-medium">
+              <h1 className="text-3xl font-bold tracking-tight text-[#1e293b] text-left">Manage QR Codes</h1>
+              <p className="text-muted-foreground text-sm font-medium text-left">
                 Create, edit, and manage QR codes for your tables.
               </p>
             </div>
@@ -83,7 +84,7 @@ export default function ManageQrPage() {
                 <Download className="h-4 w-4" />
                 Download All
               </Button>
-              <Button className="gap-2 font-bold bg-[#016EAF] hover:bg-[#015a8f] h-10 shadow-sm">
+              <Button className="gap-2 font-bold bg-[#016EAF] hover:bg-[#015a8f] h-10 shadow-sm text-white">
                 <Plus className="h-4 w-4" />
                 Create QR Code
               </Button>
@@ -92,7 +93,7 @@ export default function ManageQrPage() {
 
           {/* Filter Bar */}
           <div className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm flex flex-col lg:flex-row items-center gap-4">
-            <div className="relative flex-1 w-full">
+            <div className="relative flex-1 w-full text-left">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
                 placeholder="Search Tables"
@@ -166,7 +167,7 @@ export default function ManageQrPage() {
           </div>
 
           {/* Table Section */}
-          <Card className="border-0 shadow-sm overflow-hidden rounded-xl">
+          <Card className="border-0 shadow-sm overflow-hidden rounded-xl text-left">
             <Table>
               <TableHeader className="bg-white">
                 <TableRow className="hover:bg-transparent border-b">
@@ -267,15 +268,15 @@ export default function ManageQrPage() {
               
               <div className="flex items-center gap-1.5">
                 <Button variant="outline" size="icon" className="h-8 w-8 border-gray-200" disabled>
-                  <ChevronLeft className="h-4 w-4" />
+                  <ChevronLeftIcon className="h-4 w-4" />
                 </Button>
-                <Button size="sm" className="h-8 w-8 p-0 bg-[#016EAF] font-bold">1</Button>
+                <Button size="sm" className="h-8 w-8 p-0 bg-[#016EAF] font-bold text-white">1</Button>
                 <Button variant="ghost" size="sm" className="h-8 w-8 p-0 font-bold text-gray-600">2</Button>
                 <Button variant="ghost" size="sm" className="h-8 w-8 p-0 font-bold text-gray-600">3</Button>
                 <span className="px-1 text-gray-400">...</span>
                 <Button variant="ghost" size="sm" className="h-8 w-8 p-0 font-bold text-gray-600">21</Button>
                 <Button variant="outline" size="icon" className="h-8 w-8 border-gray-200">
-                  <ChevronRight className="h-4 w-4" />
+                  <ChevronRightIcon className="h-4 w-4" />
                 </Button>
               </div>
             </div>
@@ -287,7 +288,7 @@ export default function ManageQrPage() {
   );
 }
 
-function ChevronLeft(props: any) {
+function ChevronLeftIcon(props: any) {
   return (
     <svg
       {...props}
@@ -306,7 +307,7 @@ function ChevronLeft(props: any) {
   )
 }
 
-function ChevronRight(props: any) {
+function ChevronRightIcon(props: any) {
   return (
     <svg
       {...props}
