@@ -7,6 +7,9 @@ import { FirebaseClientProvider, CartProvider, OrderProvider } from '@/firebase'
 export const metadata: Metadata = {
   title: 'eMenu Digital Hub',
   description: 'The central hub for managing your eMenu.',
+  icons: {
+    icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><rect width="32" height="32" rx="6" fill="%23016EAF"/><path d="M11 7l10 9-10 9" fill="none" stroke="%23E54360" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+  },
 };
 
 export default function RootLayout({
