@@ -88,7 +88,7 @@ export function PopularItems() {
         ))}
       </CardContent>
       <CardFooter className="justify-center border-t border-dashed pt-4">
-        <Button variant="link" className="text-[#18B4A6] hover:text-[#149d94] font-bold gap-2 no-underline">
+        <Button variant="link" className="text-primary hover:text-primary/80 font-bold gap-2 no-underline">
           <ArrowDown className="h-4 w-4" />
           View All Items
         </Button>
