@@ -22,8 +22,8 @@ export const AppSwitcher = () => {
           Current Active Product
         </h3>
         <div className="grid grid-cols-2 gap-4 text-center mb-4">
-          <div className="flex flex-col items-center gap-2 p-2 rounded-lg bg-teal-500/20 text-teal-300 border border-teal-500/50 cursor-pointer">
-            <div className="w-12 h-12 flex items-center justify-center rounded-lg bg-teal-500">
+          <div className="flex flex-col items-center gap-2 p-2 rounded-lg bg-primary/20 text-primary border border-primary/50 cursor-pointer">
+            <div className="w-12 h-12 flex items-center justify-center rounded-lg bg-primary">
               <svg
                 width="24"
                 height="24"
@@ -76,7 +76,7 @@ export const AppSwitcher = () => {
                 />
               </svg>
             </div>
-            <span className="text-sm font-medium">eMenu QR</span>
+            <span className="text-sm font-medium">Network Dine QR</span>
           </div>
           <div
             onClick={() => setIsDialogOpen(true)}
